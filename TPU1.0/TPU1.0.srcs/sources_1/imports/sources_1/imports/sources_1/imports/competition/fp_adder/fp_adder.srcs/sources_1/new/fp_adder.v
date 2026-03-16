@@ -1,0 +1,402 @@
+`timescale 1ns/1ps                                  //修改了reset negedge
+module fp_adder #(                                  // 输入+三级流水（对阶 加减 规格化）+输出
+    parameter MATRIX_PRECISION = 32,
+    parameter FP_WIDTH    = 32,
+    //parameter INPUT_WIDTH    = MATRIX_PRECISION == 16 ? 16 : 32, // 支持32位(FP32)或16位(FP16)
+    parameter EXP_WIDTH   = FP_WIDTH == 32 ? 8 : 5,           // FP32:8位阶码, FP16:5位阶码
+    parameter FRAC_WIDTH  = FP_WIDTH == 32 ? 23 : 10,         // FP32:23位尾数, FP16:10位尾数
+    parameter MANT_WIDTH  = FRAC_WIDTH + 1,                   // 包含隐含1的尾数宽度
+    parameter BIAS        = FP_WIDTH == 32 ? 127 : 15         // FP32:偏移量127, FP16:偏移量15
+)(
+    input  wire                    clk,                 // 时钟信号
+    input  wire                    rst_n,               // 异步复位，高电平复位
+    input  wire                    read_en,             // 输入使能，高电平有效
+    input  wire [31:0]             input_A,             // 输入A
+    input  wire [31:0]             input_B,             // 输入B    特殊化处理(可以为16位)
+    input  wire [ 5:0]             input_b_precision,   //输入B的精度(可为16或32)
+    output reg  [FP_WIDTH-1:0]     C,                   // 输出结果
+    output reg                     indicate             // 计算完成指示信号s（高电平有效）
+);
+
+// 输入信号处理
+    wire [31:0] half_to_float_b;
+
+    wire [31:0] A;
+    wire [31:0] B;
+
+// 模块例化
+
+    fp16_to_fp32 h2f_b(
+        .half_in(input_B[15:0]),
+        .float_out(half_to_float_b)
+    );
+
+// 输入信号预处理(fp16->fp32)
+
+    assign A = input_A;
+    assign B = (input_b_precision == 'd16) ? half_to_float_b : input_B;
+
+
+// Stage 1：输入分解寄存器
+    reg                   signA_stage1, signB_stage1; // A/B的符号位
+    reg  [EXP_WIDTH-1:0 ]   expA_stage1, expB_stage1; // A/B的指数
+    reg  [FRAC_WIDTH-1:0] fracA_stage1, fracB_stage1; // A/B的尾数
+    reg                                    en_stage1; // 流水线使能信号
+    reg  is_inf_A_stage1, is_inf_B_stage1; // 无穷处理 A/B是否为无穷大
+    reg  is_abnorm_A_stage1, is_abnorm_B_stage1; // 判断非规格数
+    
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin                              // 复位
+            signA_stage1 <= 0;
+            signB_stage1 <= 0;
+            expA_stage1  <= 0;
+            expB_stage1  <= 0;
+            fracA_stage1 <= 0;
+            fracB_stage1 <= 0;
+            is_inf_A_stage1 <= 1'b0;
+            is_inf_B_stage1 <= 1'b0;
+            is_abnorm_A_stage1 <= 1'b0;
+            is_abnorm_B_stage1 <= 1'b0;
+            en_stage1    <= 1'b0;
+        end else begin
+            if (read_en) begin                       // read_en有效，初始化
+                // 最高位为符号位
+                signA_stage1 <= A[FP_WIDTH-1];
+                signB_stage1 <= B[FP_WIDTH-1];
+                // 符号后一位开始到尾数部分之前为阶码位
+                expA_stage1  <= A[FP_WIDTH-2:FRAC_WIDTH];
+                expB_stage1  <= B[FP_WIDTH-2:FRAC_WIDTH];
+                // 最低FRAC_WIDTH位为尾数位
+                fracA_stage1 <= A[FRAC_WIDTH-1:0];
+                fracB_stage1 <= B[FRAC_WIDTH-1:0];
+
+                // 检测A是否为无穷大: 指数全1且尾数全0
+                is_inf_A_stage1 <= (A[FP_WIDTH-2:FRAC_WIDTH] == {EXP_WIDTH{1'b1}}) && 
+                                 (A[FRAC_WIDTH-1:0] == {FRAC_WIDTH{1'b0}});
+                
+                // 检测B是否为无穷大: 指数全1且尾数全0
+                is_inf_B_stage1 <= (B[FP_WIDTH-2:FRAC_WIDTH] == {EXP_WIDTH{1'b1}}) && 
+                                 (B[FRAC_WIDTH-1:0] == {FRAC_WIDTH{1'b0}});
+                
+                is_abnorm_A_stage1 <= A[FP_WIDTH-2:FRAC_WIDTH] == 8'd0 ? 1'b1 : 1'b0;
+                is_abnorm_B_stage1 <= B[FP_WIDTH-2:FRAC_WIDTH] == 8'd0 ? 1'b1 : 1'b0;
+
+                // stage1有效跟踪
+                en_stage1    <= 1'b1;
+            end else begin
+                en_stage1    <= 1'b0;
+            end
+        end
+    end
+
+
+// Stage 2：对阶与尾数对齐
+    reg [MANT_WIDTH-1:0]    mantA_stage2, mantB_stage2; // 尾数扩展至24位
+    reg [EXP_WIDTH-1 :0]                    exp_stage2;
+    reg                     signA_stage2, signB_stage2;
+    reg                                      en_stage2;
+    reg               is_inf_A_stage2, is_inf_B_stage2; // 无穷大传递信号
+    reg               is_abnorm_A_stage2,is_abnorm_B_stage2; // 非规格数传输信号
+
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin                            // 复位
+            mantA_stage2 <= 0;
+            mantB_stage2 <= 0;
+            exp_stage2   <= 0;
+            signA_stage2 <= 0;
+            signB_stage2 <= 0;
+            is_inf_A_stage2 <= 1'b0;
+            is_inf_B_stage2 <= 1'b0;
+            is_abnorm_A_stage2 <= 1'b0;
+            is_abnorm_B_stage2 <= 1'b0; 
+            en_stage2    <= 1'b0;
+        end else if (en_stage1) begin              // Stage2继承Stage1符号结果
+            signA_stage2 <= signA_stage1;
+            signB_stage2 <= signB_stage1;
+            is_inf_A_stage2 <= is_inf_A_stage1;
+            is_inf_B_stage2 <= is_inf_B_stage1;
+            is_abnorm_A_stage2 <= is_abnorm_A_stage1;
+            is_abnorm_B_stage2 <= is_abnorm_B_stage1;
+
+            //实现对齐
+            //规格数对齐
+            if (expA_stage1 >= expB_stage1) begin                                   // 比较阶码，决定右移对象
+                exp_stage2   <= expA_stage1;                                        // 取较大者阶码作为对齐后的阶码
+                if(expA_stage1 == 8'd0) mantA_stage2 <= {1'b0, fracA_stage1};  
+                else mantA_stage2 <= {1'b1, fracA_stage1};                          // 组装尾数，加上隐含的1（规格化数隐含位）
+                if(expB_stage1 == 8'd0) mantB_stage2 <= {1'b0, fracB_stage1} >> ((expA_stage1 ? expA_stage1 : 8'd1) - 8'd1);
+                else mantB_stage2 <= {1'b1, fracB_stage1} >> (expA_stage1 - expB_stage1); // 较小者尾数右移对齐
+            end else begin                                                          // 同理，另一种情况
+                exp_stage2   <= expB_stage1;
+                if(expA_stage1 == 8'd0) mantA_stage2 <= {1'b0, fracA_stage1} >> ((expB_stage1 ? expB_stage1 : 8'd1) - 8'd1);
+                else mantA_stage2 <= {1'b1, fracA_stage1} >> (expB_stage1 - expA_stage1);
+                if(expB_stage1 == 8'd0) mantB_stage2 <= {1'b0, fracB_stage1};
+                else mantB_stage2 <= {1'b1, fracB_stage1};
+            end
+            //Stage2有效跟踪
+            en_stage2 <= 1'b1;
+        end else begin
+            en_stage2 <= 1'b0;
+        end
+    end
+
+
+// Stage 3：加减运算
+    reg          result_sign_stage3;
+    reg [EXP_WIDTH-1:0]  exp_stage3;
+    reg [MANT_WIDTH:0] sum_stage3;    //多一位保存可能的进位/借位
+    reg                   en_stage3;
+
+    reg                 is_inf_stage3;    // 结果是否为无穷大
+    reg                 is_nan_stage3;    // 结果是否为NaN（无穷相减的情况）
+    reg                 is_abnorm_A_stage3, is_abnorm_B_stage3; //非规格数传递信号
+    
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            result_sign_stage3 <= 0;
+            exp_stage3         <= 0;
+            sum_stage3         <= 0;
+            is_inf_stage3      <= 1'b0;
+            is_nan_stage3      <= 1'b0;
+            en_stage3          <= 1'b0;
+        end else if (en_stage2) begin
+            //传递对齐后的阶码
+            exp_stage3 <= exp_stage2;
+            is_abnorm_A_stage3 <= is_abnorm_A_stage2;
+            is_abnorm_B_stage3 <= is_abnorm_B_stage2;
+
+            if (is_inf_A_stage2 || is_inf_B_stage2) begin
+
+                // 两个都是无穷大 且符号相反
+                if (is_inf_A_stage2 && is_inf_B_stage2 && (signA_stage2 != signB_stage2)) begin
+                    is_nan_stage3      <= 1'b1;                             // 结果为NaN
+                    is_inf_stage3      <= 1'b0;                             // 结果不为INF
+                    result_sign_stage3 <= 1'b0;                             // NaN的符号位为0
+                    exp_stage3         <= {EXP_WIDTH{1'b1}};                // NaN的指数全为1
+                    sum_stage3         <= {2'b00, 1'b1, 22'd0};  // NaN的尾数不全为0
+                
+                end else begin
+                // 至少有一个是无穷大
+                is_inf_stage3      <= 1'b1;
+                is_nan_stage3      <= 1'b0;
+                // 结果符号为无穷大的符号
+                if (is_inf_A_stage2 && !is_inf_B_stage2)
+                    result_sign_stage3 <= signA_stage2;
+                else if (!is_inf_A_stage2 && is_inf_B_stage2)
+                    result_sign_stage3 <= signB_stage2;    
+
+                // 如果两个都是无穷大且符号相同，结果符号为该符号
+                else
+                    result_sign_stage3 <= signA_stage2; // 因为两者符号相同
+                    
+                    exp_stage3 <= {EXP_WIDTH{1'b1}};    // 无穷大的指数全为1
+                    sum_stage3 <= 25'd0;     // 无穷大的尾数全为0
+                end
+                // 正常数值的处理（原代码逻辑）
+            end else begin
+
+            //传递对齐后的阶码
+            exp_stage3 <= exp_stage2;   
+            is_inf_stage3 <= 1'b0;
+            is_nan_stage3 <= 1'b0;
+
+            //符号位相同，执行加法
+            if (signA_stage2 == signB_stage2) begin         
+                sum_stage3         <= mantA_stage2 + mantB_stage2;  //尾数求和
+                result_sign_stage3 <= signA_stage2;                 //符号任取其一
+            //符号位相异，执行减法
+            end else begin
+                if (mantA_stage2 >= mantB_stage2) begin             //大减小
+                    sum_stage3         <= mantA_stage2 - mantB_stage2;
+                    result_sign_stage3 <= signA_stage2;             //符号位取大
+                end else begin                                      //同理，另一种情况
+                    sum_stage3         <= mantB_stage2 - mantA_stage2;
+                    result_sign_stage3 <= signB_stage2;
+                end
+            end
+        end
+            //Stage3有效跟踪
+            en_stage3 <= 1'b1;
+        end else begin
+            en_stage3 <= 1'b0;
+        end
+    end
+
+
+// Stage 4：规格化
+    reg [EXP_WIDTH-1:0]              exp_stage4;
+    reg [MANT_WIDTH:0]            norm_mantissa;    //规格化后隐含1的24位尾数，1不输出
+    reg                      result_sign_stage4;
+    reg                               en_stage4;
+    reg [$clog2(MANT_WIDTH+1)-1:0] shift_amount;    //记录左移位数（前导零计数的结果）
+    reg                 is_inf_stage4, is_nan_stage4;
+    reg                 is_abnorm_A_stage4,is_abnorm_B_stage4;
+
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin                            //复位
+            exp_stage4         <= 0;
+            norm_mantissa      <= 0;
+            result_sign_stage4 <= 0;
+            is_inf_stage4      <= 1'b0;
+            is_nan_stage4      <= 1'b0;
+            en_stage4          <= 1'b0;
+        end else if (en_stage3) begin               //传递
+            result_sign_stage4 <= result_sign_stage3;
+            is_inf_stage4      <= is_inf_stage3;
+            is_nan_stage4      <= is_nan_stage3;
+            is_abnorm_A_stage4 <= is_abnorm_A_stage3;
+            is_abnorm_B_stage4 <= is_abnorm_B_stage3;
+
+        //无穷大/NaN传递
+            if (is_inf_stage3 || is_nan_stage3) begin
+                exp_stage4    <= exp_stage3;
+                if (is_inf_stage3)
+                    norm_mantissa <= 0;  // 无穷大的尾数全为0
+                else 
+                    norm_mantissa <= sum_stage3;
+            end else if(is_abnorm_A_stage3 && is_abnorm_B_stage3) begin   //非规格数处理
+                if(sum_stage3[MANT_WIDTH - 1] == 1'b1)begin
+                    norm_mantissa <= sum_stage3;
+                    exp_stage4 <= 1;
+                end else if(sum_stage3 == 0) begin
+                    norm_mantissa <= 0;
+                    exp_stage4    <= 0;
+                end else begin
+                    norm_mantissa <= sum_stage3;
+                    exp_stage4 <= 0;
+                end
+            end else if (sum_stage3 == 0) begin              //特殊0处理
+                norm_mantissa <= 0;
+                exp_stage4    <= 0;
+            // 最高位溢出（进位产生1）,右移尾数    
+            end else if (sum_stage3[MANT_WIDTH] == 1'b1) begin
+                norm_mantissa <= sum_stage3[MANT_WIDTH:1];
+                exp_stage4    <= exp_stage3 + 1;    //指数+1
+
+            // 溢出成为无穷大
+
+                if (exp_stage3 == 8'd254) begin
+                        is_inf_stage4 <= 1'b1;
+                        exp_stage4    <= 8'd255;  // 指数全为1表示无穷大
+                        norm_mantissa <= 25'd0;   // 无穷大的尾数全为0
+                    end
+
+            // 尾数规格化：使用分组优先级编码计算前导0的数量   
+            end else begin
+                // 分组优先级编码器实现 - 计算前导零
+                // 根据MANT_WIDTH确定适当的分组方式
+
+                // FP32: MANT_WIDTH = 24，分为3组，每组8位
+                // FP16: MANT_WIDTH = 11，分为2组，第一组5位，第二组6位
+                // 注意：以下代码处理了两种可能的宽度
+
+                
+
+                norm_mantissa <= sum_stage3[MANT_WIDTH:0] << (shift_amount);  // 指数大于移位数，则减去移位数，否则归零
+                if (exp_stage3 > shift_amount)
+                    exp_stage4 <= exp_stage3 - shift_amount;
+                else
+                    exp_stage4 <= 0;
+            end
+            //Stage4有效跟踪
+            en_stage4 <= 1'b1;
+        end else begin
+            en_stage4 <= 1'b0;
+        end
+    end
+
+
+// Stage 5：输出
+    reg         en_stage5;
+    reg [FP_WIDTH-1:0]  result_stage5;
+    
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            result_stage5 <= 0;
+            en_stage5     <= 1'b0;
+            C            <= 0;
+            indicate     <= 1'b0;
+        end else if (en_stage4) begin
+             // 最终结果：符号位、规格化后的阶码、规格化尾数的低FRAC_WIDTH位（去掉隐含1）
+            result_stage5 <= {result_sign_stage4, exp_stage4, norm_mantissa[22:0]};
+            en_stage5     <= 1'b1;
+            C            <= {result_sign_stage4, exp_stage4, norm_mantissa[22:0]};
+            indicate     <= 1'b1;   //输出有效跟踪
+        end else begin
+            en_stage5    <= 1'b0;
+            indicate     <= 1'b0;
+        end
+    end
+
+    always @(*) begin
+                if (MANT_WIDTH > 16) begin
+                    // 处理FP32情况 - 24位尾数(包含隐含位)，分成3组
+                    if (sum_stage3[FRAC_WIDTH:FRAC_WIDTH-7] != 0) begin
+                        // 最高8位有1
+                        casez (sum_stage3[FRAC_WIDTH:FRAC_WIDTH-7])
+                            8'b1???????: shift_amount = 0;
+                            8'b01??????: shift_amount = 1;
+                            8'b001?????: shift_amount = 2;
+                            8'b0001????: shift_amount = 3;
+                            8'b00001???: shift_amount = 4;
+                            8'b000001??: shift_amount = 5;
+                            8'b0000001?: shift_amount = 6;
+                            8'b00000001: shift_amount = 7;
+                            default: shift_amount = 8; // 不应该到达这里
+                        endcase
+                    end else if (sum_stage3[FRAC_WIDTH-8:FRAC_WIDTH-15] != 0) begin
+                        // 中间8位有1
+                        casez (sum_stage3[FRAC_WIDTH-8:FRAC_WIDTH-15])
+                            8'b1???????: shift_amount = 8;
+                            8'b01??????: shift_amount = 9;
+                            8'b001?????: shift_amount = 10;
+                            8'b0001????: shift_amount = 11;
+                            8'b00001???: shift_amount = 12;
+                            8'b000001??: shift_amount = 13;
+                            8'b0000001?: shift_amount = 14;
+                            8'b00000001: shift_amount = 15;
+                            default: shift_amount = 16; // 不应该到达这里
+                        endcase
+                    end else begin
+                        // 最低8位(对于FP32，实际只需要处理到最低的8位)
+                        casez (sum_stage3[FRAC_WIDTH-16:FRAC_WIDTH-23])
+                            8'b1???????: shift_amount = 16;
+                            8'b01??????: shift_amount = 17;
+                            8'b001?????: shift_amount = 18;
+                            8'b0001????: shift_amount = 19;
+                            8'b00001???: shift_amount = 20;
+                            8'b000001??: shift_amount = 21;
+                            8'b0000001?: shift_amount = 22;
+                            8'b00000001: shift_amount = 23;
+                            default: shift_amount = 24; // 全0情况
+                        endcase
+                    end
+                end else begin
+                    // 处理FP16情况 - 11位尾数(包含隐含位)，分成2组
+                    if (sum_stage3[FRAC_WIDTH:FRAC_WIDTH-5] != 0) begin
+                        // 最高6位有1
+                        casez (sum_stage3[FRAC_WIDTH:FRAC_WIDTH-5])
+                            6'b1?????: shift_amount = 0;
+                            6'b01????: shift_amount = 1;
+                            6'b001???: shift_amount = 2;
+                            6'b0001??: shift_amount = 3;
+                            6'b00001?: shift_amount = 4;
+                            6'b000001: shift_amount = 5;
+                            default: shift_amount = 6; // 不应该到达这里
+                        endcase
+                    end else begin
+                        // 最低5位有1
+                        casez (sum_stage3[FRAC_WIDTH-6:0])
+                            5'b1????: shift_amount = 6'd6;
+                            5'b01???: shift_amount = 6'd7;
+                            5'b001??: shift_amount = 6'd8;
+                            5'b0001?: shift_amount = 6'd9;
+                            5'b00001: shift_amount = 6'd10;
+                            default: shift_amount = 6'd11; // 全0情况
+                        endcase
+                    end
+                end
+    end
+
+
+endmodule
