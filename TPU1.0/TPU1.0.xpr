@@ -59,6 +59,14 @@
   <FileSets Version="1" Minor="31">
     <FileSet Name="sources_1" Type="DesignSrcs" RelSrcDir="$PSRCDIR/sources_1">
       <Filter Type="Srcs"/>
+      <File Path="$PSRCDIR/sources_1/new/define.v">
+        <FileInfo>
+          <Attr Name="IsGlobalInclude" Val="1"/>
+          <Attr Name="UsedIn" Val="synthesis"/>
+          <Attr Name="UsedIn" Val="implementation"/>
+          <Attr Name="UsedIn" Val="simulation"/>
+        </FileInfo>
+      </File>
       <File Path="$PSRCDIR/sources_1/ip/RAM_C/RAM_C.xci">
         <FileInfo>
           <Attr Name="ImportPath" Val="$PPRDIR/../../../../competition/IC_bisai_jichuangsai/zhon_ke_xin_bei/fensaiqu_chusai/project/RAM_BRIDGE/RAM_BRIDGE_1.5/RAM_BRIDGE_1.5/RAM_BRIDGE_1.5.srcs/sources_1/ip/RAM_C/RAM_C.xci"/>
@@ -170,124 +178,6 @@
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PSRCDIR/sources_1/imports/sources_1/new/RAM_BUF_TOP.sv">
-        <FileInfo>
-          <Attr Name="AutoDisabled" Val="1"/>
-          <Attr Name="ImportPath" Val="$PPRDIR/../../../../competition/IC_bisai_jichuangsai/zhon_ke_xin_bei/fensaiqu_chusai/project/RAM_BRIDGE/RAM_BRIDGE_1.5/RAM_BRIDGE_1.5/RAM_BRIDGE_1.5.srcs/sources_1/new/RAM_BUF_TOP.sv"/>
-          <Attr Name="ImportTime" Val="1752401311"/>
-          <Attr Name="UsedIn" Val="synthesis"/>
-          <Attr Name="UsedIn" Val="implementation"/>
-          <Attr Name="UsedIn" Val="simulation"/>
-        </FileInfo>
-      </File>
-      <File Path="$PSRCDIR/sources_1/imports/sources_1/new/TPU.sv">
-        <FileInfo>
-          <Attr Name="AutoDisabled" Val="1"/>
-          <Attr Name="ImportPath" Val="$PPRDIR/../../../../competition/IC_bisai_jichuangsai/zhon_ke_xin_bei/fensaiqu_chusai/project/RAM_BRIDGE/RAM_BRIDGE_1.5/RAM_BRIDGE_1.5/RAM_BRIDGE_1.5.srcs/sources_1/new/TPU.sv"/>
-          <Attr Name="ImportTime" Val="1752401325"/>
-          <Attr Name="UsedIn" Val="synthesis"/>
-          <Attr Name="UsedIn" Val="implementation"/>
-          <Attr Name="UsedIn" Val="simulation"/>
-        </FileInfo>
-      </File>
-      <File Path="$PSRCDIR/sources_1/imports/sources_1/imports/sources_1/new/MATRIX_COMPUTE_KERNEL.sv">
-        <FileInfo>
-          <Attr Name="AutoDisabled" Val="1"/>
-          <Attr Name="ImportPath" Val="$PPRDIR/../../../../competition/IC_bisai_jichuangsai/zhon_ke_xin_bei/fensaiqu_chusai/project/RAM_BRIDGE/RAM_BRIDGE_1.5/RAM_BRIDGE_1.5/RAM_BRIDGE_1.5.srcs/sources_1/imports/sources_1/new/MATRIX_COMPUTE_KERNEL.sv"/>
-          <Attr Name="ImportTime" Val="1752396147"/>
-          <Attr Name="UsedIn" Val="synthesis"/>
-          <Attr Name="UsedIn" Val="implementation"/>
-          <Attr Name="UsedIn" Val="simulation"/>
-        </FileInfo>
-      </File>
-      <File Path="$PSRCDIR/sources_1/imports/sources_1/imports/sources_1/new/matmult_kernel.sv">
-        <FileInfo>
-          <Attr Name="AutoDisabled" Val="1"/>
-          <Attr Name="ImportPath" Val="$PPRDIR/../../../../competition/IC_bisai_jichuangsai/zhon_ke_xin_bei/fensaiqu_chusai/project/RAM_BRIDGE/RAM_BRIDGE_1.5/RAM_BRIDGE_1.5/RAM_BRIDGE_1.5.srcs/sources_1/imports/sources_1/new/matmult_kernel.sv"/>
-          <Attr Name="ImportTime" Val="1752392032"/>
-          <Attr Name="UsedIn" Val="synthesis"/>
-          <Attr Name="UsedIn" Val="implementation"/>
-          <Attr Name="UsedIn" Val="simulation"/>
-        </FileInfo>
-      </File>
-      <File Path="$PSRCDIR/sources_1/imports/sources_1/imports/sources_1/imports/new/half2float.v">
-        <FileInfo>
-          <Attr Name="AutoDisabled" Val="1"/>
-          <Attr Name="ImportPath" Val="$PPRDIR/../../../../competition/IC_bisai_jichuangsai/zhon_ke_xin_bei/fensaiqu_chusai/project/RAM_BRIDGE/RAM_BRIDGE_1.5/RAM_BRIDGE_1.5/RAM_BRIDGE_1.5.srcs/sources_1/imports/sources_1/imports/new/half2float.v"/>
-          <Attr Name="ImportTime" Val="1747743538"/>
-          <Attr Name="UsedIn" Val="synthesis"/>
-          <Attr Name="UsedIn" Val="implementation"/>
-          <Attr Name="UsedIn" Val="simulation"/>
-        </FileInfo>
-      </File>
-      <File Path="$PSRCDIR/sources_1/imports/sources_1/imports/sources_1/imports/new/int2float.v">
-        <FileInfo>
-          <Attr Name="AutoDisabled" Val="1"/>
-          <Attr Name="ImportPath" Val="$PPRDIR/../../../../competition/IC_bisai_jichuangsai/zhon_ke_xin_bei/fensaiqu_chusai/project/RAM_BRIDGE/RAM_BRIDGE_1.5/RAM_BRIDGE_1.5/RAM_BRIDGE_1.5.srcs/sources_1/imports/sources_1/imports/new/int2float.v"/>
-          <Attr Name="ImportTime" Val="1752243764"/>
-          <Attr Name="UsedIn" Val="synthesis"/>
-          <Attr Name="UsedIn" Val="implementation"/>
-          <Attr Name="UsedIn" Val="simulation"/>
-        </FileInfo>
-      </File>
-      <File Path="$PSRCDIR/sources_1/imports/sources_1/imports/sources_1/imports/competition/fp_adder/fp_adder.srcs/sources_1/new/fp_adder.v">
-        <FileInfo>
-          <Attr Name="AutoDisabled" Val="1"/>
-          <Attr Name="ImportPath" Val="$PPRDIR/../../../../competition/IC_bisai_jichuangsai/zhon_ke_xin_bei/fensaiqu_chusai/project/RAM_BRIDGE/RAM_BRIDGE_1.5/RAM_BRIDGE_1.5/RAM_BRIDGE_1.5.srcs/sources_1/imports/sources_1/imports/competition/fp_adder/fp_adder.srcs/sources_1/new/fp_adder.v"/>
-          <Attr Name="ImportTime" Val="1751986307"/>
-          <Attr Name="UsedIn" Val="synthesis"/>
-          <Attr Name="UsedIn" Val="implementation"/>
-          <Attr Name="UsedIn" Val="simulation"/>
-        </FileInfo>
-      </File>
-      <File Path="$PPRDIR/../../../../competition/IC_bisai_jichuangsai/zhon_ke_xin_bei/fensaiqu_chusai/project/AXI_TPU/AXI_TPU1.0/AXI_TPU1.1/AXI_TPU1.1.srcs/sources_1/imports/sources_1/imports/sources_1/imports/competition/Variable_Mult/Variable_Mult.srcs/sources_1/new/Variable_Mult.v">
-        <FileInfo>
-          <Attr Name="AutoDisabled" Val="1"/>
-          <Attr Name="ImportPath" Val="$PPRDIR/../../../../competition/IC_bisai_jichuangsai/zhon_ke_xin_bei/fensaiqu_chusai/project/RAM_BRIDGE/RAM_BRIDGE_1.5/RAM_BRIDGE_1.5/RAM_BRIDGE_1.5.srcs/sources_1/imports/sources_1/imports/competition/Variable_Mult/Variable_Mult.srcs/sources_1/new/Variable_Mult.v"/>
-          <Attr Name="ImportTime" Val="1752240399"/>
-          <Attr Name="UsedIn" Val="synthesis"/>
-          <Attr Name="UsedIn" Val="implementation"/>
-          <Attr Name="UsedIn" Val="simulation"/>
-        </FileInfo>
-      </File>
-      <File Path="$PSRCDIR/sources_1/imports/sources_1/imports/sources_1/imports/src/define.v">
-        <FileInfo>
-          <Attr Name="AutoDisabled" Val="1"/>
-          <Attr Name="ImportPath" Val="$PPRDIR/../../../../competition/IC_bisai_jichuangsai/zhon_ke_xin_bei/fensaiqu_chusai/project/RAM_BRIDGE/RAM_BRIDGE_1.5/RAM_BRIDGE_1.5/RAM_BRIDGE_1.5.srcs/sources_1/imports/sources_1/imports/src/define.v"/>
-          <Attr Name="ImportTime" Val="1743437248"/>
-          <Attr Name="UsedIn" Val="synthesis"/>
-          <Attr Name="UsedIn" Val="implementation"/>
-          <Attr Name="UsedIn" Val="simulation"/>
-        </FileInfo>
-      </File>
-      <File Path="$PSRCDIR/sources_1/imports/sources_1/new/matmult_top.sv">
-        <FileInfo>
-          <Attr Name="AutoDisabled" Val="1"/>
-          <Attr Name="ImportPath" Val="$PPRDIR/../../../../competition/IC_bisai_jichuangsai/zhon_ke_xin_bei/fensaiqu_chusai/project/RAM_BRIDGE/RAM_BRIDGE_1.5/RAM_BRIDGE_1.5/RAM_BRIDGE_1.5.srcs/sources_1/new/matmult_top.sv"/>
-          <Attr Name="ImportTime" Val="1752150506"/>
-          <Attr Name="UsedIn" Val="synthesis"/>
-          <Attr Name="UsedIn" Val="implementation"/>
-          <Attr Name="UsedIn" Val="simulation"/>
-        </FileInfo>
-      </File>
-      <File Path="$PSRCDIR/sources_1/imports/sources_1/new/RAM_BUF_TOP.v">
-        <FileInfo>
-          <Attr Name="AutoDisabled" Val="1"/>
-          <Attr Name="ImportPath" Val="$PPRDIR/../../../../competition/IC_bisai_jichuangsai/zhon_ke_xin_bei/fensaiqu_chusai/project/RAM_BRIDGE/RAM_BRIDGE_1.5/RAM_BRIDGE_1.5/RAM_BRIDGE_1.5.srcs/sources_1/new/RAM_BUF_TOP.v"/>
-          <Attr Name="ImportTime" Val="1752150400"/>
-          <Attr Name="UsedIn" Val="synthesis"/>
-          <Attr Name="UsedIn" Val="implementation"/>
-          <Attr Name="UsedIn" Val="simulation"/>
-        </FileInfo>
-      </File>
-      <File Path="$PSRCDIR/sources_1/new/define.v">
-        <FileInfo>
-          <Attr Name="AutoDisabled" Val="1"/>
-          <Attr Name="UsedIn" Val="synthesis"/>
-          <Attr Name="UsedIn" Val="implementation"/>
-          <Attr Name="UsedIn" Val="simulation"/>
-        </FileInfo>
-      </File>
       <File Path="$PSRCDIR/sources_1/new/matmult_top.sv">
         <FileInfo>
           <Attr Name="AutoDisabled" Val="1"/>
@@ -380,7 +270,7 @@
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PSRCDIR/sim_1/imports/new/ddr3_model_parameters.vh">
+      <File Path="$PSRCDIR/sim_1/new/ddr3_model_parameters.vh">
         <FileInfo>
           <Attr Name="ImportPath" Val="$PPRDIR/../../../../competition/IC_bisai_jichuangsai/zhon_ke_xin_bei/relative_project/ddr_test/ddr_test.srcs/sim_1/new/ddr3_model_parameters.vh"/>
           <Attr Name="ImportTime" Val="1597900272"/>
@@ -388,10 +278,8 @@
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PSRCDIR/sim_1/imports/new/ddr3_model.sv">
+      <File Path="$PSRCDIR/sim_1/new/ddr3_model.sv">
         <FileInfo>
-          <Attr Name="ImportPath" Val="$PPRDIR/../../../../competition/IC_bisai_jichuangsai/zhon_ke_xin_bei/relative_project/ddr_test/ddr_test.srcs/sim_1/new/ddr3_model.sv"/>
-          <Attr Name="ImportTime" Val="1597900272"/>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
@@ -413,29 +301,9 @@
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PSRCDIR/sim_1/imports/new/top_parameter.vh">
+      <File Path="$PSRCDIR/sim_1/new/define.v">
         <FileInfo>
           <Attr Name="AutoDisabled" Val="1"/>
-          <Attr Name="ImportPath" Val="$PPRDIR/../../../../competition/IC_bisai_jichuangsai/zhon_ke_xin_bei/relative_project/ddr_test/ddr_test.srcs/sources_1/new/top_parameter.vh"/>
-          <Attr Name="ImportTime" Val="1747556491"/>
-          <Attr Name="UsedIn" Val="synthesis"/>
-          <Attr Name="UsedIn" Val="simulation"/>
-        </FileInfo>
-      </File>
-      <File Path="$PSRCDIR/sim_1/new/ddr3_model_parameters.vh">
-        <FileInfo>
-          <Attr Name="AutoDisabled" Val="1"/>
-          <Attr Name="ImportPath" Val="$PPRDIR/../../../../competition/IC_bisai_jichuangsai/zhon_ke_xin_bei/relative_project/ddr_test/ddr_test.srcs/sim_1/new/ddr3_model_parameters.vh"/>
-          <Attr Name="ImportTime" Val="1597900272"/>
-          <Attr Name="UsedIn" Val="synthesis"/>
-          <Attr Name="UsedIn" Val="simulation"/>
-        </FileInfo>
-      </File>
-      <File Path="$PSRCDIR/sim_1/imports/imports/src/define.v">
-        <FileInfo>
-          <Attr Name="AutoDisabled" Val="1"/>
-          <Attr Name="ImportPath" Val="$PPRDIR/../../../../competition/IC_bisai_jichuangsai/zhon_ke_xin_bei/fensaiqu_chusai/project/RAM_BRIDGE/RAM_BRIDGE_1.5/MATRIX_1.9_AXI.srcs/MATRIX_1.9_AXI.srcs/sim_1/imports/src/define.v"/>
-          <Attr Name="ImportTime" Val="1743437248"/>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
