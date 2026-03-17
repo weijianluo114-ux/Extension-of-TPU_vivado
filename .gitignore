@@ -1,11 +1,38 @@
-# Vivado generated files
+# ================================
+# Vivado
+# ================================
+
 *.jou
 *.log
 *.str
 *.dcp
-*.cache
-*.runs
-*.sim
-*.hw
-*.ip_user_files
-*.Xil
+
+*.cache/
+*.runs/
+*.sim/
+*.hw/
+*.ip_user_files/
+*.Xil/
+
+# IP generated (but keep .xci!)
+*.gen/
+
+# ================================
+# VSCode
+# ================================
+
+.vscode/
+
+# ================================
+# Python (你用conda)
+# ================================
+
+__pycache__/
+*.pyc
+
+# ================================
+# OS
+# ================================
+
+.DS_Store
+Thumbs.db
