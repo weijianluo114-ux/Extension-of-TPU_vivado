@@ -3,7 +3,7 @@
 该模块是一个2位超前进位加法器
 
 */
-module cla_adder_2bit (
+module cla2bit (
     input  [1:0] a,    // 加数A
     input  [1:0] b,    // 加数B
     input        cin,  // 进位输入
