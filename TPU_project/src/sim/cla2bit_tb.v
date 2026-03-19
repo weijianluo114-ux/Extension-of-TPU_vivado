@@ -68,7 +68,7 @@ module cla2bit_tb;
   end
 
   /******************************* 模块例化 ***********************************/
-  cla2bit cla2bit_inst (
+  cla_2bit cla_2bit_inst (
       .a(a),
       .b(b),
       .cin(cin),
