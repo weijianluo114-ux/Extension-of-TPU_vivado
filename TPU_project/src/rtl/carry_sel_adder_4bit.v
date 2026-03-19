@@ -29,8 +29,10 @@ module carry_sel_adder_4bit (
     input [3:0] b,   //4位加数b
     input       cin, //低位进位cin
 
-    output [3:0] sum,  //和sum
-    output       cout  //输出进位cout
+    output [3:0] sum,   //和sum
+    output       cout,  //输出进位cout
+    output [3:0] g,     //生成（generate）
+    output [3:0] p      //传播（propagate）信号
 );
   /******************************* 网表信号 ***********************************/
   wire sel;  //进位选择中间信号
@@ -56,7 +58,9 @@ module carry_sel_adder_4bit (
       .b(b[1:0]),
       .cin(cin),
       .s(sum[1:0]),
-      .cout(sel)
+      .cout(sel),
+      .g(g[1:0]),
+      .p(p[1:0])
   );
 
   //进位输入为0
@@ -65,7 +69,9 @@ module carry_sel_adder_4bit (
       .b(b[3:2]),
       .cin(1'b0),
       .s(sum_temp0),
-      .cout(cout_temp0)
+      .cout(cout_temp0),
+      .g(g[3:2]),
+      .p(p[3:2])
   );
   //进位输入为1
   cla_2bit cla_2bit_inst_upper1 (
