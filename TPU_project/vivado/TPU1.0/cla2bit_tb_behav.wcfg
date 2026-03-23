@@ -11,15 +11,15 @@
       </db_ref>
    </db_ref_list>
    <zoom_setting>
-      <ZoomStartTime time="291900000fs"></ZoomStartTime>
-      <ZoomEndTime time="411700001fs"></ZoomEndTime>
-      <Cursor1Time time="335000000fs"></Cursor1Time>
+      <ZoomStartTime time="0fs"></ZoomStartTime>
+      <ZoomEndTime time="635000001fs"></ZoomEndTime>
+      <Cursor1Time time="484626000fs"></Cursor1Time>
    </zoom_setting>
    <column_width_setting>
-      <NameColumnWidth column_width="202"></NameColumnWidth>
-      <ValueColumnWidth column_width="140"></ValueColumnWidth>
+      <NameColumnWidth column_width="221"></NameColumnWidth>
+      <ValueColumnWidth column_width="312"></ValueColumnWidth>
    </column_width_setting>
-   <WVObjectSize size="16" />
+   <WVObjectSize size="18" />
    <wvobject fp_name="/fp_adder_16_32_bits_tb/indicate" type="logic">
       <obj_property name="ElementShortName">indicate</obj_property>
       <obj_property name="ObjectShortName">indicate</obj_property>
@@ -37,36 +37,20 @@
       <obj_property name="ObjectShortName">read_en</obj_property>
    </wvobject>
    <wvobject fp_name="/fp_adder_16_32_bits_tb/input_A" type="array">
-      <obj_property name="ElementShortName">input_A[31:0]</obj_property>
-      <obj_property name="ObjectShortName">input_A[31:0]</obj_property>
+      <obj_property name="ElementShortName">input_A[5:0][31:0]</obj_property>
+      <obj_property name="ObjectShortName">input_A[5:0][31:0]</obj_property>
       <obj_property name="Radix">REALRADIX</obj_property>
       <obj_property name="radix_realType">FLOATINGPOINTRADIX</obj_property>
       <obj_property name="radix_fractionWidth">24</obj_property>
       <obj_property name="radix_otherWidth">8</obj_property>
    </wvobject>
    <wvobject fp_name="/fp_adder_16_32_bits_tb/input_B" type="array">
-      <obj_property name="ElementShortName">input_B[31:0]</obj_property>
-      <obj_property name="ObjectShortName">input_B[31:0]</obj_property>
+      <obj_property name="ElementShortName">input_B[5:0][31:0]</obj_property>
+      <obj_property name="ObjectShortName">input_B[5:0][31:0]</obj_property>
       <obj_property name="Radix">REALRADIX</obj_property>
       <obj_property name="radix_realType">FLOATINGPOINTRADIX</obj_property>
       <obj_property name="radix_fractionWidth">24</obj_property>
       <obj_property name="radix_otherWidth">8</obj_property>
-   </wvobject>
-   <wvobject fp_name="/fp_adder_16_32_bits_tb/C" type="array">
-      <obj_property name="ElementShortName">C[31:0]</obj_property>
-      <obj_property name="ObjectShortName">C[31:0]</obj_property>
-      <obj_property name="Radix">REALRADIX</obj_property>
-      <obj_property name="radix_realType">FLOATINGPOINTRADIX</obj_property>
-      <obj_property name="radix_fractionWidth">24</obj_property>
-      <obj_property name="radix_otherWidth">8</obj_property>
-   </wvobject>
-   <wvobject fp_name="/fp_adder_16_32_bits_tb/fp_adder_16_32bits_inst/indicate" type="logic">
-      <obj_property name="ElementShortName">indicate</obj_property>
-      <obj_property name="ObjectShortName">indicate</obj_property>
-   </wvobject>
-   <wvobject fp_name="/fp_adder_16_32_bits_tb/fp_adder_16_32bits_inst/half_to_float_b" type="array">
-      <obj_property name="ElementShortName">half_to_float_b[31:0]</obj_property>
-      <obj_property name="ObjectShortName">half_to_float_b[31:0]</obj_property>
    </wvobject>
    <wvobject fp_name="/fp_adder_16_32_bits_tb/fp_adder_16_32bits_inst/A" type="array">
       <obj_property name="ElementShortName">A[31:0]</obj_property>
@@ -84,10 +68,53 @@
       <obj_property name="radix_fractionWidth">24</obj_property>
       <obj_property name="radix_otherWidth">8</obj_property>
    </wvobject>
+   <wvobject fp_name="/fp_adder_16_32_bits_tb/fp_adder_16_32bits_inst/A" type="array">
+      <obj_property name="ElementShortName">A[31:0]</obj_property>
+      <obj_property name="ObjectShortName">A[31:0]</obj_property>
+      <obj_property name="Radix">HEXRADIX</obj_property>
+      <obj_property name="radix_realType">FLOATINGPOINTRADIX</obj_property>
+      <obj_property name="radix_fractionWidth">24</obj_property>
+      <obj_property name="radix_otherWidth">8</obj_property>
+   </wvobject>
+   <wvobject fp_name="/fp_adder_16_32_bits_tb/fp_adder_16_32bits_inst/B" type="array">
+      <obj_property name="ElementShortName">B[31:0]</obj_property>
+      <obj_property name="ObjectShortName">B[31:0]</obj_property>
+      <obj_property name="Radix">HEXRADIX</obj_property>
+      <obj_property name="radix_realType">FLOATINGPOINTRADIX</obj_property>
+      <obj_property name="radix_fractionWidth">24</obj_property>
+      <obj_property name="radix_otherWidth">8</obj_property>
+   </wvobject>
+   <wvobject fp_name="/fp_adder_16_32_bits_tb/input_A[5]" type="array">
+      <obj_property name="ElementShortName">[5][31:0]</obj_property>
+      <obj_property name="ObjectShortName">[5][31:0]</obj_property>
+      <obj_property name="Radix">REALRADIX</obj_property>
+      <obj_property name="radix_realType">FLOATINGPOINTRADIX</obj_property>
+      <obj_property name="radix_fractionWidth">24</obj_property>
+      <obj_property name="radix_otherWidth">8</obj_property>
+   </wvobject>
+   <wvobject fp_name="/fp_adder_16_32_bits_tb/input_B[5]" type="array">
+      <obj_property name="ElementShortName">[5][31:0]</obj_property>
+      <obj_property name="ObjectShortName">[5][31:0]</obj_property>
+      <obj_property name="Radix">REALRADIX</obj_property>
+      <obj_property name="radix_realType">FLOATINGPOINTRADIX</obj_property>
+      <obj_property name="radix_fractionWidth">24</obj_property>
+      <obj_property name="radix_otherWidth">8</obj_property>
+   </wvobject>
+   <wvobject fp_name="/fp_adder_16_32_bits_tb/C" type="array">
+      <obj_property name="ElementShortName">C[31:0]</obj_property>
+      <obj_property name="ObjectShortName">C[31:0]</obj_property>
+      <obj_property name="Radix">REALRADIX</obj_property>
+      <obj_property name="radix_realType">FLOATINGPOINTRADIX</obj_property>
+      <obj_property name="radix_fractionWidth">24</obj_property>
+      <obj_property name="radix_otherWidth">8</obj_property>
+   </wvobject>
    <wvobject fp_name="group140" type="group">
       <obj_property name="label">stage1</obj_property>
       <obj_property name="DisplayName">label</obj_property>
-      <obj_property name="isExpanded"></obj_property>
+      <wvobject fp_name="/fp_adder_16_32_bits_tb/fp_adder_16_32bits_inst/en_stage1" type="logic">
+         <obj_property name="ElementShortName">en_stage1</obj_property>
+         <obj_property name="ObjectShortName">en_stage1</obj_property>
+      </wvobject>
       <wvobject fp_name="/fp_adder_16_32_bits_tb/fp_adder_16_32bits_inst/signA_stage1" type="logic">
          <obj_property name="ElementShortName">signA_stage1</obj_property>
          <obj_property name="ObjectShortName">signA_stage1</obj_property>
@@ -99,22 +126,22 @@
       <wvobject fp_name="/fp_adder_16_32_bits_tb/fp_adder_16_32bits_inst/expA_stage1" type="array">
          <obj_property name="ElementShortName">expA_stage1[7:0]</obj_property>
          <obj_property name="ObjectShortName">expA_stage1[7:0]</obj_property>
+         <obj_property name="Radix">HEXRADIX</obj_property>
       </wvobject>
       <wvobject fp_name="/fp_adder_16_32_bits_tb/fp_adder_16_32bits_inst/expB_stage1" type="array">
          <obj_property name="ElementShortName">expB_stage1[7:0]</obj_property>
          <obj_property name="ObjectShortName">expB_stage1[7:0]</obj_property>
+         <obj_property name="Radix">HEXRADIX</obj_property>
       </wvobject>
       <wvobject fp_name="/fp_adder_16_32_bits_tb/fp_adder_16_32bits_inst/fracA_stage1" type="array">
          <obj_property name="ElementShortName">fracA_stage1[22:0]</obj_property>
          <obj_property name="ObjectShortName">fracA_stage1[22:0]</obj_property>
+         <obj_property name="Radix">HEXRADIX</obj_property>
       </wvobject>
       <wvobject fp_name="/fp_adder_16_32_bits_tb/fp_adder_16_32bits_inst/fracB_stage1" type="array">
          <obj_property name="ElementShortName">fracB_stage1[22:0]</obj_property>
          <obj_property name="ObjectShortName">fracB_stage1[22:0]</obj_property>
-      </wvobject>
-      <wvobject fp_name="/fp_adder_16_32_bits_tb/fp_adder_16_32bits_inst/en_stage1" type="logic">
-         <obj_property name="ElementShortName">en_stage1</obj_property>
-         <obj_property name="ObjectShortName">en_stage1</obj_property>
+         <obj_property name="Radix">HEXRADIX</obj_property>
       </wvobject>
       <wvobject fp_name="/fp_adder_16_32_bits_tb/fp_adder_16_32bits_inst/is_inf_A_stage1" type="logic">
          <obj_property name="ElementShortName">is_inf_A_stage1</obj_property>
@@ -140,11 +167,46 @@
          <obj_property name="ElementShortName">is_zero_B_stage1</obj_property>
          <obj_property name="ObjectShortName">is_zero_B_stage1</obj_property>
       </wvobject>
+      <wvobject fp_name="/fp_adder_16_32_bits_tb/fp_adder_16_32bits_inst/is_NaN_A_stage1" type="logic">
+         <obj_property name="ElementShortName">is_NaN_A_stage1</obj_property>
+         <obj_property name="ObjectShortName">is_NaN_A_stage1</obj_property>
+      </wvobject>
+      <wvobject fp_name="/fp_adder_16_32_bits_tb/fp_adder_16_32bits_inst/is_NaN_B_stage1" type="logic">
+         <obj_property name="ElementShortName">is_NaN_B_stage1</obj_property>
+         <obj_property name="ObjectShortName">is_NaN_B_stage1</obj_property>
+      </wvobject>
+      <wvobject fp_name="/fp_adder_16_32_bits_tb/fp_adder_16_32bits_inst/is_NaN_stage1" type="logic">
+         <obj_property name="ElementShortName">is_NaN_stage1</obj_property>
+         <obj_property name="ObjectShortName">is_NaN_stage1</obj_property>
+      </wvobject>
+      <wvobject fp_name="/fp_adder_16_32_bits_tb/fp_adder_16_32bits_inst/is_exp_zero_A_stage1" type="logic">
+         <obj_property name="ElementShortName">is_exp_zero_A_stage1</obj_property>
+         <obj_property name="ObjectShortName">is_exp_zero_A_stage1</obj_property>
+      </wvobject>
+      <wvobject fp_name="/fp_adder_16_32_bits_tb/fp_adder_16_32bits_inst/is_exp_one_A_stage1" type="logic">
+         <obj_property name="ElementShortName">is_exp_one_A_stage1</obj_property>
+         <obj_property name="ObjectShortName">is_exp_one_A_stage1</obj_property>
+      </wvobject>
+      <wvobject fp_name="/fp_adder_16_32_bits_tb/fp_adder_16_32bits_inst/is_frac_zero_A_stage1" type="logic">
+         <obj_property name="ElementShortName">is_frac_zero_A_stage1</obj_property>
+         <obj_property name="ObjectShortName">is_frac_zero_A_stage1</obj_property>
+      </wvobject>
+      <wvobject fp_name="/fp_adder_16_32_bits_tb/fp_adder_16_32bits_inst/is_exp_zero_B_stage1" type="logic">
+         <obj_property name="ElementShortName">is_exp_zero_B_stage1</obj_property>
+         <obj_property name="ObjectShortName">is_exp_zero_B_stage1</obj_property>
+      </wvobject>
+      <wvobject fp_name="/fp_adder_16_32_bits_tb/fp_adder_16_32bits_inst/is_exp_one_B_stage1" type="logic">
+         <obj_property name="ElementShortName">is_exp_one_B_stage1</obj_property>
+         <obj_property name="ObjectShortName">is_exp_one_B_stage1</obj_property>
+      </wvobject>
+      <wvobject fp_name="/fp_adder_16_32_bits_tb/fp_adder_16_32bits_inst/is_frac_zero_B_stage1" type="logic">
+         <obj_property name="ElementShortName">is_frac_zero_B_stage1</obj_property>
+         <obj_property name="ObjectShortName">is_frac_zero_B_stage1</obj_property>
+      </wvobject>
    </wvobject>
    <wvobject fp_name="group141" type="group">
       <obj_property name="label">stage2</obj_property>
       <obj_property name="DisplayName">label</obj_property>
-      <obj_property name="isExpanded"></obj_property>
       <wvobject fp_name="/fp_adder_16_32_bits_tb/fp_adder_16_32bits_inst/mantA_stage2" type="array">
          <obj_property name="ElementShortName">mantA_stage2[23:0]</obj_property>
          <obj_property name="ObjectShortName">mantA_stage2[23:0]</obj_property>
@@ -197,11 +259,14 @@
          <obj_property name="radix_fractionWidth">24</obj_property>
          <obj_property name="radix_otherWidth">8</obj_property>
       </wvobject>
+      <wvobject fp_name="/fp_adder_16_32_bits_tb/fp_adder_16_32bits_inst/is_NaN_stage2" type="logic">
+         <obj_property name="ElementShortName">is_NaN_stage2</obj_property>
+         <obj_property name="ObjectShortName">is_NaN_stage2</obj_property>
+      </wvobject>
    </wvobject>
    <wvobject fp_name="group142" type="group">
       <obj_property name="label">stage3</obj_property>
       <obj_property name="DisplayName">label</obj_property>
-      <obj_property name="isExpanded"></obj_property>
       <wvobject fp_name="/fp_adder_16_32_bits_tb/fp_adder_16_32bits_inst/result_sign_stage3" type="logic">
          <obj_property name="ElementShortName">result_sign_stage3</obj_property>
          <obj_property name="ObjectShortName">result_sign_stage3</obj_property>
@@ -246,11 +311,14 @@
          <obj_property name="radix_fractionWidth">24</obj_property>
          <obj_property name="radix_otherWidth">8</obj_property>
       </wvobject>
+      <wvobject fp_name="/fp_adder_16_32_bits_tb/fp_adder_16_32bits_inst/is_NaN_stage3" type="logic">
+         <obj_property name="ElementShortName">is_NaN_stage3</obj_property>
+         <obj_property name="ObjectShortName">is_NaN_stage3</obj_property>
+      </wvobject>
    </wvobject>
    <wvobject fp_name="group143" type="group">
       <obj_property name="label">stage4</obj_property>
       <obj_property name="DisplayName">label</obj_property>
-      <obj_property name="isExpanded"></obj_property>
       <wvobject fp_name="/fp_adder_16_32_bits_tb/fp_adder_16_32bits_inst/exp_stage4" type="array">
          <obj_property name="ElementShortName">exp_stage4[7:0]</obj_property>
          <obj_property name="ObjectShortName">exp_stage4[7:0]</obj_property>
@@ -299,9 +367,21 @@
          <obj_property name="radix_fractionWidth">24</obj_property>
          <obj_property name="radix_otherWidth">8</obj_property>
       </wvobject>
+      <wvobject fp_name="/fp_adder_16_32_bits_tb/fp_adder_16_32bits_inst/is_NaN_stage4" type="logic">
+         <obj_property name="ElementShortName">is_NaN_stage4</obj_property>
+         <obj_property name="ObjectShortName">is_NaN_stage4</obj_property>
+      </wvobject>
+      <wvobject fp_name="/fp_adder_16_32_bits_tb/fp_adder_16_32bits_inst/is_nan_stage4" type="logic">
+         <obj_property name="ElementShortName">is_nan_stage4</obj_property>
+         <obj_property name="ObjectShortName">is_nan_stage4</obj_property>
+      </wvobject>
    </wvobject>
-   <wvobject fp_name="/fp_adder_16_32_bits_tb/fp_adder_16_32bits_inst/en_stage5" type="logic">
-      <obj_property name="ElementShortName">en_stage5</obj_property>
-      <obj_property name="ObjectShortName">en_stage5</obj_property>
+   <wvobject fp_name="group107" type="group">
+      <obj_property name="label">stage5</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <wvobject fp_name="/fp_adder_16_32_bits_tb/fp_adder_16_32bits_inst/en_stage5" type="logic">
+         <obj_property name="ElementShortName">en_stage5</obj_property>
+         <obj_property name="ObjectShortName">en_stage5</obj_property>
+      </wvobject>
    </wvobject>
 </wave_config>
