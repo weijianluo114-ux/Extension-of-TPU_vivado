@@ -11,13 +11,13 @@
       </db_ref>
    </db_ref_list>
    <zoom_setting>
-      <ZoomStartTime time="0fs"></ZoomStartTime>
-      <ZoomEndTime time="635000001fs"></ZoomEndTime>
-      <Cursor1Time time="484626000fs"></Cursor1Time>
+      <ZoomStartTime time="331375000fs"></ZoomStartTime>
+      <ZoomEndTime time="413125001fs"></ZoomEndTime>
+      <Cursor1Time time="345000000fs"></Cursor1Time>
    </zoom_setting>
    <column_width_setting>
       <NameColumnWidth column_width="221"></NameColumnWidth>
-      <ValueColumnWidth column_width="312"></ValueColumnWidth>
+      <ValueColumnWidth column_width="307"></ValueColumnWidth>
    </column_width_setting>
    <WVObjectSize size="18" />
    <wvobject fp_name="/fp_adder_16_32_bits_tb/indicate" type="logic">
@@ -343,10 +343,6 @@
          <obj_property name="ElementShortName">is_inf_stage4</obj_property>
          <obj_property name="ObjectShortName">is_inf_stage4</obj_property>
       </wvobject>
-      <wvobject fp_name="/fp_adder_16_32_bits_tb/fp_adder_16_32bits_inst/is_nan_stage4" type="logic">
-         <obj_property name="ElementShortName">is_nan_stage4</obj_property>
-         <obj_property name="ObjectShortName">is_nan_stage4</obj_property>
-      </wvobject>
       <wvobject fp_name="/fp_adder_16_32_bits_tb/fp_adder_16_32bits_inst/is_abnorm_A_stage4" type="logic">
          <obj_property name="ElementShortName">is_abnorm_A_stage4</obj_property>
          <obj_property name="ObjectShortName">is_abnorm_A_stage4</obj_property>
@@ -370,10 +366,6 @@
       <wvobject fp_name="/fp_adder_16_32_bits_tb/fp_adder_16_32bits_inst/is_NaN_stage4" type="logic">
          <obj_property name="ElementShortName">is_NaN_stage4</obj_property>
          <obj_property name="ObjectShortName">is_NaN_stage4</obj_property>
-      </wvobject>
-      <wvobject fp_name="/fp_adder_16_32_bits_tb/fp_adder_16_32bits_inst/is_nan_stage4" type="logic">
-         <obj_property name="ElementShortName">is_nan_stage4</obj_property>
-         <obj_property name="ObjectShortName">is_nan_stage4</obj_property>
       </wvobject>
    </wvobject>
    <wvobject fp_name="group107" type="group">
