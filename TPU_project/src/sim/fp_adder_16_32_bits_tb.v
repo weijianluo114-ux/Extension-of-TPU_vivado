@@ -38,9 +38,9 @@ module fp_adder_16_32_bits_tb;
     reg                 clk;
     reg                 rst_n;
     reg                 read_en;
-    reg  [        31:0] input_A           [5:0];
-    reg  [        31:0] input_B           [5:0];
-    reg  [         5:0] input_b_precision;
+    reg  [        31:0] input_A         [5:0];
+    reg  [        31:0] input_B         [5:0];
+    reg                 input_precision;
     reg  [         2:0] count;
 
     /******************************* 时序逻辑 ***********************************/
@@ -62,7 +62,7 @@ module fp_adder_16_32_bits_tb;
         rst_n = 0;
         input_A[0] = 32'b0;
         input_B[0] = 32'b0;
-        input_b_precision = 0;
+        input_precision = 1;
 
         #100;
         read_en = 1;
@@ -304,7 +304,7 @@ module fp_adder_16_32_bits_tb;
         .read_en          (read_en),
         .input_A          (input_A[0]),
         .input_B          (input_B[0]),
-        .input_b_precision(input_b_precision),
+        .is_fp32_precision(input_precision),
         .C                (C),
         .indicate         (indicate)
     );

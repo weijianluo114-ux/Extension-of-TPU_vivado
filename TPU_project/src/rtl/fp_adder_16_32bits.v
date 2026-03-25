@@ -28,9 +28,9 @@ module fp_adder_16_32bits (
     input  wire        clk,                // 时钟信号
     input  wire        rst_n,              // 异步复位，低电平复位
     input  wire        read_en,            // 输入使能，高电平有效
-    input  wire [31:0] input_A,            // 输入A
-    input  wire [31:0] input_B,            // 输入B    特殊化处理(可以为16位)
-    input  wire        input_b_precision,  //输入B的精度(可为0为16，1为32)
+    input  wire [31:0] input_A,            // 输入A       若只有16位，则只有低16位会使用
+    input  wire [31:0] input_B,            // 输入B       
+    input  wire        is_fp32_precision,  //输入B的精度(可为0为16，1为32)
     output reg  [31:0] C,                  // 输出结果，默认是32位的输出
     output reg         indicate            // 计算完成指示信号s（高电平有效）
 );
@@ -81,6 +81,7 @@ module fp_adder_16_32bits (
     reg  [           FP32_EXP_WIDTH-1:0] expB_stage1;  // B的指数
     reg  [          FP32_FRAC_WIDTH-1:0] fracA_stage1;  // A/B的尾数
     reg  [          FP32_FRAC_WIDTH-1:0] fracB_stage1;  // A/B的尾数
+    reg                                  is_fp32_precision_stage1;
     //检测
     reg                                  is_exp_one_A_stage1;  // 判断指数是否全1
     reg                                  is_exp_one_B_stage1;  // 判断指数是否全1
@@ -106,6 +107,7 @@ module fp_adder_16_32bits (
     reg                                  is_zero_stage2;  // 判断是否为0
     reg  [               FP32_WIDTH-1:0] zero_result_stage2;  //传递有一个数是0时的结果
     reg                                  is_NaN_stage2;  // 判断是否为0
+    reg                                  is_fp32_precision_stage2;
 
     // Stage 3：加减运算
     reg                                  en_stage3;
@@ -121,6 +123,7 @@ module fp_adder_16_32bits (
     reg                                  is_zero_stage3;  // 判断是否为0
     reg  [               FP32_WIDTH-1:0] zero_result_stage3;  //传递有一个数是0时的结果
     reg                                  is_NaN_stage3;  // 判断是否为0
+    reg                                  is_fp32_precision_stage3;
 
     // Stage 4：规格化
     reg                                  en_stage4;
@@ -134,12 +137,14 @@ module fp_adder_16_32bits (
     reg                                  is_zero_stage4;  // 判断是否为0
     reg  [               FP32_WIDTH-1:0] zero_result_stage4;  //传递有一个数是0时的结果
     reg                                  is_NaN_stage4;  // 判断是否为0
+    reg                                  is_fp32_precision_stage4;
 
     // Stage 5：输出
 
     /******************************* 组合逻辑 ***********************************/
-    assign A = input_A;
-    assign B = input_B;
+    //通过判断是否是32位的精度来决定是否要在高位补0
+    assign A = is_fp32_precision ? input_A : {{FP16_WIDTH{1'b0}}, input_A[FP16_WIDTH-1:0]};
+    assign B = is_fp32_precision ? input_B : {{FP16_WIDTH{1'b0}}, input_B[FP16_WIDTH-1:0]};
 
     //第一级流水线
     //对0的判断
@@ -161,47 +166,69 @@ module fp_adder_16_32bits (
     //第一级流水线
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin  // 复位
-            en_stage1    <= 1'b0;
+            en_stage1                <= 1'b0;
             //分段存储
-            signA_stage1 <= 0;
-            signB_stage1 <= 0;
-            expA_stage1  <= 0;
-            expB_stage1  <= 0;
-            fracA_stage1 <= 0;
-            fracB_stage1 <= 0;
+            is_fp32_precision_stage1 <= 1'b1;  //默认是32位的精度
+            signA_stage1             <= 0;
+            signB_stage1             <= 0;
+            expA_stage1              <= 0;
+            expB_stage1              <= 0;
+            fracA_stage1             <= 0;
+            fracB_stage1             <= 0;
             //分段检测
-            is_exp_one_A_stage1 <= 0;
-            is_exp_one_B_stage1 <= 0;
-            is_exp_zero_A_stage1 <= 1'b0;
-            is_exp_zero_B_stage1 <= 1'b0;
-            is_frac_zero_A_stage1 <= 1'b0;
-            is_frac_zero_B_stage1 <= 1'b0;
+            is_exp_one_A_stage1      <= 0;
+            is_exp_one_B_stage1      <= 0;
+            is_exp_zero_A_stage1     <= 1'b0;
+            is_exp_zero_B_stage1     <= 1'b0;
+            is_frac_zero_A_stage1    <= 1'b0;
+            is_frac_zero_B_stage1    <= 1'b0;
         end else begin
             if (read_en) begin  // read_en有效，初始化
                 // stage1有效跟踪
                 en_stage1 <= 1'b1;
 
-                //存储
-                // 最高位为符号位
-                signA_stage1 <= A[FP32_WIDTH-1];
-                signB_stage1 <= B[FP32_WIDTH-1];
-                // 符号后一位开始到尾数部分之前为阶码位
-                expA_stage1 <= A[FP32_WIDTH-2:FP32_FRAC_WIDTH];
-                expB_stage1 <= B[FP32_WIDTH-2:FP32_FRAC_WIDTH];
-                // 最低FRAC_WIDTH位为尾数位
-                fracA_stage1 <= A[FP32_FRAC_WIDTH-1:0];
-                fracB_stage1 <= B[FP32_FRAC_WIDTH-1:0];
+                if (is_fp32_precision) begin  //32位
+                    is_fp32_precision_stage1 <= 1'b1;
+                    //存储
+                    // 最高位为符号位
+                    signA_stage1 <= A[FP32_WIDTH-1];
+                    signB_stage1 <= B[FP32_WIDTH-1];
+                    // 符号后一位开始到尾数部分之前为阶码位
+                    expA_stage1 <= A[FP32_WIDTH-2:FP32_FRAC_WIDTH];
+                    expB_stage1 <= B[FP32_WIDTH-2:FP32_FRAC_WIDTH];
+                    // 最低FRAC_WIDTH位为尾数位
+                    fracA_stage1 <= A[FP32_FRAC_WIDTH-1:0];
+                    fracB_stage1 <= B[FP32_FRAC_WIDTH-1:0];
+                end else begin  //16位
+                    is_fp32_precision_stage1 <= 1'b0;
+                    signA_stage1 <= A[FP16_WIDTH-1];
+                    signB_stage1 <= B[FP16_WIDTH-1];
+                    expA_stage1 <= A[FP16_WIDTH-2:FP16_FRAC_WIDTH];
+                    expB_stage1 <= B[FP16_WIDTH-2:FP16_FRAC_WIDTH];
+                    fracA_stage1 <= A[FP16_FRAC_WIDTH-1:0];
+                    fracB_stage1 <= B[FP16_FRAC_WIDTH-1:0];
+                end
 
-                //检测
-                // 检测A和B的指数是否全1
-                is_exp_one_A_stage1 <= A[FP32_WIDTH-2:FP32_FRAC_WIDTH] == 8'hff ? 1'b1 : 1'b0;
-                is_exp_one_B_stage1 <= B[FP32_WIDTH-2:FP32_FRAC_WIDTH] == 8'hff ? 1'b1 : 1'b0;
-                // 检测A和B的指数是全0
-                is_exp_zero_A_stage1 <= A[FP32_WIDTH-2:FP32_FRAC_WIDTH] == 8'b0 ? 1'b1 : 1'b0;
-                is_exp_zero_B_stage1 <= B[FP32_WIDTH-2:FP32_FRAC_WIDTH] == 8'b0 ? 1'b1 : 1'b0;
-                //检测A和B尾数是否全0
-                is_frac_zero_A_stage1 <= A[FP32_FRAC_WIDTH-1:0] == 23'b0 ? 1'b1 : 1'b0;
-                is_frac_zero_B_stage1 <= B[FP32_FRAC_WIDTH-1:0] == 23'b0 ? 1'b1 : 1'b0;
+                if (is_fp32_precision) begin  //32位
+                    //检测
+                    // 检测A和B的指数是否全1
+                    is_exp_one_A_stage1   <= A[FP32_WIDTH-2:FP32_FRAC_WIDTH] == {FP32_EXP_WIDTH{1'b1}} ? 1'b1 : 1'b0;
+                    is_exp_one_B_stage1   <= B[FP32_WIDTH-2:FP32_FRAC_WIDTH] == {FP32_EXP_WIDTH{1'b1}} ? 1'b1 : 1'b0;
+                    // 检测A和B的指数是全0
+                    is_exp_zero_A_stage1  <= A[FP32_WIDTH-2:FP32_FRAC_WIDTH] == {FP32_EXP_WIDTH{1'b0}} ? 1'b1 : 1'b0;
+                    is_exp_zero_B_stage1  <= B[FP32_WIDTH-2:FP32_FRAC_WIDTH] == {FP32_EXP_WIDTH{1'b0}} ? 1'b1 : 1'b0;
+                    //检测A和B尾数是否全0
+                    is_frac_zero_A_stage1 <= A[FP32_FRAC_WIDTH-1:0] == {FP32_FRAC_WIDTH{1'b0}} ? 1'b1 : 1'b0;
+                    is_frac_zero_B_stage1 <= B[FP32_FRAC_WIDTH-1:0] == {FP32_FRAC_WIDTH{1'b0}} ? 1'b1 : 1'b0;
+                end else begin  //16位
+                    is_exp_one_A_stage1   <= A[FP16_WIDTH-2:FP16_FRAC_WIDTH] == {FP16_EXP_WIDTH{1'b1}} ? 1'b1 : 1'b0;
+                    is_exp_one_B_stage1   <= B[FP16_WIDTH-2:FP16_FRAC_WIDTH] == {FP16_EXP_WIDTH{1'b1}} ? 1'b1 : 1'b0;
+                    is_exp_zero_A_stage1  <= A[FP32_WIDTH-2:FP32_FRAC_WIDTH] == {FP16_EXP_WIDTH{1'b0}} ? 1'b1 : 1'b0;
+                    is_exp_zero_B_stage1  <= B[FP32_WIDTH-2:FP32_FRAC_WIDTH] == {FP16_EXP_WIDTH{1'b0}} ? 1'b1 : 1'b0;
+                    is_frac_zero_A_stage1 <= A[FP32_FRAC_WIDTH-1:0] == {FP16_FRAC_WIDTH{1'b0}} ? 1'b1 : 1'b0;
+                    is_frac_zero_B_stage1 <= B[FP32_FRAC_WIDTH-1:0] == {FP16_FRAC_WIDTH{1'b0}} ? 1'b1 : 1'b0;
+                end
+
             end else begin
                 en_stage1 <= 1'b0;
             end
@@ -213,6 +240,7 @@ module fp_adder_16_32bits (
         if (!rst_n) begin  // 复位
             en_stage2    <= 1'b0;
             //存储
+            is_fp32_precision_stage2 <= 1'b1;
             signA_stage2 <= 0;
             signB_stage2 <= 0;
             exp_stage2   <= 0;
@@ -231,6 +259,7 @@ module fp_adder_16_32bits (
             en_stage2 <= 1'b1;
 
             //存储传递
+            is_fp32_precision_stage2 <= is_fp32_precision_stage1;
             signA_stage2 <= signA_stage1;
             signB_stage2 <= signB_stage1;
             is_inf_A_stage2 <= is_inf_A_stage1;
@@ -244,9 +273,17 @@ module fp_adder_16_32bits (
             if (is_NaN_stage1) begin  //为NaN则传递
                 //若是则不进行其它操作
             end else if (is_zero_A_stage1) begin  //为0则传递
-                zero_result_stage2 <= {signB_stage1, expB_stage1, fracB_stage1};
+                if (is_fp32_precision_stage1) begin  //32位
+                    zero_result_stage2 <= {signB_stage1, expB_stage1, fracB_stage1};
+                end else begin  //16位
+                    zero_result_stage2 <= {signB_stage1, expB_stage1[FP16_EXP_WIDTH-1:0], fracB_stage1[FP16_FRAC_WIDTH-1:0]};
+                end
             end else if (is_zero_B_stage1) begin  //B为0则传递A
-                zero_result_stage2 <= {signA_stage1, expA_stage1, fracA_stage1};
+                if (is_fp32_precision_stage1) begin  //32位
+                    zero_result_stage2 <= {signA_stage1, expA_stage1, fracA_stage1};
+                end else begin  //16位
+                    zero_result_stage2 <= {signA_stage1, expA_stage1[FP16_EXP_WIDTH-1:0], fracA_stage1[FP16_FRAC_WIDTH-1:0]};
+                end
             end else begin
                 //给出默认值，防止锁存
                 zero_result_stage2 <= 32'b0;
