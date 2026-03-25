@@ -36,7 +36,8 @@ module fp_adder_16_32bits (
 );
 
     /******************************* 参数 ***********************************/
-    localparam QNAN = {1'b0, {31{1'b1}}};  //作为一个默认的QNaN输出
+    localparam FP32_QNAN = {1'b0, {31{1'b1}}};  //作为一个默认的32位QNaN输出
+    localparam FP16_QNAN = {{17{1'b0}}, {15{1'b1}}};  //作为一个默认的16位QNaN输出
 
     parameter FP32_WIDTH = 32;
     parameter FP32_EXP_WIDTH = 8;  // FP32:8位阶码, FP16:5位阶码
@@ -478,30 +479,49 @@ module fp_adder_16_32bits (
                 end else if (is_abnorm_A_stage3 && is_abnorm_B_stage3) begin  //非规格数处理
                     is_inf_stage4 <= 0;
                     norm_mantissa <= sum_stage3;
-                    if (sum_stage3[FP32_MANT_WIDTH-1] == 1'b1) begin  //非规格数相加，因为超过了非规格数能表示的范围而进位，故阶码加1，即普通溢出
-                        exp_stage4 <= 1;
-                    end else begin  //既没有溢出，也不等于0，即没有进位
-                        exp_stage4 <= 0;
+                    if (is_fp32_precision_stage3) begin  //32位处理
+                        if (sum_stage3[FP32_MANT_WIDTH-1] == 1'b1) begin  //非规格数相加，因为超过了非规格数能表示的范围而进位，故阶码加1，即普通溢出
+                            exp_stage4 <= 1;
+                        end else begin  //既没有溢出，也不等于0，即没有进位
+                            exp_stage4 <= 0;
+                        end
+                    end else begin  //16位
+                        if (sum_stage3[FP16_MANT_WIDTH-1] == 1'b1) begin  //非规格数相加，因为超过了非规格数能表示的范围而进位，故阶码加1，即普通溢出
+                            exp_stage4 <= 1;
+                        end else begin  //既没有溢出，也不等于0，即没有进位
+                            exp_stage4 <= 0;
+                        end
                     end
+
                 end else if (sum_stage3[FP32_MANT_WIDTH] == 1'b1) begin  // 最高位溢出（进位产生1）,右移尾数
                     // 溢出成为无穷大
-                    if (exp_stage3 == 8'd254) begin
-                        is_inf_stage4 <= 1'b1;
+                    if (is_fp32_precision_stage3) begin
+                        if (exp_stage3 == 8'b1111_1110) begin
+                            is_inf_stage4 <= 1'b1;
+                        end else begin
+                            is_inf_stage4 <= 0;
+                            norm_mantissa <= sum_stage3[FP32_MANT_WIDTH:1];
+                            exp_stage4    <= exp_stage3 + 1;    //指数+1
+                        end
                     end else begin
-                        is_inf_stage4 <= 0;
-                        norm_mantissa <= sum_stage3[FP32_MANT_WIDTH:1];
-                        exp_stage4    <= exp_stage3 + 1;    //指数+1
+                        if (exp_stage3 == 8'b0001_1110) begin
+                            is_inf_stage4 <= 1'b1;
+                        end else begin
+                            is_inf_stage4 <= 0;
+                            norm_mantissa <= sum_stage3[FP16_MANT_WIDTH:1];
+                            exp_stage4    <= exp_stage3 + 1;    //指数+1
+                        end
                     end
-                    // 尾数规格化：使用分组优先级编码计算前导0的数量
-                end else begin
-                    // 分组优先级编码器实现 - 计算前导零
-                    // 根据MANT_WIDTH确定适当的分组方式
 
-                    // FP32: FP32_MANT_WIDTH = 24，分为3组，每组8位
-                    // FP16: FP32_MANT_WIDTH = 11，分为2组，第一组5位，第二组6位
-                    // 注意：以下代码处理了两种可能的宽度
+                end else begin  // 尾数规格化：使用分组优先级编码计算前导0的数量
                     is_inf_stage4 <= 0;
-                    norm_mantissa <= sum_stage3[FP32_MANT_WIDTH:0] << (shift_amount);  // 指数大于移位数，则减去移位数，否则归零
+
+                    if (is_fp32_precision_stage3) begin  //32位
+                        norm_mantissa <= sum_stage3[FP32_MANT_WIDTH:0] << (shift_amount);  // 指数大于移位数，则减去移位数，否则归零
+                    end else begin  //16位
+                        norm_mantissa <= sum_stage3[FP16_MANT_WIDTH:0] << (shift_amount);  // 指数大于移位数，则减去移位数，否则归零
+                    end
+
                     if (exp_stage3 > shift_amount) begin  //够移则仍然是规格数
                         exp_stage4 <= exp_stage3 - shift_amount;
                     end else begin  //不够移位则是非规格数
@@ -523,22 +543,41 @@ module fp_adder_16_32bits (
         end else if (en_stage4) begin
             indicate <= 1'b1;  //输出有效跟踪
             // 最终结果：符号位、规格化后的阶码、规格化尾数的低FRAC_WIDTH位（去掉隐含1）
-            if (is_NaN_stage4) begin
-                C <= QNAN;
-            end else if (is_zero_stage4) begin  //0则传递
-                C <= zero_result_stage4;
-            end else if (is_inf_stage4) begin
-                C <= {result_sign_stage4, {FP32_EXP_WIDTH{1'b1}}, {FP32_FRAC_WIDTH{1'b0}}};  //对应的无穷大
-            end else begin  //若都不是则进行其它操作
-                C <= {result_sign_stage4, exp_stage4, norm_mantissa[22:0]};
+            if (is_fp32_precision_stage4) begin
+                if (is_NaN_stage4) begin
+                    C <= FP32_QNAN;
+                end else if (is_zero_stage4) begin  //0则传递
+                    C <= zero_result_stage4;
+                end else if (is_inf_stage4) begin
+                    C <= {result_sign_stage4, {FP32_EXP_WIDTH{1'b1}}, {FP32_FRAC_WIDTH{1'b0}}};  //对应的无穷大
+                end else begin  //若都不是则进行其它操作
+                    C <= {result_sign_stage4, exp_stage4, norm_mantissa[FP32_FRAC_WIDTH-1:0]};
+                end
+            end else begin
+                if (is_NaN_stage4) begin
+                    C <= FP16_QNAN;
+                end else if (is_zero_stage4) begin  //0则传递
+                    C <= zero_result_stage4;
+                end else if (is_inf_stage4) begin
+                    C <= {{FP16_WIDTH{1'b0}}, result_sign_stage4, {FP16_EXP_WIDTH{1'b1}}, {FP16_FRAC_WIDTH{1'b0}}};  //对应的无穷大
+                end else begin  //若都不是则进行其它操作
+                    C <= {{FP16_WIDTH{1'b0}}, result_sign_stage4, exp_stage4[FP16_EXP_WIDTH-1:0], norm_mantissa[FP16_FRAC_WIDTH-1:0]};
+                end
             end
+
         end else begin
             indicate <= 1'b0;
         end
     end
 
+    // 分组优先级编码器实现 - 计算前导零
+    // 根据MANT_WIDTH确定适当的分组方式
+
+    // FP32: FP32_MANT_WIDTH = 24，分为3组，每组8位
+    // FP16: FP32_MANT_WIDTH = 11，分为2组，第一组5位，第二组6位
+    // 注意：以下代码处理了两种可能的宽度
     always @(*) begin
-        if (FP32_MANT_WIDTH > 16) begin
+        if (is_fp32_precision_stage3) begin
             // 处理FP32情况 - 24位尾数(包含隐含位)，分成3组
             if (sum_stage3[FP32_FRAC_WIDTH:FP32_FRAC_WIDTH-7] != 0) begin
                 // 最高8位有1
@@ -582,9 +621,9 @@ module fp_adder_16_32bits (
             end
         end else begin
             // 处理FP16情况 - 11位尾数(包含隐含位)，分成2组
-            if (sum_stage3[FP32_FRAC_WIDTH:FP32_FRAC_WIDTH-5] != 0) begin
+            if (sum_stage3[FP16_FRAC_WIDTH:FP16_FRAC_WIDTH-5] != 0) begin
                 // 最高6位有1
-                casez (sum_stage3[FP32_FRAC_WIDTH:FP32_FRAC_WIDTH-5])
+                casez (sum_stage3[FP16_FRAC_WIDTH:FP16_FRAC_WIDTH-5])
                     6'b1?????: shift_amount = 0;
                     6'b01????: shift_amount = 1;
                     6'b001???: shift_amount = 2;
@@ -595,7 +634,7 @@ module fp_adder_16_32bits (
                 endcase
             end else begin
                 // 最低5位有1
-                casez (sum_stage3[FP32_FRAC_WIDTH-6:0])
+                casez (sum_stage3[FP16_FRAC_WIDTH-6:0])
                     5'b1????: shift_amount = 6'd6;
                     5'b01???: shift_amount = 6'd7;
                     5'b001??: shift_amount = 6'd8;
