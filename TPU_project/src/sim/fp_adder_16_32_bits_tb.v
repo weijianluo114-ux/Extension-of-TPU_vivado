@@ -36,7 +36,10 @@ module fp_adder_16_32_bits_tb;
     wire [        31:0] input_A;
     wire [        31:0] input_B;
     wire [        15:0] FP16_C;
+    wire [        31:0] FP32_C;
 
+    wire [        31:0] FP16_OUT_A;
+    wire [        31:0] FP16_OUT_B;
     /******************************* reg信号 ***********************************/
     reg                 clk;
     reg                 rst_n;
@@ -45,6 +48,7 @@ module fp_adder_16_32_bits_tb;
     reg  [        31:0] FP32_B            [5:0];
     reg  [        15:0] FP16_A            [5:0];
     reg  [        15:0] FP16_B            [5:0];
+
 
     reg                 is_fp32_precision;
     reg  [         2:0] count;
@@ -519,5 +523,18 @@ module fp_adder_16_32_bits_tb;
         .indicate         (indicate)
     );
 
+    fp16_to_fp32 fp16_to_fp32_inst1 (
+        .half_in  (FP16_C),
+        .float_out(FP32_C)
+    );
 
+    fp16_to_fp32 fp16_to_fp32_inst2 (
+        .half_in  (FP16_A[5]),
+        .float_out(FP16_OUT_A)
+    );
+
+    fp16_to_fp32 fp16_to_fp32_inst3 (
+        .half_in  (FP16_B[5]),
+        .float_out(FP16_OUT_B)
+    );
 endmodule

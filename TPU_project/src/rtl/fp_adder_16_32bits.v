@@ -48,7 +48,7 @@ module fp_adder_16_32bits (
     parameter FP16_WIDTH = 16;
     parameter FP16_EXP_WIDTH = 5;  // FP32:8位阶码, FP16:5位阶码
     parameter FP16_FRAC_WIDTH = 10;  // FP32:23位尾数, FP16:10位尾数
-    parameter FP16_MANT_WIDTH = FP32_FRAC_WIDTH + 1;  // 包含隐含1的尾数宽度
+    parameter FP16_MANT_WIDTH = FP16_FRAC_WIDTH + 1;  // 包含隐含1的尾数宽度
     parameter FP16_BIAS = 15;  // FP32:偏移量127, FP16:偏移量15
 
     /******************************* 网表信号 ***********************************/
@@ -224,10 +224,10 @@ module fp_adder_16_32bits (
                 end else begin  //16位
                     is_exp_one_A_stage1   <= A[FP16_WIDTH-2:FP16_FRAC_WIDTH] == {FP16_EXP_WIDTH{1'b1}} ? 1'b1 : 1'b0;
                     is_exp_one_B_stage1   <= B[FP16_WIDTH-2:FP16_FRAC_WIDTH] == {FP16_EXP_WIDTH{1'b1}} ? 1'b1 : 1'b0;
-                    is_exp_zero_A_stage1  <= A[FP32_WIDTH-2:FP32_FRAC_WIDTH] == {FP16_EXP_WIDTH{1'b0}} ? 1'b1 : 1'b0;
-                    is_exp_zero_B_stage1  <= B[FP32_WIDTH-2:FP32_FRAC_WIDTH] == {FP16_EXP_WIDTH{1'b0}} ? 1'b1 : 1'b0;
-                    is_frac_zero_A_stage1 <= A[FP32_FRAC_WIDTH-1:0] == {FP16_FRAC_WIDTH{1'b0}} ? 1'b1 : 1'b0;
-                    is_frac_zero_B_stage1 <= B[FP32_FRAC_WIDTH-1:0] == {FP16_FRAC_WIDTH{1'b0}} ? 1'b1 : 1'b0;
+                    is_exp_zero_A_stage1  <= A[FP16_WIDTH-2:FP16_FRAC_WIDTH] == {FP16_EXP_WIDTH{1'b0}} ? 1'b1 : 1'b0;
+                    is_exp_zero_B_stage1  <= B[FP16_WIDTH-2:FP16_FRAC_WIDTH] == {FP16_EXP_WIDTH{1'b0}} ? 1'b1 : 1'b0;
+                    is_frac_zero_A_stage1 <= A[FP16_FRAC_WIDTH-1:0] == {FP16_FRAC_WIDTH{1'b0}} ? 1'b1 : 1'b0;
+                    is_frac_zero_B_stage1 <= B[FP16_FRAC_WIDTH-1:0] == {FP16_FRAC_WIDTH{1'b0}} ? 1'b1 : 1'b0;
                 end
 
             end else begin
@@ -302,9 +302,9 @@ module fp_adder_16_32bits (
                         end
                     end else begin  //若A阶码不全为0，则进行1扩展，即组装尾数，加上隐含的1（规格化数隐含位）
                         if (is_fp32_precision_stage1) begin
-                            mantA_stage2 <= {1'b1, fracA_stage1};  //则对实际的尾数进行0扩展
+                            mantA_stage2 <= {1'b1, fracA_stage1};  
                         end else begin
-                            mantA_stage2 <= {{(FP32_MANT_WIDTH - FP16_FRAC_WIDTH - 1) {1'b0}}, 1'b0, fracA_stage1[FP16_FRAC_WIDTH-1:0]};  //则对实际的尾数进行0扩展
+                            mantA_stage2 <= {{(FP32_MANT_WIDTH - FP16_FRAC_WIDTH - 1) {1'b0}}, 1'b1, fracA_stage1[FP16_FRAC_WIDTH-1:0]};  //则对实际的尾数进行0扩展
                         end
                     end
                     //若B的阶码全为0则说明其为非规格数，进行0扩展并移位
@@ -362,19 +362,20 @@ module fp_adder_16_32bits (
     //第三级流水线
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
-            en_stage3          <= 1'b0;
+            is_fp32_precision_stage3 <= 1'b0;
+            en_stage3                <= 1'b0;
             //存储
-            result_sign_stage3 <= 0;
-            exp_stage3         <= 0;
-            sum_stage3         <= 0;
+            result_sign_stage3       <= 0;
+            exp_stage3               <= 0;
+            sum_stage3               <= 0;
             //传递
-            is_inf_stage3      <= 1'b0;
-            is_nan_stage3      <= 1'b0;
-            is_abnorm_A_stage3 <= 1'b0;
-            is_abnorm_B_stage3 <= 1'b0;
-            is_zero_stage3     <= 1'b0;
-            is_NaN_stage3      <= 1'b0;
-            zero_result_stage3 <= 'b0;
+            is_inf_stage3            <= 1'b0;
+            is_nan_stage3            <= 1'b0;
+            is_abnorm_A_stage3       <= 1'b0;
+            is_abnorm_B_stage3       <= 1'b0;
+            is_zero_stage3           <= 1'b0;
+            is_NaN_stage3            <= 1'b0;
+            zero_result_stage3       <= 'b0;
         end else if (en_stage2) begin
             //Stage3有效跟踪
             en_stage3 <= 1'b1;
@@ -385,6 +386,7 @@ module fp_adder_16_32bits (
             is_zero_stage3 <= is_zero_stage2;
             is_NaN_stage3 <= is_NaN_stage2;
             zero_result_stage3 <= zero_result_stage2;
+            is_fp32_precision_stage3 <= is_fp32_precision_stage2;
 
 
             //首先进行是否为0的判断
@@ -444,25 +446,27 @@ module fp_adder_16_32bits (
     //第四级流水线
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin  //复位
-            en_stage4          <= 1'b0;
+            is_fp32_precision_stage4 <= 1'b0;
+            en_stage4                <= 1'b0;
             //存储
-            result_sign_stage4 <= 1'b0;
-            exp_stage4         <= 'b0;
-            norm_mantissa      <= 'b0;
+            result_sign_stage4       <= 1'b0;
+            exp_stage4               <= 'b0;
+            norm_mantissa            <= 'b0;
             //传递
-            is_inf_stage4      <= 1'b0;
-            is_zero_stage4     <= 1'b0;
-            is_NaN_stage4      <= 1'b0;
-            zero_result_stage4 <= 'b0;
+            is_inf_stage4            <= 1'b0;
+            is_zero_stage4           <= 1'b0;
+            is_NaN_stage4            <= 1'b0;
+            zero_result_stage4       <= 'b0;
         end else if (en_stage3) begin  //传递
             //Stage4有效跟踪
-            en_stage4          <= 1'b1;
+            en_stage4                <= 1'b1;
 
             //传递
-            result_sign_stage4 <= result_sign_stage3;
-            is_zero_stage4     <= is_zero_stage3;
-            is_NaN_stage4      <= is_NaN_stage3 || is_nan_stage3;  //传递
-            zero_result_stage4 <= zero_result_stage3;
+            is_fp32_precision_stage4 <= is_fp32_precision_stage3;
+            result_sign_stage4       <= result_sign_stage3;
+            is_zero_stage4           <= is_zero_stage3;
+            is_NaN_stage4            <= is_NaN_stage3 || is_nan_stage3;  //传递
+            zero_result_stage4       <= zero_result_stage3;
 
             //首先进行是否为0的判断
             if (is_NaN_stage3) begin
@@ -493,26 +497,23 @@ module fp_adder_16_32bits (
                         end
                     end
 
-                end else if (sum_stage3[FP32_MANT_WIDTH] == 1'b1) begin  // 最高位溢出（进位产生1）,右移尾数
+                end else if (sum_stage3[FP32_MANT_WIDTH] == 1'b1 && is_fp32_precision_stage3) begin  // 最高位溢出（进位产生1）,右移尾数
                     // 溢出成为无穷大
-                    if (is_fp32_precision_stage3) begin
-                        if (exp_stage3 == 8'b1111_1110) begin
-                            is_inf_stage4 <= 1'b1;
-                        end else begin
-                            is_inf_stage4 <= 0;
-                            norm_mantissa <= sum_stage3[FP32_MANT_WIDTH:1];
-                            exp_stage4    <= exp_stage3 + 1;    //指数+1
-                        end
+                    if (exp_stage3 == 8'b1111_1110) begin
+                        is_inf_stage4 <= 1'b1;
                     end else begin
-                        if (exp_stage3 == 8'b0001_1110) begin
-                            is_inf_stage4 <= 1'b1;
-                        end else begin
-                            is_inf_stage4 <= 0;
-                            norm_mantissa <= sum_stage3[FP16_MANT_WIDTH:1];
-                            exp_stage4    <= exp_stage3 + 1;    //指数+1
-                        end
+                        is_inf_stage4 <= 0;
+                        norm_mantissa <= sum_stage3[FP32_MANT_WIDTH:1];
+                        exp_stage4    <= exp_stage3 + 1;    //指数+1
                     end
-
+                end else if (sum_stage3[FP16_MANT_WIDTH] == 1'b1 && !is_fp32_precision_stage3) begin
+                    if (exp_stage3 == 8'b0001_1110) begin
+                        is_inf_stage4 <= 1'b1;
+                    end else begin
+                        is_inf_stage4 <= 0;
+                        norm_mantissa <= sum_stage3[FP16_MANT_WIDTH:1];
+                        exp_stage4    <= exp_stage3 + 1;    //指数+1
+                    end
                 end else begin  // 尾数规格化：使用分组优先级编码计算前导0的数量
                     is_inf_stage4 <= 0;
 
