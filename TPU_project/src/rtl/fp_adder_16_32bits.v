@@ -38,99 +38,102 @@ module fp_adder_16_32bits (
     /******************************* 参数 ***********************************/
     localparam QNAN = {1'b0, {31{1'b1}}};  //作为一个默认的QNaN输出
 
-    parameter MATRIX_PRECISION = 32;
-    parameter FP_WIDTH = 32;
-    //parameter INPUT_WIDTH    = MATRIX_PRECISION == 16 ? 16 : 32, // 支持32位(FP32)或16位(FP16)
-    parameter EXP_WIDTH = FP_WIDTH == 32 ? 8 : 5;  // FP32:8位阶码, FP16:5位阶码
-    parameter FRAC_WIDTH = FP_WIDTH == 32 ? 23 : 10;  // FP32:23位尾数, FP16:10位尾数
-    parameter MANT_WIDTH = FRAC_WIDTH + 1;  // 包含隐含1的尾数宽度
-    parameter BIAS = FP_WIDTH == 32 ? 127 : 15;  // FP32:偏移量127, FP16:偏移量15
+    parameter FP32_WIDTH = 32;
+    parameter FP32_EXP_WIDTH = 8;  // FP32:8位阶码, FP16:5位阶码
+    parameter FP32_FRAC_WIDTH = 23;  // FP32:23位尾数, FP16:10位尾数
+    parameter FP32_MANT_WIDTH = FP32_FRAC_WIDTH + 1;  // 包含隐含1的尾数宽度
+    parameter FP32_BIAS = 127;  // FP32:偏移量127, FP16:偏移量15
+
+    parameter FP16_WIDTH = 16;
+    parameter FP16_EXP_WIDTH = 5;  // FP32:8位阶码, FP16:5位阶码
+    parameter FP16_FRAC_WIDTH = 10;  // FP32:23位尾数, FP16:10位尾数
+    parameter FP16_MANT_WIDTH = FP32_FRAC_WIDTH + 1;  // 包含隐含1的尾数宽度
+    parameter FP16_BIAS = 15;  // FP32:偏移量127, FP16:偏移量15
 
     /******************************* 网表信号 ***********************************/
     // 输入信号处理
-    wire [                    31:0] half_to_float_b;
-    wire [                    31:0] A;
-    wire [                    31:0] B;
+    wire [                         31:0] A;
+    wire [                         31:0] B;
 
     //第一级流水线
     //将对指数和尾数是否均为0进行判断，即0
-    wire                            is_zero_A_stage1;
-    wire                            is_zero_B_stage1;
-    wire                            is_zero_stage1;
+    wire                                 is_zero_A_stage1;
+    wire                                 is_zero_B_stage1;
+    wire                                 is_zero_stage1;
     //判断指数位是否全1
-    wire                            is_inf_A_stage1;  // 无穷处理 A/B是否为无穷大
-    wire                            is_inf_B_stage1;  // 无穷处理 A/B是否为无穷大
+    wire                                 is_inf_A_stage1;  // 无穷处理 A/B是否为无穷大
+    wire                                 is_inf_B_stage1;  // 无穷处理 A/B是否为无穷大
     //对非规格数进行判断
-    wire                            is_abnorm_A_stage1;  // 判断指数是否为0
-    wire                            is_abnorm_B_stage1;  // 判断指数是否为0
+    wire                                 is_abnorm_A_stage1;  // 判断指数是否为0
+    wire                                 is_abnorm_B_stage1;  // 判断指数是否为0
     //对NaN的判断
-    wire                            is_NaN_A_stage1;
-    wire                            is_NaN_B_stage1;
-    wire                            is_NaN_stage1;
+    wire                                 is_NaN_A_stage1;
+    wire                                 is_NaN_B_stage1;
+    wire                                 is_NaN_stage1;
 
     /******************************* reg信号 ***********************************/
     // Stage 1：输入分解寄存器
-    reg                             en_stage1;  // 流水线使能信号
+    reg                                  en_stage1;  // 流水线使能信号
     //存储
-    reg                             signA_stage1;  // A的符号位
-    reg                             signB_stage1;  ///B的符号位
-    reg  [           EXP_WIDTH-1:0] expA_stage1;  // A的指数
-    reg  [           EXP_WIDTH-1:0] expB_stage1;  // B的指数
-    reg  [          FRAC_WIDTH-1:0] fracA_stage1;  // A/B的尾数
-    reg  [          FRAC_WIDTH-1:0] fracB_stage1;  // A/B的尾数
+    reg                                  signA_stage1;  // A的符号位
+    reg                                  signB_stage1;  ///B的符号位
+    reg  [           FP32_EXP_WIDTH-1:0] expA_stage1;  // A的指数
+    reg  [           FP32_EXP_WIDTH-1:0] expB_stage1;  // B的指数
+    reg  [          FP32_FRAC_WIDTH-1:0] fracA_stage1;  // A/B的尾数
+    reg  [          FP32_FRAC_WIDTH-1:0] fracB_stage1;  // A/B的尾数
     //检测
-    reg                             is_exp_one_A_stage1;  // 判断指数是否全1
-    reg                             is_exp_one_B_stage1;  // 判断指数是否全1
-    reg                             is_exp_zero_A_stage1;  // 判断指数是否全0
-    reg                             is_exp_zero_B_stage1;  // 判断指数是否全0
-    reg                             is_frac_zero_A_stage1;  // 判断A是否全0
-    reg                             is_frac_zero_B_stage1;  // 判断B是否全0
+    reg                                  is_exp_one_A_stage1;  // 判断指数是否全1
+    reg                                  is_exp_one_B_stage1;  // 判断指数是否全1
+    reg                                  is_exp_zero_A_stage1;  // 判断指数是否全0
+    reg                                  is_exp_zero_B_stage1;  // 判断指数是否全0
+    reg                                  is_frac_zero_A_stage1;  // 判断A是否全0
+    reg                                  is_frac_zero_B_stage1;  // 判断B是否全0
 
 
     // Stage 2：对阶与尾数对齐
-    reg                             en_stage2;
+    reg                                  en_stage2;
     //存储
-    reg                             signA_stage2;
-    reg                             signB_stage2;
-    reg  [         EXP_WIDTH-1 : 0] exp_stage2;
-    reg  [          MANT_WIDTH-1:0] mantA_stage2;  // 尾数扩展至24位
-    reg  [          MANT_WIDTH-1:0] mantB_stage2;  // 尾数扩展至24位
+    reg                                  signA_stage2;
+    reg                                  signB_stage2;
+    reg  [         FP32_EXP_WIDTH-1 : 0] exp_stage2;
+    reg  [          FP32_MANT_WIDTH-1:0] mantA_stage2;  // 尾数扩展至24位
+    reg  [          FP32_MANT_WIDTH-1:0] mantB_stage2;  // 尾数扩展至24位
     //传递
-    reg                             is_inf_A_stage2;  // 无穷大传递信号
-    reg                             is_inf_B_stage2;  // 无穷大传递信号
-    reg                             is_abnorm_A_stage2;  // 非规格数传输信号
-    reg                             is_abnorm_B_stage2;  // 非规格数传输信号
-    reg                             is_zero_stage2;  // 判断是否为0
-    reg  [            FP_WIDTH-1:0] zero_result_stage2;  //传递有一个数是0时的结果
-    reg                             is_NaN_stage2;  // 判断是否为0
+    reg                                  is_inf_A_stage2;  // 无穷大传递信号
+    reg                                  is_inf_B_stage2;  // 无穷大传递信号
+    reg                                  is_abnorm_A_stage2;  // 非规格数传输信号
+    reg                                  is_abnorm_B_stage2;  // 非规格数传输信号
+    reg                                  is_zero_stage2;  // 判断是否为0
+    reg  [               FP32_WIDTH-1:0] zero_result_stage2;  //传递有一个数是0时的结果
+    reg                                  is_NaN_stage2;  // 判断是否为0
 
     // Stage 3：加减运算
-    reg                             en_stage3;
+    reg                                  en_stage3;
     //存储
-    reg                             result_sign_stage3;
-    reg  [           EXP_WIDTH-1:0] exp_stage3;
-    reg  [            MANT_WIDTH:0] sum_stage3;  //多一位保存可能的进位/借位
+    reg                                  result_sign_stage3;
+    reg  [           FP32_EXP_WIDTH-1:0] exp_stage3;
+    reg  [            FP32_MANT_WIDTH:0] sum_stage3;  //多一位保存可能的进位/借位
     //传递
-    reg                             is_inf_stage3;  // 结果是否为无穷大
-    reg                             is_nan_stage3;  // 结果是否为NaN（无穷相减的情况）
-    reg                             is_abnorm_A_stage3;  //非规格数传递信号
-    reg                             is_abnorm_B_stage3;  //非规格数传递信号
-    reg                             is_zero_stage3;  // 判断是否为0
-    reg  [            FP_WIDTH-1:0] zero_result_stage3;  //传递有一个数是0时的结果
-    reg                             is_NaN_stage3;  // 判断是否为0
+    reg                                  is_inf_stage3;  // 结果是否为无穷大
+    reg                                  is_nan_stage3;  // 结果是否为NaN（无穷相减的情况）
+    reg                                  is_abnorm_A_stage3;  //非规格数传递信号
+    reg                                  is_abnorm_B_stage3;  //非规格数传递信号
+    reg                                  is_zero_stage3;  // 判断是否为0
+    reg  [               FP32_WIDTH-1:0] zero_result_stage3;  //传递有一个数是0时的结果
+    reg                                  is_NaN_stage3;  // 判断是否为0
 
     // Stage 4：规格化
-    reg                             en_stage4;
+    reg                                  en_stage4;
     //存储
-    reg                             result_sign_stage4;
-    reg  [           EXP_WIDTH-1:0] exp_stage4;  //指数位
-    reg  [            MANT_WIDTH:0] norm_mantissa;  //规格化后隐含1的24位尾数，1不输出
-    reg  [$clog2(MANT_WIDTH+1)-1:0] shift_amount;  //记录左移位数（前导零计数的结果）
+    reg                                  result_sign_stage4;
+    reg  [           FP32_EXP_WIDTH-1:0] exp_stage4;  //指数位
+    reg  [            FP32_MANT_WIDTH:0] norm_mantissa;  //规格化后隐含1的24位尾数，1不输出
+    reg  [$clog2(FP32_MANT_WIDTH+1)-1:0] shift_amount;  //记录左移位数（前导零计数的结果）
     //传递
-    reg                             is_inf_stage4;
-    reg                             is_zero_stage4;  // 判断是否为0
-    reg  [            FP_WIDTH-1:0] zero_result_stage4;  //传递有一个数是0时的结果
-    reg                             is_NaN_stage4;  // 判断是否为0
+    reg                                  is_inf_stage4;
+    reg                                  is_zero_stage4;  // 判断是否为0
+    reg  [               FP32_WIDTH-1:0] zero_result_stage4;  //传递有一个数是0时的结果
+    reg                                  is_NaN_stage4;  // 判断是否为0
 
     // Stage 5：输出
 
@@ -180,25 +183,25 @@ module fp_adder_16_32bits (
 
                 //存储
                 // 最高位为符号位
-                signA_stage1 <= A[FP_WIDTH-1];
-                signB_stage1 <= B[FP_WIDTH-1];
+                signA_stage1 <= A[FP32_WIDTH-1];
+                signB_stage1 <= B[FP32_WIDTH-1];
                 // 符号后一位开始到尾数部分之前为阶码位
-                expA_stage1 <= A[FP_WIDTH-2:FRAC_WIDTH];
-                expB_stage1 <= B[FP_WIDTH-2:FRAC_WIDTH];
+                expA_stage1 <= A[FP32_WIDTH-2:FP32_FRAC_WIDTH];
+                expB_stage1 <= B[FP32_WIDTH-2:FP32_FRAC_WIDTH];
                 // 最低FRAC_WIDTH位为尾数位
-                fracA_stage1 <= A[FRAC_WIDTH-1:0];
-                fracB_stage1 <= B[FRAC_WIDTH-1:0];
+                fracA_stage1 <= A[FP32_FRAC_WIDTH-1:0];
+                fracB_stage1 <= B[FP32_FRAC_WIDTH-1:0];
 
                 //检测
                 // 检测A和B的指数是否全1
-                is_exp_one_A_stage1 <= A[FP_WIDTH-2:FRAC_WIDTH] == 8'hff ? 1'b1 : 1'b0;
-                is_exp_one_B_stage1 <= B[FP_WIDTH-2:FRAC_WIDTH] == 8'hff ? 1'b1 : 1'b0;
+                is_exp_one_A_stage1 <= A[FP32_WIDTH-2:FP32_FRAC_WIDTH] == 8'hff ? 1'b1 : 1'b0;
+                is_exp_one_B_stage1 <= B[FP32_WIDTH-2:FP32_FRAC_WIDTH] == 8'hff ? 1'b1 : 1'b0;
                 // 检测A和B的指数是全0
-                is_exp_zero_A_stage1 <= A[FP_WIDTH-2:FRAC_WIDTH] == 8'b0 ? 1'b1 : 1'b0;
-                is_exp_zero_B_stage1 <= B[FP_WIDTH-2:FRAC_WIDTH] == 8'b0 ? 1'b1 : 1'b0;
+                is_exp_zero_A_stage1 <= A[FP32_WIDTH-2:FP32_FRAC_WIDTH] == 8'b0 ? 1'b1 : 1'b0;
+                is_exp_zero_B_stage1 <= B[FP32_WIDTH-2:FP32_FRAC_WIDTH] == 8'b0 ? 1'b1 : 1'b0;
                 //检测A和B尾数是否全0
-                is_frac_zero_A_stage1 <= A[FRAC_WIDTH-1:0] == 23'b0 ? 1'b1 : 1'b0;
-                is_frac_zero_B_stage1 <= B[FRAC_WIDTH-1:0] == 23'b0 ? 1'b1 : 1'b0;
+                is_frac_zero_A_stage1 <= A[FP32_FRAC_WIDTH-1:0] == 23'b0 ? 1'b1 : 1'b0;
+                is_frac_zero_B_stage1 <= B[FP32_FRAC_WIDTH-1:0] == 23'b0 ? 1'b1 : 1'b0;
             end else begin
                 en_stage1 <= 1'b0;
             end
@@ -406,19 +409,19 @@ module fp_adder_16_32bits (
                 end else if (is_abnorm_A_stage3 && is_abnorm_B_stage3) begin  //非规格数处理
                     is_inf_stage4 <= 0;
                     norm_mantissa <= sum_stage3;
-                    if (sum_stage3[MANT_WIDTH-1] == 1'b1)
+                    if (sum_stage3[FP32_MANT_WIDTH-1] == 1'b1)
           begin //非规格数相加，因为超过了非规格数能表示的范围而进位，故阶码加1，即普通溢出
                         exp_stage4 <= 1;
                     end else begin  //既没有溢出，也不等于0，即没有进位
                         exp_stage4 <= 0;
                     end
-                end else if (sum_stage3[MANT_WIDTH] == 1'b1) begin  // 最高位溢出（进位产生1）,右移尾数
+                end else if (sum_stage3[FP32_MANT_WIDTH] == 1'b1) begin  // 最高位溢出（进位产生1）,右移尾数
                     // 溢出成为无穷大
                     if (exp_stage3 == 8'd254) begin
                         is_inf_stage4 <= 1'b1;
                     end else begin
                         is_inf_stage4 <= 0;
-                        norm_mantissa <= sum_stage3[MANT_WIDTH:1];
+                        norm_mantissa <= sum_stage3[FP32_MANT_WIDTH:1];
                         exp_stage4    <= exp_stage3 + 1;    //指数+1
                     end
                     // 尾数规格化：使用分组优先级编码计算前导0的数量
@@ -426,11 +429,11 @@ module fp_adder_16_32bits (
                     // 分组优先级编码器实现 - 计算前导零
                     // 根据MANT_WIDTH确定适当的分组方式
 
-                    // FP32: MANT_WIDTH = 24，分为3组，每组8位
-                    // FP16: MANT_WIDTH = 11，分为2组，第一组5位，第二组6位
+                    // FP32: FP32_MANT_WIDTH = 24，分为3组，每组8位
+                    // FP16: FP32_MANT_WIDTH = 11，分为2组，第一组5位，第二组6位
                     // 注意：以下代码处理了两种可能的宽度
                     is_inf_stage4 <= 0;
-                    norm_mantissa <= sum_stage3[MANT_WIDTH:0] << (shift_amount);  // 指数大于移位数，则减去移位数，否则归零
+                    norm_mantissa <= sum_stage3[FP32_MANT_WIDTH:0] << (shift_amount);  // 指数大于移位数，则减去移位数，否则归零
                     if (exp_stage3 > shift_amount) begin  //够移则仍然是规格数
                         exp_stage4 <= exp_stage3 - shift_amount;
                     end else begin  //不够移位则是非规格数
@@ -457,7 +460,7 @@ module fp_adder_16_32bits (
             end else if (is_zero_stage4) begin  //0则传递
                 C <= zero_result_stage4;
             end else if (is_inf_stage4) begin
-                C <= {result_sign_stage4, {EXP_WIDTH{1'b1}}, {FRAC_WIDTH{1'b0}}};  //对应的无穷大
+                C <= {result_sign_stage4, {FP32_EXP_WIDTH{1'b1}}, {FP32_FRAC_WIDTH{1'b0}}};  //对应的无穷大
             end else begin  //若都不是则进行其它操作
                 C <= {result_sign_stage4, exp_stage4, norm_mantissa[22:0]};
             end
@@ -467,11 +470,11 @@ module fp_adder_16_32bits (
     end
 
     always @(*) begin
-        if (MANT_WIDTH > 16) begin
+        if (FP32_MANT_WIDTH > 16) begin
             // 处理FP32情况 - 24位尾数(包含隐含位)，分成3组
-            if (sum_stage3[FRAC_WIDTH:FRAC_WIDTH-7] != 0) begin
+            if (sum_stage3[FP32_FRAC_WIDTH:FP32_FRAC_WIDTH-7] != 0) begin
                 // 最高8位有1
-                casez (sum_stage3[FRAC_WIDTH:FRAC_WIDTH-7])
+                casez (sum_stage3[FP32_FRAC_WIDTH:FP32_FRAC_WIDTH-7])
                     8'b1???????: shift_amount = 0;
                     8'b01??????: shift_amount = 1;
                     8'b001?????: shift_amount = 2;
@@ -482,9 +485,9 @@ module fp_adder_16_32bits (
                     8'b00000001: shift_amount = 7;
                     default: shift_amount = 8;  // 不应该到达这里
                 endcase
-            end else if (sum_stage3[FRAC_WIDTH-8:FRAC_WIDTH-15] != 0) begin
+            end else if (sum_stage3[FP32_FRAC_WIDTH-8:FP32_FRAC_WIDTH-15] != 0) begin
                 // 中间8位有1
-                casez (sum_stage3[FRAC_WIDTH-8:FRAC_WIDTH-15])
+                casez (sum_stage3[FP32_FRAC_WIDTH-8:FP32_FRAC_WIDTH-15])
                     8'b1???????: shift_amount = 8;
                     8'b01??????: shift_amount = 9;
                     8'b001?????: shift_amount = 10;
@@ -497,7 +500,7 @@ module fp_adder_16_32bits (
                 endcase
             end else begin
                 // 最低8位(对于FP32，实际只需要处理到最低的8位)
-                casez (sum_stage3[FRAC_WIDTH-16:FRAC_WIDTH-23])
+                casez (sum_stage3[FP32_FRAC_WIDTH-16:FP32_FRAC_WIDTH-23])
                     8'b1???????: shift_amount = 16;
                     8'b01??????: shift_amount = 17;
                     8'b001?????: shift_amount = 18;
@@ -511,9 +514,9 @@ module fp_adder_16_32bits (
             end
         end else begin
             // 处理FP16情况 - 11位尾数(包含隐含位)，分成2组
-            if (sum_stage3[FRAC_WIDTH:FRAC_WIDTH-5] != 0) begin
+            if (sum_stage3[FP32_FRAC_WIDTH:FP32_FRAC_WIDTH-5] != 0) begin
                 // 最高6位有1
-                casez (sum_stage3[FRAC_WIDTH:FRAC_WIDTH-5])
+                casez (sum_stage3[FP32_FRAC_WIDTH:FP32_FRAC_WIDTH-5])
                     6'b1?????: shift_amount = 0;
                     6'b01????: shift_amount = 1;
                     6'b001???: shift_amount = 2;
@@ -524,7 +527,7 @@ module fp_adder_16_32bits (
                 endcase
             end else begin
                 // 最低5位有1
-                casez (sum_stage3[FRAC_WIDTH-6:0])
+                casez (sum_stage3[FP32_FRAC_WIDTH-6:0])
                     5'b1????: shift_amount = 6'd6;
                     5'b01???: shift_amount = 6'd7;
                     5'b001??: shift_amount = 6'd8;
@@ -538,10 +541,5 @@ module fp_adder_16_32bits (
 
     /******************************* 模块例化 ***********************************/
     // 输入信号预处理(fp16->fp32)
-    fp16_to_fp32 h2f_b (
-        .half_in  (input_B[15:0]),
-        .float_out(half_to_float_b)
-    );
-
 
 endmodule
