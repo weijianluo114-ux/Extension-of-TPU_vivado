@@ -35,6 +35,7 @@ module fp_adder_16_32_bits_tb;
     wire                indicate;
     wire [        31:0] input_A;
     wire [        31:0] input_B;
+    wire [        15:0] FP16_C;
 
     /******************************* reg信号 ***********************************/
     reg                 clk;
@@ -49,6 +50,7 @@ module fp_adder_16_32_bits_tb;
     reg  [         2:0] count;
 
     /******************************* 组合逻辑 ***********************************/
+    assign FP16_C  = C[15:0];
     assign input_A = (is_fp32_precision) ? FP32_A[0] : {{16{1'b0}}, FP16_A[0]};
     assign input_B = (is_fp32_precision) ? FP32_B[0] : {{16{1'b0}}, FP16_B[0]};
 
@@ -510,8 +512,8 @@ module fp_adder_16_32_bits_tb;
         .clk              (clk),
         .rst_n            (rst_n),
         .read_en          (read_en),
-        .input_A_         (input_A),
-        .input_B_         (input_B),
+        .input_A          (input_A),
+        .input_B          (input_B),
         .is_fp32_precision(is_fp32_precision),
         .C                (C),
         .indicate         (indicate)
