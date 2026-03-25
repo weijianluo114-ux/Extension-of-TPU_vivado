@@ -199,14 +199,14 @@ module fp_adder_16_32bits (
                     // 最低FRAC_WIDTH位为尾数位
                     fracA_stage1 <= A[FP32_FRAC_WIDTH-1:0];
                     fracB_stage1 <= B[FP32_FRAC_WIDTH-1:0];
-                end else begin  //16位
+                end else begin  //16位，不足的位数要在最高位补0
                     is_fp32_precision_stage1 <= 1'b0;
                     signA_stage1 <= A[FP16_WIDTH-1];
                     signB_stage1 <= B[FP16_WIDTH-1];
-                    expA_stage1 <= A[FP16_WIDTH-2:FP16_FRAC_WIDTH];
-                    expB_stage1 <= B[FP16_WIDTH-2:FP16_FRAC_WIDTH];
-                    fracA_stage1 <= A[FP16_FRAC_WIDTH-1:0];
-                    fracB_stage1 <= B[FP16_FRAC_WIDTH-1:0];
+                    expA_stage1 <= {{(FP32_EXP_WIDTH - FP16_EXP_WIDTH) {1'b0}}, A[FP16_WIDTH-2:FP16_FRAC_WIDTH]};
+                    expB_stage1 <= {{(FP32_EXP_WIDTH - FP16_EXP_WIDTH) {1'b0}}, B[FP16_WIDTH-2:FP16_FRAC_WIDTH]};
+                    fracA_stage1 <= {{(FP32_FRAC_WIDTH - FP16_FRAC_WIDTH) {1'b0}}, A[FP16_FRAC_WIDTH-1:0]};
+                    fracB_stage1 <= {{(FP32_FRAC_WIDTH - FP16_FRAC_WIDTH) {1'b0}}, B[FP16_FRAC_WIDTH-1:0]};
                 end
 
                 if (is_fp32_precision) begin  //32位
@@ -275,14 +275,14 @@ module fp_adder_16_32bits (
             end else if (is_zero_A_stage1) begin  //为0则传递
                 if (is_fp32_precision_stage1) begin  //32位
                     zero_result_stage2 <= {signB_stage1, expB_stage1, fracB_stage1};
-                end else begin  //16位
-                    zero_result_stage2 <= {signB_stage1, expB_stage1[FP16_EXP_WIDTH-1:0], fracB_stage1[FP16_FRAC_WIDTH-1:0]};
+                end else begin  //16位，注意补0
+                    zero_result_stage2 <= {{FP16_WIDTH{1'b0}}, signB_stage1, expB_stage1[FP16_EXP_WIDTH-1:0], fracB_stage1[FP16_FRAC_WIDTH-1:0]};
                 end
             end else if (is_zero_B_stage1) begin  //B为0则传递A
                 if (is_fp32_precision_stage1) begin  //32位
                     zero_result_stage2 <= {signA_stage1, expA_stage1, fracA_stage1};
-                end else begin  //16位
-                    zero_result_stage2 <= {signA_stage1, expA_stage1[FP16_EXP_WIDTH-1:0], fracA_stage1[FP16_FRAC_WIDTH-1:0]};
+                end else begin  //16位，注意补0
+                    zero_result_stage2 <= {{FP16_WIDTH{1'b0}}, signA_stage1, expA_stage1[FP16_EXP_WIDTH-1:0], fracA_stage1[FP16_FRAC_WIDTH-1:0]};
                 end
             end else begin
                 //给出默认值，防止锁存
@@ -294,29 +294,61 @@ module fp_adder_16_32bits (
                     exp_stage2 <= expA_stage1;  // 取较大者阶码作为对齐后的阶码
                     //若A的阶码全0，意味着A为非规格数
                     if (is_abnorm_A_stage1) begin
-                        mantA_stage2 <= {1'b0, fracA_stage1};  //则对实际的尾数进行0扩展
+                        if (is_fp32_precision_stage1) begin
+                            mantA_stage2 <= {1'b0, fracA_stage1};  //则对实际的尾数进行0扩展
+                        end else begin
+                            mantA_stage2 <= {{(FP32_MANT_WIDTH - FP16_FRAC_WIDTH) {1'b0}}, fracA_stage1[FP16_FRAC_WIDTH-1:0]};  //则对实际的尾数进行0扩展
+                        end
                     end else begin  //若A阶码不全为0，则进行1扩展，即组装尾数，加上隐含的1（规格化数隐含位）
-                        mantA_stage2 <= {1'b1, fracA_stage1};
+                        if (is_fp32_precision_stage1) begin
+                            mantA_stage2 <= {1'b1, fracA_stage1};  //则对实际的尾数进行0扩展
+                        end else begin
+                            mantA_stage2 <= {{(FP32_MANT_WIDTH - FP16_FRAC_WIDTH - 1) {1'b0}}, 1'b0, fracA_stage1[FP16_FRAC_WIDTH-1:0]};  //则对实际的尾数进行0扩展
+                        end
                     end
                     //若B的阶码全为0则说明其为非规格数，进行0扩展并移位
                     if (is_abnorm_B_stage1) begin
-                        mantB_stage2 <= {1'b0, fracB_stage1} >> ((expA_stage1 ? expA_stage1 : 8'd1) - 8'd1);
+                        if (is_fp32_precision_stage1) begin
+                            mantB_stage2 <= {1'b0, fracB_stage1} >> ((expA_stage1 ? expA_stage1 : 8'd1) - 8'd1);
+                        end else begin
+                            mantB_stage2 <= {{(FP32_MANT_WIDTH - FP16_FRAC_WIDTH) {1'b0}}, fracB_stage1[FP16_FRAC_WIDTH-1:0]} >> ((expA_stage1 ? expA_stage1 : 8'd1) - 8'd1);  //则对实际的尾数进行0扩展
+                        end
                     end else begin
-                        mantB_stage2 <= {1'b1, fracB_stage1} >> (expA_stage1 - expB_stage1);  // 较小者尾数右移对齐
+                        if (is_fp32_precision_stage1) begin
+                            mantB_stage2 <= {1'b1, fracB_stage1} >> (expA_stage1 - expB_stage1);  // 较小者尾数右移对齐
+                        end else begin
+                            mantB_stage2 <= {{(FP32_MANT_WIDTH - FP16_FRAC_WIDTH - 1) {1'b0}}, 1'b1, fracB_stage1[FP16_FRAC_WIDTH-1:0]} >> (expA_stage1 - expB_stage1);  //则对实际的尾数进行0扩展
+                        end
                     end  //若B阶码不全为0，则进行1扩展并移位
-                end else begin  // 同理，另一种情况
+                end else begin  // 同理，另一种情况，B的阶码更大
                     exp_stage2 <= expB_stage1;
                     //A的判断
                     if (is_abnorm_A_stage1) begin
-                        mantA_stage2 <= {1'b0, fracA_stage1} >> ((expB_stage1 ? expB_stage1 : 8'd1) - 8'd1);
+                        if (is_fp32_precision_stage1) begin
+                            mantA_stage2 <= {1'b0, fracA_stage1} >> ((expB_stage1 ? expB_stage1 : 8'd1) - 8'd1);
+                        end else begin
+                            mantA_stage2 <= {{(FP32_MANT_WIDTH - FP16_FRAC_WIDTH) {1'b0}}, fracA_stage1[FP16_FRAC_WIDTH-1:0]} >> ((expB_stage1 ? expB_stage1 : 8'd1) - 8'd1);  //则对实际的尾数进行0扩展
+                        end
                     end else begin
-                        mantA_stage2 <= {1'b1, fracA_stage1} >> (expB_stage1 - expA_stage1);
+                        if (is_fp32_precision_stage1) begin
+                            mantA_stage2 <= {1'b1, fracA_stage1} >> (expB_stage1 - expA_stage1);
+                        end else begin
+                            mantA_stage2 <= {{(FP32_MANT_WIDTH - FP16_FRAC_WIDTH - 1) {1'b0}}, 1'b1, fracA_stage1[FP16_FRAC_WIDTH-1:0]} >> (expB_stage1 - expA_stage1);  //则对实际的尾数进行0扩展
+                        end
                     end
                     //B的判断
                     if (is_abnorm_B_stage1) begin
-                        mantB_stage2 <= {1'b0, fracB_stage1};
+                        if (is_fp32_precision_stage1) begin
+                            mantB_stage2 <= {1'b0, fracB_stage1};
+                        end else begin
+                            mantB_stage2 <= {{(FP32_MANT_WIDTH - FP16_FRAC_WIDTH) {1'b0}}, fracB_stage1[FP16_FRAC_WIDTH-1:0]};  //则对实际的尾数进行0扩展
+                        end
                     end else begin
-                        mantB_stage2 <= {1'b1, fracB_stage1};
+                        if (is_fp32_precision_stage1) begin
+                            mantB_stage2 <= {1'b1, fracB_stage1};
+                        end else begin
+                            mantB_stage2 <= {{(FP32_MANT_WIDTH - FP16_FRAC_WIDTH - 1) {1'b0}}, 1'b1, fracB_stage1[FP16_FRAC_WIDTH-1:0]};  //则对实际的尾数进行0扩展
+                        end
                     end
                 end
             end
@@ -446,8 +478,7 @@ module fp_adder_16_32bits (
                 end else if (is_abnorm_A_stage3 && is_abnorm_B_stage3) begin  //非规格数处理
                     is_inf_stage4 <= 0;
                     norm_mantissa <= sum_stage3;
-                    if (sum_stage3[FP32_MANT_WIDTH-1] == 1'b1)
-          begin //非规格数相加，因为超过了非规格数能表示的范围而进位，故阶码加1，即普通溢出
+                    if (sum_stage3[FP32_MANT_WIDTH-1] == 1'b1) begin  //非规格数相加，因为超过了非规格数能表示的范围而进位，故阶码加1，即普通溢出
                         exp_stage4 <= 1;
                     end else begin  //既没有溢出，也不等于0，即没有进位
                         exp_stage4 <= 0;
