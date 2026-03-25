@@ -24,122 +24,119 @@
 //****************************************************************************************//
 
 `timescale 1ns / 1ps  //修改了reset negedge
-module fp_adder_16_32bits #(  // 输入+三级流水（对阶 加减 规格化）+输出
-    parameter MATRIX_PRECISION = 32,
-    parameter FP_WIDTH         = 32,
-    //parameter INPUT_WIDTH    = MATRIX_PRECISION == 16 ? 16 : 32, // 支持32位(FP32)或16位(FP16)
-    parameter EXP_WIDTH        = FP_WIDTH == 32 ? 8 : 5,    // FP32:8位阶码, FP16:5位阶码
-    parameter FRAC_WIDTH       = FP_WIDTH == 32 ? 23 : 10,  // FP32:23位尾数, FP16:10位尾数
-    parameter MANT_WIDTH       = FRAC_WIDTH + 1,            // 包含隐含1的尾数宽度
-    parameter BIAS             = FP_WIDTH == 32 ? 127 : 15  // FP32:偏移量127, FP16:偏移量15
-) (
-    input  wire                clk,                // 时钟信号
-    input  wire                rst_n,              // 异步复位，低电平复位
-    input  wire                read_en,            // 输入使能，高电平有效
-    input  wire [        31:0] input_A,            // 输入A
-    input  wire [        31:0] input_B,            // 输入B    特殊化处理(可以为16位)
-    input  wire [         5:0] input_b_precision,  //输入B的精度(可为16或32)
-    output reg  [FP_WIDTH-1:0] C,                  // 输出结果
-    output reg                 indicate            // 计算完成指示信号s（高电平有效）
+module fp_adder_16_32bits (
+    input  wire        clk,                // 时钟信号
+    input  wire        rst_n,              // 异步复位，低电平复位
+    input  wire        read_en,            // 输入使能，高电平有效
+    input  wire [31:0] input_A,            // 输入A
+    input  wire [31:0] input_B,            // 输入B    特殊化处理(可以为16位)
+    input  wire        input_b_precision,  //输入B的精度(可为0为16，1为32)
+    output reg  [31:0] C,                  // 输出结果，默认是32位的输出
+    output reg         indicate            // 计算完成指示信号s（高电平有效）
 );
 
     /******************************* 参数 ***********************************/
     localparam QNAN = {1'b0, {31{1'b1}}};  //作为一个默认的QNaN输出
 
+    parameter MATRIX_PRECISION = 32;
+    parameter FP_WIDTH = 32;
+    //parameter INPUT_WIDTH    = MATRIX_PRECISION == 16 ? 16 : 32, // 支持32位(FP32)或16位(FP16)
+    parameter EXP_WIDTH = FP_WIDTH == 32 ? 8 : 5;  // FP32:8位阶码, FP16:5位阶码
+    parameter FRAC_WIDTH = FP_WIDTH == 32 ? 23 : 10;  // FP32:23位尾数, FP16:10位尾数
+    parameter MANT_WIDTH = FRAC_WIDTH + 1;  // 包含隐含1的尾数宽度
+    parameter BIAS = FP_WIDTH == 32 ? 127 : 15;  // FP32:偏移量127, FP16:偏移量15
 
     /******************************* 网表信号 ***********************************/
     // 输入信号处理
-    wire [                        31:0] half_to_float_b;
-    wire [                        31:0] A;
-    wire [                        31:0] B;
+    wire [                    31:0] half_to_float_b;
+    wire [                    31:0] A;
+    wire [                    31:0] B;
 
     //第一级流水线
     //将对指数和尾数是否均为0进行判断，即0
-    wire                                is_zero_A_stage1;
-    wire                                is_zero_B_stage1;
-    wire                                is_zero_stage1;
+    wire                            is_zero_A_stage1;
+    wire                            is_zero_B_stage1;
+    wire                            is_zero_stage1;
     //判断指数位是否全1
-    wire                                is_inf_A_stage1;  // 无穷处理 A/B是否为无穷大
-    wire                                is_inf_B_stage1;  // 无穷处理 A/B是否为无穷大
+    wire                            is_inf_A_stage1;  // 无穷处理 A/B是否为无穷大
+    wire                            is_inf_B_stage1;  // 无穷处理 A/B是否为无穷大
     //对非规格数进行判断
-    wire                                is_abnorm_A_stage1;  // 判断指数是否为0
-    wire                                is_abnorm_B_stage1;  // 判断指数是否为0
+    wire                            is_abnorm_A_stage1;  // 判断指数是否为0
+    wire                            is_abnorm_B_stage1;  // 判断指数是否为0
     //对NaN的判断
-    wire                                is_NaN_A_stage1;
-    wire                                is_NaN_B_stage1;
-    wire                                is_NaN_stage1;
+    wire                            is_NaN_A_stage1;
+    wire                            is_NaN_B_stage1;
+    wire                            is_NaN_stage1;
 
     /******************************* reg信号 ***********************************/
     // Stage 1：输入分解寄存器
-    reg                                 en_stage1;  // 流水线使能信号
+    reg                             en_stage1;  // 流水线使能信号
     //存储
-    reg                                 signA_stage1;  // A的符号位
-    reg                                 signB_stage1;  ///B的符号位
-    reg  [               EXP_WIDTH-1:0] expA_stage1;  // A的指数
-    reg  [               EXP_WIDTH-1:0] expB_stage1;  // B的指数
-    reg  [              FRAC_WIDTH-1:0] fracA_stage1;  // A/B的尾数
-    reg  [              FRAC_WIDTH-1:0] fracB_stage1;  // A/B的尾数
+    reg                             signA_stage1;  // A的符号位
+    reg                             signB_stage1;  ///B的符号位
+    reg  [           EXP_WIDTH-1:0] expA_stage1;  // A的指数
+    reg  [           EXP_WIDTH-1:0] expB_stage1;  // B的指数
+    reg  [          FRAC_WIDTH-1:0] fracA_stage1;  // A/B的尾数
+    reg  [          FRAC_WIDTH-1:0] fracB_stage1;  // A/B的尾数
     //检测
-    reg                                 is_exp_one_A_stage1;  // 判断指数是否全1
-    reg                                 is_exp_one_B_stage1;  // 判断指数是否全1
-    reg                                 is_exp_zero_A_stage1;  // 判断指数是否全0
-    reg                                 is_exp_zero_B_stage1;  // 判断指数是否全0
-    reg                                 is_frac_zero_A_stage1;  // 判断A是否全0
-    reg                                 is_frac_zero_B_stage1;  // 判断B是否全0
+    reg                             is_exp_one_A_stage1;  // 判断指数是否全1
+    reg                             is_exp_one_B_stage1;  // 判断指数是否全1
+    reg                             is_exp_zero_A_stage1;  // 判断指数是否全0
+    reg                             is_exp_zero_B_stage1;  // 判断指数是否全0
+    reg                             is_frac_zero_A_stage1;  // 判断A是否全0
+    reg                             is_frac_zero_B_stage1;  // 判断B是否全0
 
 
     // Stage 2：对阶与尾数对齐
-    reg                                 en_stage2;
+    reg                             en_stage2;
     //存储
-    reg                                 signA_stage2;
-    reg                                 signB_stage2;
-    reg  [             EXP_WIDTH-1 : 0] exp_stage2;
-    reg  [              MANT_WIDTH-1:0] mantA_stage2;  // 尾数扩展至24位
-    reg  [              MANT_WIDTH-1:0] mantB_stage2;  // 尾数扩展至24位
+    reg                             signA_stage2;
+    reg                             signB_stage2;
+    reg  [         EXP_WIDTH-1 : 0] exp_stage2;
+    reg  [          MANT_WIDTH-1:0] mantA_stage2;  // 尾数扩展至24位
+    reg  [          MANT_WIDTH-1:0] mantB_stage2;  // 尾数扩展至24位
     //传递
-    reg                                 is_inf_A_stage2;  // 无穷大传递信号
-    reg                                 is_inf_B_stage2;  // 无穷大传递信号
-    reg                                 is_abnorm_A_stage2;  // 非规格数传输信号
-    reg                                 is_abnorm_B_stage2;  // 非规格数传输信号
-    reg                                 is_zero_stage2;  // 判断是否为0
-    reg  [                FP_WIDTH-1:0] zero_result_stage2;  //传递有一个数是0时的结果
-    reg                                 is_NaN_stage2;  // 判断是否为0
+    reg                             is_inf_A_stage2;  // 无穷大传递信号
+    reg                             is_inf_B_stage2;  // 无穷大传递信号
+    reg                             is_abnorm_A_stage2;  // 非规格数传输信号
+    reg                             is_abnorm_B_stage2;  // 非规格数传输信号
+    reg                             is_zero_stage2;  // 判断是否为0
+    reg  [            FP_WIDTH-1:0] zero_result_stage2;  //传递有一个数是0时的结果
+    reg                             is_NaN_stage2;  // 判断是否为0
 
     // Stage 3：加减运算
-    reg                                 en_stage3;
+    reg                             en_stage3;
     //存储
-    reg                                 result_sign_stage3;
-    reg  [               EXP_WIDTH-1:0] exp_stage3;
-    reg  [                MANT_WIDTH:0] sum_stage3;  //多一位保存可能的进位/借位
+    reg                             result_sign_stage3;
+    reg  [           EXP_WIDTH-1:0] exp_stage3;
+    reg  [            MANT_WIDTH:0] sum_stage3;  //多一位保存可能的进位/借位
     //传递
-    reg                                 is_inf_stage3;  // 结果是否为无穷大
-    reg                                 is_nan_stage3;  // 结果是否为NaN（无穷相减的情况）
-    reg                                 is_abnorm_A_stage3;  //非规格数传递信号
-    reg                                 is_abnorm_B_stage3;  //非规格数传递信号
-    reg                                 is_zero_stage3;  // 判断是否为0
-    reg  [                FP_WIDTH-1:0] zero_result_stage3;  //传递有一个数是0时的结果
-    reg                                 is_NaN_stage3;  // 判断是否为0
+    reg                             is_inf_stage3;  // 结果是否为无穷大
+    reg                             is_nan_stage3;  // 结果是否为NaN（无穷相减的情况）
+    reg                             is_abnorm_A_stage3;  //非规格数传递信号
+    reg                             is_abnorm_B_stage3;  //非规格数传递信号
+    reg                             is_zero_stage3;  // 判断是否为0
+    reg  [            FP_WIDTH-1:0] zero_result_stage3;  //传递有一个数是0时的结果
+    reg                             is_NaN_stage3;  // 判断是否为0
 
     // Stage 4：规格化
-    reg                                 en_stage4;
+    reg                             en_stage4;
     //存储
-    reg                                 result_sign_stage4;
-    reg  [               EXP_WIDTH-1:0] exp_stage4;  //指数位
-    reg  [                MANT_WIDTH:0] norm_mantissa;  //规格化后隐含1的24位尾数，1不输出
-    reg  [$clog2(
-MANT_WIDTH+1
-)-1:0] shift_amount;  //记录左移位数（前导零计数的结果）
+    reg                             result_sign_stage4;
+    reg  [           EXP_WIDTH-1:0] exp_stage4;  //指数位
+    reg  [            MANT_WIDTH:0] norm_mantissa;  //规格化后隐含1的24位尾数，1不输出
+    reg  [$clog2(MANT_WIDTH+1)-1:0] shift_amount;  //记录左移位数（前导零计数的结果）
     //传递
-    reg                                 is_inf_stage4;
-    reg                                 is_zero_stage4;  // 判断是否为0
-    reg  [                FP_WIDTH-1:0] zero_result_stage4;  //传递有一个数是0时的结果
-    reg                                 is_NaN_stage4;  // 判断是否为0
+    reg                             is_inf_stage4;
+    reg                             is_zero_stage4;  // 判断是否为0
+    reg  [            FP_WIDTH-1:0] zero_result_stage4;  //传递有一个数是0时的结果
+    reg                             is_NaN_stage4;  // 判断是否为0
 
     // Stage 5：输出
 
     /******************************* 组合逻辑 ***********************************/
     assign A = input_A;
-    assign B = (input_b_precision == 'd16) ? half_to_float_b : input_B;
+    assign B = input_B;
 
     //第一级流水线
     //对0的判断
