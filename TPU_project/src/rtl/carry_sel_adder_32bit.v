@@ -35,7 +35,7 @@ module carry_sel_adder_32bit (
     output reg [31:0] sum,           //和sum
     output reg        cout,          //输出进位cout
     output reg        output_valid,  //输出有效信号
-    output reg        overflow       //溢出标志
+    output            overflow       //溢出标志
 );
     /******************************* 网表信号 ***********************************/
     wire        sel;  //进位选择中间信号
@@ -58,12 +58,15 @@ module carry_sel_adder_32bit (
     reg  [31:0] B;
     reg         CIN;
     reg         ENABLE;
+    reg         OVERFLOW;
 
     /******************************* 组合逻辑 ***********************************/
     //首先对输出的和进行选择
     assign SUM[31:16] = sel ? sum_temp1 : sum_temp0;
     //再对输出的进位进行选择
     assign COUT = sel ? cout_temp1 : cout_temp0;
+
+    assign overflow = OVERFLOW && output_valid;
 
     /******************************* 时序逻辑 ***********************************/
     //对输入打一拍
@@ -78,9 +81,10 @@ module carry_sel_adder_32bit (
     always @(posedge clk) begin
         sum <= SUM;
         cout <= COUT;
+
         output_valid <= ENABLE;
         //溢出检测，符号位相同相加后不同
-        overflow = (A[31] == B[31]) && (SUM[31] != A[31]);
+        OVERFLOW <= (A[31] == B[31]) && (SUM[31] != A[31]);
     end
     /******************************* 模块例化 ***********************************/
     //1个16位的加法器作为低位，2个作为进位选择的高位

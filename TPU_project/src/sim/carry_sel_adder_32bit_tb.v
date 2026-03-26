@@ -40,6 +40,7 @@ module carry_sel_adder_32bit_tb;
     wire        cout;
     wire        mismatch;
     wire        output_valid;
+    wire        overflow;
 
     /******************************* 组合逻辑 ***********************************/
     assign gold_result = a + b;
@@ -89,6 +90,7 @@ module carry_sel_adder_32bit_tb;
         .cout        (cout),
         .is_add      (is_add),
         .enable      (enable),
+        .overflow    (overflow),
         .output_valid(output_valid)
     );
 
