@@ -30,7 +30,6 @@ module carry_sel_adder_32bit_tb;
     reg         clk;
     reg  [31:0] a;
     reg  [31:0] b;
-    reg         cin;
     reg         enable;
 
     /******************************* 网表信号 ***********************************/
@@ -42,7 +41,7 @@ module carry_sel_adder_32bit_tb;
     wire        output_valid;
 
     /******************************* 组合逻辑 ***********************************/
-    assign gold_result = a + b + cin;
+    assign gold_result = a + b;
     assign mismatch = (output_valid) ? gold_result ^ {cout, sum} : 1'b0;
 
     /******************************* 时序逻辑 ***********************************/
@@ -52,16 +51,14 @@ module carry_sel_adder_32bit_tb;
     initial begin
         a = 0;
         b = 0;
-        cin = 0;
         enable = 0;
         clk = 0;
         #100;
 
         repeat (10) begin
             // 1. 更新输入数据（随机值）
-            a   = $urandom;  // 32 位随机数
-            b   = $urandom;  // 32 位随机数
-            cin = $urandom_range(0, 1);  // 0 或 1
+            a = $urandom;  // 32 位随机数
+            b = $urandom;  // 32 位随机数
 
             // 2. 拉高 enable（此时数据已稳定）
             @(posedge clk);
@@ -89,6 +86,7 @@ module carry_sel_adder_32bit_tb;
         .cin         (cin),
         .sum         (sum),
         .cout        (cout),
+        .is_add      (is_add),
         .enable      (enable),
         .output_valid(output_valid)
     );

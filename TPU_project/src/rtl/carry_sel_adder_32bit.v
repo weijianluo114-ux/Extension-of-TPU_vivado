@@ -25,11 +25,12 @@
 //****************************************************************************************//
 
 module carry_sel_adder_32bit (
-    input [31:0] a,       //4位加数a
-    input [31:0] b,       //4位加数b
-    input        cin,     //低位进位cin
-    input        enable,  //使能信号
     input        clk,     //时钟
+    input        enable,  //使能信号
+    input        is_add,  //判断是加法还是减法运算a+b或者a-b
+    input [31:0] a,       //32位加数a
+    input [31:0] b,       //32位加数b
+    input        cin,     //低位进位cin
 
     output reg [31:0] sum,          //和sum
     output reg        cout,         //输出进位cout
@@ -67,8 +68,8 @@ module carry_sel_adder_32bit (
     //对输入打一拍
     always @(posedge clk) begin
         A <= a;
-        B <= b;
-        CIN <= cin;
+        B <= (is_add) ? b : (~b + 1);  //减法即加补码
+        CIN <= (cin == 1'bx) ? 1'b0 : cin;  //给cin的默认值为0
         ENABLE <= enable;
     end
 
