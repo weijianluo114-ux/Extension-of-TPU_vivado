@@ -11,9 +11,9 @@
       </db_ref>
    </db_ref_list>
    <zoom_setting>
-      <ZoomStartTime time="0fs"></ZoomStartTime>
-      <ZoomEndTime time="1055000000fs"></ZoomEndTime>
-      <Cursor1Time time="1055000000fs"></Cursor1Time>
+      <ZoomStartTime time="871641667fs"></ZoomStartTime>
+      <ZoomEndTime time="951791668fs"></ZoomEndTime>
+      <Cursor1Time time="885000000fs"></Cursor1Time>
    </zoom_setting>
    <column_width_setting>
       <NameColumnWidth column_width="263"></NameColumnWidth>
@@ -319,6 +319,7 @@
       <wvobject fp_name="/fp_adder_16_32_bits_tb/fp_adder_16_32bits_inst/exp_stage3" type="array">
          <obj_property name="ElementShortName">exp_stage3[7:0]</obj_property>
          <obj_property name="ObjectShortName">exp_stage3[7:0]</obj_property>
+         <obj_property name="Radix">BINARYRADIX</obj_property>
       </wvobject>
       <wvobject fp_name="/fp_adder_16_32_bits_tb/fp_adder_16_32bits_inst/sum_stage3" type="array">
          <obj_property name="ElementShortName">sum_stage3[24:0]</obj_property>
