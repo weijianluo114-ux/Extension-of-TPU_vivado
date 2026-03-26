@@ -81,7 +81,7 @@ module carry_sel_adder_32bit (
     end
     /******************************* 模块例化 ***********************************/
     //1个8位的加法器作为低位，2个作为进位选择的高位
-    carry_bypass_8bit carry_bypass_8bit_inst_lower (
+    carry_bypass_16bit carry_bypass_8bit_inst_lower (
         .a   (A[15:0]),
         .b   (B[15:0]),
         .cin (CIN),
@@ -90,7 +90,7 @@ module carry_sel_adder_32bit (
     );
 
     //进位输入为0
-    carry_bypass_8bit carry_bypass_8bit_inst_upper0 (
+    carry_bypass_16bit carry_bypass_8bit_inst_upper0 (
         .a   (A[31:16]),
         .b   (B[31:16]),
         .cin (1'b0),
@@ -98,7 +98,7 @@ module carry_sel_adder_32bit (
         .cout(cout_temp0)
     );
     //进位输入为1
-    carry_bypass_8bit carry_bypass_8bit_inst_upper1 (
+    carry_bypass_16bit carry_bypass_8bit_inst_upper1 (
         .a   (A[31:16]),
         .b   (B[31:16]),
         .cin (1'b1),
