@@ -27,15 +27,14 @@
 module carry_sel_adder_32bit_tb;
 
     /******************************* reg信号 ***********************************/
-    reg         cin;
     reg         clk;
-    reg  [63:0] count;  //使用一个8位的计数器来遍历所有的8位的情况
-    reg         start;  //开始信号
+    reg  [31:0] a;
+    reg  [31:0] b;
+    reg         cin;
     reg         enable;
 
     /******************************* 网表信号 ***********************************/
-    wire [31:0] a;
-    wire [31:0] b;
+
     wire [31:0] sum;
     wire [32:0] gold_result;
     wire        cout;
@@ -43,32 +42,42 @@ module carry_sel_adder_32bit_tb;
     wire        output_valid;
 
     /******************************* 组合逻辑 ***********************************/
-    assign a = count[31:0];
-    assign b = count[63:32];
-    assign gold_result = a + b;
-    assign mismatch = gold_result ^ {cout, sum};
+    assign gold_result = a + b + cin;
+    assign mismatch = (output_valid) ? gold_result ^ {cout, sum} : 1'b0;
 
     /******************************* 时序逻辑 ***********************************/
     always #5 clk = ~clk;
-    always @(posedge clk) begin
-        if (start == 1) begin
-            count <= count + 1;
-        end else begin
-            count = 0;
-        end
-    end
-
-    always #20 enable = ~enable;
 
     /******************************* 仿真过程 ***********************************/
     initial begin
+        a = 0;
+        b = 0;
+        cin = 0;
+        enable = 0;
         clk = 0;
         #100;
-        start = 1;
-        cin   = 0;
+
+        repeat (10) begin
+            // 1. 更新输入数据（随机值）
+            a   = $urandom;  // 32 位随机数
+            b   = $urandom;  // 32 位随机数
+            cin = $urandom_range(0, 1);  // 0 或 1
+
+            // 2. 拉高 enable（此时数据已稳定）
+            @(posedge clk);
+            enable = 1'b1;
+
+            // 3. 等待一个时钟上升沿（DUT 在此边沿采样）
+            @(posedge clk);
+
+            // 4. 在时钟上升沿后立即拉低 enable
+            enable = 1'b0;
+
+            // 5. 延迟 10 ns，再开始下一组激励
+            #10;
+        end
 
         //等到所有的数都计算完就结束
-        wait (count == ((9'd1 << 20) - 1));
         #100 $stop;
     end
 

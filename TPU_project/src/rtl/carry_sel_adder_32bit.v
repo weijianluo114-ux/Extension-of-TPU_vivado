@@ -49,7 +49,6 @@ module carry_sel_adder_32bit (
     //输出信号组合逻辑
     wire [31:0] SUM;
     wire        COUT;
-    wire        OUTPUT_VALID;
 
     /******************************* reg信号 ***********************************/
     //对各信号进行寄存
@@ -77,11 +76,11 @@ module carry_sel_adder_32bit (
     always @(posedge clk) begin
         sum <= SUM;
         cout <= COUT;
-        output_valid <= OUTPUT_VALID;
+        output_valid <= ENABLE;
     end
     /******************************* 模块例化 ***********************************/
-    //1个8位的加法器作为低位，2个作为进位选择的高位
-    carry_bypass_16bit carry_bypass_8bit_inst_lower (
+    //1个16位的加法器作为低位，2个作为进位选择的高位
+    carry_sel_adder_16bit carry_sel_adder_16bit_inst_lower (
         .a   (A[15:0]),
         .b   (B[15:0]),
         .cin (CIN),
@@ -90,7 +89,7 @@ module carry_sel_adder_32bit (
     );
 
     //进位输入为0
-    carry_bypass_16bit carry_bypass_8bit_inst_upper0 (
+    carry_sel_adder_16bit carry_sel_adder_16bit_inst_upper0 (
         .a   (A[31:16]),
         .b   (B[31:16]),
         .cin (1'b0),
@@ -98,7 +97,7 @@ module carry_sel_adder_32bit (
         .cout(cout_temp0)
     );
     //进位输入为1
-    carry_bypass_16bit carry_bypass_8bit_inst_upper1 (
+    carry_sel_adder_16bit carry_sel_adder_16bit_inst_upper1 (
         .a   (A[31:16]),
         .b   (B[31:16]),
         .cin (1'b1),
