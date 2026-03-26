@@ -19,7 +19,7 @@
 // Version:                V1.0
 // TEXT NAME:              carry_sel_adder_32bit.v
 // PATH:                   E:\electronic2\project\verilog_pro\TPU_vivado\TPU_project\src\rtl\carry_sel_adder_32bit.v
-// Descriptions:           32位加法器，添加了控制逻辑
+// Descriptions:           32位有符号加法器，添加了控制逻辑
 //                         
 //----------------------------------------------------------------------------------------
 //****************************************************************************************//
@@ -30,11 +30,12 @@ module carry_sel_adder_32bit (
     input        is_add,  //判断是加法还是减法运算a+b或者a-b
     input [31:0] a,       //32位加数a
     input [31:0] b,       //32位加数b
-    input        cin,     //低位进位cin
+    // input        cin,     //低位进位cin
 
-    output reg [31:0] sum,          //和sum
-    output reg        cout,         //输出进位cout
-    output reg        output_valid  //输出有效信号
+    output reg [31:0] sum,           //和sum
+    output reg        cout,          //输出进位cout
+    output reg        output_valid,  //输出有效信号
+    output reg        overflow       //溢出标志
 );
     /******************************* 网表信号 ***********************************/
     wire        sel;  //进位选择中间信号
@@ -69,7 +70,7 @@ module carry_sel_adder_32bit (
     always @(posedge clk) begin
         A <= a;
         B <= (is_add) ? b : (~b + 1);  //减法即加补码
-        CIN <= (cin == 1'bx) ? 1'b0 : cin;  //给cin的默认值为0
+        CIN <= 1'b0;  //给cin的默认值为0
         ENABLE <= enable;
     end
 
@@ -78,6 +79,8 @@ module carry_sel_adder_32bit (
         sum <= SUM;
         cout <= COUT;
         output_valid <= ENABLE;
+        //溢出检测，符号位相同相加后不同
+        overflow = (A[31] == B[31]) && (SUM[31] != A[31]);
     end
     /******************************* 模块例化 ***********************************/
     //1个16位的加法器作为低位，2个作为进位选择的高位

@@ -31,6 +31,7 @@ module carry_sel_adder_32bit_tb;
     reg  [31:0] a;
     reg  [31:0] b;
     reg         enable;
+    reg         is_add;  //加法标志信号
 
     /******************************* 网表信号 ***********************************/
 
@@ -53,6 +54,7 @@ module carry_sel_adder_32bit_tb;
         b = 0;
         enable = 0;
         clk = 0;
+        is_add = 1;
         #100;
 
         repeat (10) begin
@@ -83,7 +85,6 @@ module carry_sel_adder_32bit_tb;
         .clk         (clk),
         .a           (a),
         .b           (b),
-        .cin         (cin),
         .sum         (sum),
         .cout        (cout),
         .is_add      (is_add),
