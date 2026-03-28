@@ -11,33 +11,123 @@
       </db_ref>
    </db_ref_list>
    <zoom_setting>
-      <ZoomStartTime time="0fs"></ZoomStartTime>
-      <ZoomEndTime time="68675393fs"></ZoomEndTime>
-      <Cursor1Time time="345000000fs"></Cursor1Time>
+      <ZoomStartTime time="92100000fs"></ZoomStartTime>
+      <ZoomEndTime time="256600001fs"></ZoomEndTime>
+      <Cursor1Time time="165000000fs"></Cursor1Time>
    </zoom_setting>
    <column_width_setting>
       <NameColumnWidth column_width="221"></NameColumnWidth>
-      <ValueColumnWidth column_width="302"></ValueColumnWidth>
+      <ValueColumnWidth column_width="297"></ValueColumnWidth>
    </column_width_setting>
-   <WVObjectSize size="5" />
-   <wvobject fp_name="group140" type="group">
-      <obj_property name="label">stage1</obj_property>
-      <obj_property name="DisplayName">label</obj_property>
+   <WVObjectSize size="26" />
+   <wvobject fp_name="/carry_sel_adder_32bit_tb/clk" type="logic">
+      <obj_property name="ElementShortName">clk</obj_property>
+      <obj_property name="ObjectShortName">clk</obj_property>
    </wvobject>
-   <wvobject fp_name="group141" type="group">
-      <obj_property name="label">stage2</obj_property>
-      <obj_property name="DisplayName">label</obj_property>
+   <wvobject fp_name="/carry_sel_adder_32bit_tb/enable" type="logic">
+      <obj_property name="ElementShortName">enable</obj_property>
+      <obj_property name="ObjectShortName">enable</obj_property>
    </wvobject>
-   <wvobject fp_name="group142" type="group">
-      <obj_property name="label">stage3</obj_property>
-      <obj_property name="DisplayName">label</obj_property>
+   <wvobject fp_name="/carry_sel_adder_32bit_tb/a" type="array">
+      <obj_property name="ElementShortName">a[31:0]</obj_property>
+      <obj_property name="ObjectShortName">a[31:0]</obj_property>
+      <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
    </wvobject>
-   <wvobject fp_name="group143" type="group">
-      <obj_property name="label">stage4</obj_property>
-      <obj_property name="DisplayName">label</obj_property>
+   <wvobject fp_name="/carry_sel_adder_32bit_tb/b" type="array">
+      <obj_property name="ElementShortName">b[31:0]</obj_property>
+      <obj_property name="ObjectShortName">b[31:0]</obj_property>
+      <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
    </wvobject>
-   <wvobject fp_name="group107" type="group">
-      <obj_property name="label">stage5</obj_property>
-      <obj_property name="DisplayName">label</obj_property>
+   <wvobject fp_name="/carry_sel_adder_32bit_tb/sum" type="array">
+      <obj_property name="ElementShortName">sum[31:0]</obj_property>
+      <obj_property name="ObjectShortName">sum[31:0]</obj_property>
+      <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject fp_name="/carry_sel_adder_32bit_tb/gold_result" type="array">
+      <obj_property name="ElementShortName">gold_result[32:0]</obj_property>
+      <obj_property name="ObjectShortName">gold_result[32:0]</obj_property>
+      <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject fp_name="/carry_sel_adder_32bit_tb/cout" type="logic">
+      <obj_property name="ElementShortName">cout</obj_property>
+      <obj_property name="ObjectShortName">cout</obj_property>
+   </wvobject>
+   <wvobject fp_name="/carry_sel_adder_32bit_tb/mismatch" type="logic">
+      <obj_property name="ElementShortName">mismatch</obj_property>
+      <obj_property name="ObjectShortName">mismatch</obj_property>
+   </wvobject>
+   <wvobject fp_name="/carry_sel_adder_32bit_tb/output_valid" type="logic">
+      <obj_property name="ElementShortName">output_valid</obj_property>
+      <obj_property name="ObjectShortName">output_valid</obj_property>
+   </wvobject>
+   <wvobject fp_name="/carry_sel_adder_32bit_tb/carry_sel_adder_32bit_inst/enable" type="logic">
+      <obj_property name="ElementShortName">enable</obj_property>
+      <obj_property name="ObjectShortName">enable</obj_property>
+   </wvobject>
+   <wvobject fp_name="/carry_sel_adder_32bit_tb/carry_sel_adder_32bit_inst/clk" type="logic">
+      <obj_property name="ElementShortName">clk</obj_property>
+      <obj_property name="ObjectShortName">clk</obj_property>
+   </wvobject>
+   <wvobject fp_name="/carry_sel_adder_32bit_tb/carry_sel_adder_32bit_inst/cout" type="logic">
+      <obj_property name="ElementShortName">cout</obj_property>
+      <obj_property name="ObjectShortName">cout</obj_property>
+   </wvobject>
+   <wvobject fp_name="/carry_sel_adder_32bit_tb/carry_sel_adder_32bit_inst/output_valid" type="logic">
+      <obj_property name="ElementShortName">output_valid</obj_property>
+      <obj_property name="ObjectShortName">output_valid</obj_property>
+   </wvobject>
+   <wvobject fp_name="/carry_sel_adder_32bit_tb/carry_sel_adder_32bit_inst/sel" type="logic">
+      <obj_property name="ElementShortName">sel</obj_property>
+      <obj_property name="ObjectShortName">sel</obj_property>
+   </wvobject>
+   <wvobject fp_name="/carry_sel_adder_32bit_tb/carry_sel_adder_32bit_inst/sum_temp0" type="array">
+      <obj_property name="ElementShortName">sum_temp0[15:0]</obj_property>
+      <obj_property name="ObjectShortName">sum_temp0[15:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/carry_sel_adder_32bit_tb/carry_sel_adder_32bit_inst/sum_temp1" type="array">
+      <obj_property name="ElementShortName">sum_temp1[15:0]</obj_property>
+      <obj_property name="ObjectShortName">sum_temp1[15:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/carry_sel_adder_32bit_tb/carry_sel_adder_32bit_inst/cout_temp0" type="logic">
+      <obj_property name="ElementShortName">cout_temp0</obj_property>
+      <obj_property name="ObjectShortName">cout_temp0</obj_property>
+   </wvobject>
+   <wvobject fp_name="/carry_sel_adder_32bit_tb/carry_sel_adder_32bit_inst/cout_temp1" type="logic">
+      <obj_property name="ElementShortName">cout_temp1</obj_property>
+      <obj_property name="ObjectShortName">cout_temp1</obj_property>
+   </wvobject>
+   <wvobject fp_name="/carry_sel_adder_32bit_tb/carry_sel_adder_32bit_inst/SUM" type="array">
+      <obj_property name="ElementShortName">SUM[31:0]</obj_property>
+      <obj_property name="ObjectShortName">SUM[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/carry_sel_adder_32bit_tb/carry_sel_adder_32bit_inst/COUT" type="logic">
+      <obj_property name="ElementShortName">COUT</obj_property>
+      <obj_property name="ObjectShortName">COUT</obj_property>
+   </wvobject>
+   <wvobject fp_name="/carry_sel_adder_32bit_tb/carry_sel_adder_32bit_inst/A" type="array">
+      <obj_property name="ElementShortName">A[31:0]</obj_property>
+      <obj_property name="ObjectShortName">A[31:0]</obj_property>
+      <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject fp_name="/carry_sel_adder_32bit_tb/carry_sel_adder_32bit_inst/B" type="array">
+      <obj_property name="ElementShortName">B[31:0]</obj_property>
+      <obj_property name="ObjectShortName">B[31:0]</obj_property>
+      <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject fp_name="/carry_sel_adder_32bit_tb/carry_sel_adder_32bit_inst/CIN" type="logic">
+      <obj_property name="ElementShortName">CIN</obj_property>
+      <obj_property name="ObjectShortName">CIN</obj_property>
+   </wvobject>
+   <wvobject fp_name="/carry_sel_adder_32bit_tb/carry_sel_adder_32bit_inst/ENABLE" type="logic">
+      <obj_property name="ElementShortName">ENABLE</obj_property>
+      <obj_property name="ObjectShortName">ENABLE</obj_property>
+   </wvobject>
+   <wvobject fp_name="/carry_sel_adder_32bit_tb/is_add" type="logic">
+      <obj_property name="ElementShortName">is_add</obj_property>
+      <obj_property name="ObjectShortName">is_add</obj_property>
+   </wvobject>
+   <wvobject fp_name="/carry_sel_adder_32bit_tb/overflow" type="logic">
+      <obj_property name="ElementShortName">overflow</obj_property>
+      <obj_property name="ObjectShortName">overflow</obj_property>
    </wvobject>
 </wave_config>
