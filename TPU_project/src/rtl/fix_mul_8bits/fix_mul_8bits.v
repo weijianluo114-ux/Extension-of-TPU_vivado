@@ -34,5 +34,12 @@ module fix_mul_8bits (
     output [15:0] c
 );
 
+    booth_encoder_8bits booth_encoder_8bits_inst (
+        .b   (b),
+        .enc0(enc0),
+        .enc1(enc1),
+        .enc2(enc2),
+        .enc3(enc3)
+    );
 
 endmodule
