@@ -19,7 +19,7 @@
 // Version:                V1.0
 // TEXT NAME:              booth_encoder_8bits.v
 // PATH:                   E:\electronic2\project\verilog_pro\TPU_vivado\TPU_project\src\rtl\booth_encoder_8bits.v
-// Descriptions:           此模块用于给8位乘数进行波兹编码
+// Descriptions:           此模块用于给8位乘数进行波兹编码，组合逻辑，只用数查找表实现
 //                         
 //----------------------------------------------------------------------------------------
 //****************************************************************************************//
@@ -31,6 +31,8 @@ module booth_encoder_8bits (
     output reg [2:0] enc2,
     output reg [2:0] enc3
 );
+
+    /******************************* 函数 ***********************************/
     // 辅助函数：将 3 位组合转换为编码
     function [2:0] booth_code;
         input [2:0] bits;  // {b[2i+1], b[2i], b[2i-1]}
@@ -49,6 +51,7 @@ module booth_encoder_8bits (
         end
     endfunction
 
+    /******************************* 组合逻辑 ***********************************/
     always @(*) begin
         // 组0: b[1], b[0], b[-1]=0
         enc0 = booth_code({b[1], b[0], 1'b0});
@@ -58,5 +61,6 @@ module booth_encoder_8bits (
         enc2 = booth_code({b[5], b[4], b[3]});
         // 组3: b[7], b[6], b[5]
         enc3 = booth_code({b[7], b[6], b[5]});
+        //注意这里忽略最高的3位，因为有符号数的情况下，最高3位永远是0
     end
 endmodule

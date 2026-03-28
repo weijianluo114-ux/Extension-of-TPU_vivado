@@ -31,7 +31,7 @@ module fix_mul_8bits (
     input [7:0] a,
     input [7:0] b,
 
-    output [15:0] c
+    output [31:0] c
 );
 
     booth_encoder_8bits booth_encoder_8bits_inst (
