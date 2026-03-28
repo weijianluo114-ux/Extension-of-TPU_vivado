@@ -3,131 +3,211 @@
    <wave_state>
    </wave_state>
    <db_ref_list>
-      <db_ref path="carry_sel_adder_32bit_tb_behav.wdb" id="1">
+      <db_ref path="fix_mul_8bits_tb_behav.wdb" id="1">
          <top_modules>
-            <top_module name="carry_sel_adder_32bit_tb" />
+            <top_module name="fix_mul_8bits_tb" />
             <top_module name="glbl" />
          </top_modules>
       </db_ref>
    </db_ref_list>
    <zoom_setting>
-      <ZoomStartTime time="92100000fs"></ZoomStartTime>
-      <ZoomEndTime time="256600001fs"></ZoomEndTime>
-      <Cursor1Time time="165000000fs"></Cursor1Time>
+      <ZoomStartTime time="0fs"></ZoomStartTime>
+      <ZoomEndTime time="1000000001fs"></ZoomEndTime>
+      <Cursor1Time time="985000000fs"></Cursor1Time>
    </zoom_setting>
    <column_width_setting>
       <NameColumnWidth column_width="221"></NameColumnWidth>
-      <ValueColumnWidth column_width="297"></ValueColumnWidth>
+      <ValueColumnWidth column_width="287"></ValueColumnWidth>
    </column_width_setting>
-   <WVObjectSize size="26" />
-   <wvobject fp_name="/carry_sel_adder_32bit_tb/clk" type="logic">
+   <WVObjectSize size="11" />
+   <wvobject fp_name="/fix_mul_8bits_tb/fix_mul_8bits_inst/clk" type="logic">
       <obj_property name="ElementShortName">clk</obj_property>
       <obj_property name="ObjectShortName">clk</obj_property>
    </wvobject>
-   <wvobject fp_name="/carry_sel_adder_32bit_tb/enable" type="logic">
+   <wvobject fp_name="/fix_mul_8bits_tb/fix_mul_8bits_inst/rst_n" type="logic">
+      <obj_property name="ElementShortName">rst_n</obj_property>
+      <obj_property name="ObjectShortName">rst_n</obj_property>
+   </wvobject>
+   <wvobject fp_name="/fix_mul_8bits_tb/fix_mul_8bits_inst/enable" type="logic">
       <obj_property name="ElementShortName">enable</obj_property>
       <obj_property name="ObjectShortName">enable</obj_property>
    </wvobject>
-   <wvobject fp_name="/carry_sel_adder_32bit_tb/a" type="array">
-      <obj_property name="ElementShortName">a[31:0]</obj_property>
-      <obj_property name="ObjectShortName">a[31:0]</obj_property>
+   <wvobject fp_name="/fix_mul_8bits_tb/fix_mul_8bits_inst/a" type="array">
+      <obj_property name="ElementShortName">a[7:0]</obj_property>
+      <obj_property name="ObjectShortName">a[7:0]</obj_property>
       <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
    </wvobject>
-   <wvobject fp_name="/carry_sel_adder_32bit_tb/b" type="array">
-      <obj_property name="ElementShortName">b[31:0]</obj_property>
-      <obj_property name="ObjectShortName">b[31:0]</obj_property>
+   <wvobject fp_name="/fix_mul_8bits_tb/fix_mul_8bits_inst/b" type="array">
+      <obj_property name="ElementShortName">b[7:0]</obj_property>
+      <obj_property name="ObjectShortName">b[7:0]</obj_property>
       <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
    </wvobject>
-   <wvobject fp_name="/carry_sel_adder_32bit_tb/sum" type="array">
-      <obj_property name="ElementShortName">sum[31:0]</obj_property>
-      <obj_property name="ObjectShortName">sum[31:0]</obj_property>
-      <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
-   </wvobject>
-   <wvobject fp_name="/carry_sel_adder_32bit_tb/gold_result" type="array">
-      <obj_property name="ElementShortName">gold_result[32:0]</obj_property>
-      <obj_property name="ObjectShortName">gold_result[32:0]</obj_property>
-      <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
-   </wvobject>
-   <wvobject fp_name="/carry_sel_adder_32bit_tb/cout" type="logic">
-      <obj_property name="ElementShortName">cout</obj_property>
-      <obj_property name="ObjectShortName">cout</obj_property>
-   </wvobject>
-   <wvobject fp_name="/carry_sel_adder_32bit_tb/mismatch" type="logic">
-      <obj_property name="ElementShortName">mismatch</obj_property>
-      <obj_property name="ObjectShortName">mismatch</obj_property>
-   </wvobject>
-   <wvobject fp_name="/carry_sel_adder_32bit_tb/output_valid" type="logic">
+   <wvobject fp_name="/fix_mul_8bits_tb/fix_mul_8bits_inst/output_valid" type="logic">
       <obj_property name="ElementShortName">output_valid</obj_property>
       <obj_property name="ObjectShortName">output_valid</obj_property>
    </wvobject>
-   <wvobject fp_name="/carry_sel_adder_32bit_tb/carry_sel_adder_32bit_inst/enable" type="logic">
-      <obj_property name="ElementShortName">enable</obj_property>
-      <obj_property name="ObjectShortName">enable</obj_property>
+   <wvobject fp_name="/fix_mul_8bits_tb/fix_mul_8bits_inst/p" type="array">
+      <obj_property name="ElementShortName">p[31:0]</obj_property>
+      <obj_property name="ObjectShortName">p[31:0]</obj_property>
    </wvobject>
-   <wvobject fp_name="/carry_sel_adder_32bit_tb/carry_sel_adder_32bit_inst/clk" type="logic">
-      <obj_property name="ElementShortName">clk</obj_property>
-      <obj_property name="ObjectShortName">clk</obj_property>
+   <wvobject fp_name="group42" type="group">
+      <obj_property name="label">s1</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <wvobject fp_name="/fix_mul_8bits_tb/fix_mul_8bits_inst/enc0_w1" type="array">
+         <obj_property name="ElementShortName">enc0_w1[2:0]</obj_property>
+         <obj_property name="ObjectShortName">enc0_w1[2:0]</obj_property>
+         <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/fix_mul_8bits_tb/fix_mul_8bits_inst/enc1_w1" type="array">
+         <obj_property name="ElementShortName">enc1_w1[2:0]</obj_property>
+         <obj_property name="ObjectShortName">enc1_w1[2:0]</obj_property>
+         <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/fix_mul_8bits_tb/fix_mul_8bits_inst/enc2_w1" type="array">
+         <obj_property name="ElementShortName">enc2_w1[2:0]</obj_property>
+         <obj_property name="ObjectShortName">enc2_w1[2:0]</obj_property>
+         <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/fix_mul_8bits_tb/fix_mul_8bits_inst/enc3_w1" type="array">
+         <obj_property name="ElementShortName">enc3_w1[2:0]</obj_property>
+         <obj_property name="ObjectShortName">enc3_w1[2:0]</obj_property>
+         <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/fix_mul_8bits_tb/fix_mul_8bits_inst/a_r1" type="array">
+         <obj_property name="ElementShortName">a_r1[7:0]</obj_property>
+         <obj_property name="ObjectShortName">a_r1[7:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/fix_mul_8bits_tb/fix_mul_8bits_inst/b_r1" type="array">
+         <obj_property name="ElementShortName">b_r1[7:0]</obj_property>
+         <obj_property name="ObjectShortName">b_r1[7:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/fix_mul_8bits_tb/fix_mul_8bits_inst/enable_r1" type="logic">
+         <obj_property name="ElementShortName">enable_r1</obj_property>
+         <obj_property name="ObjectShortName">enable_r1</obj_property>
+      </wvobject>
    </wvobject>
-   <wvobject fp_name="/carry_sel_adder_32bit_tb/carry_sel_adder_32bit_inst/cout" type="logic">
-      <obj_property name="ElementShortName">cout</obj_property>
-      <obj_property name="ObjectShortName">cout</obj_property>
+   <wvobject fp_name="group45" type="group">
+      <obj_property name="label">s2</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <wvobject fp_name="/fix_mul_8bits_tb/fix_mul_8bits_inst/a_r2" type="array">
+         <obj_property name="ElementShortName">a_r2[7:0]</obj_property>
+         <obj_property name="ObjectShortName">a_r2[7:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/fix_mul_8bits_tb/fix_mul_8bits_inst/enable_r2" type="logic">
+         <obj_property name="ElementShortName">enable_r2</obj_property>
+         <obj_property name="ObjectShortName">enable_r2</obj_property>
+      </wvobject>
+      <wvobject fp_name="/fix_mul_8bits_tb/fix_mul_8bits_inst/enc0_r2" type="array">
+         <obj_property name="ElementShortName">enc0_r2[2:0]</obj_property>
+         <obj_property name="ObjectShortName">enc0_r2[2:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/fix_mul_8bits_tb/fix_mul_8bits_inst/enc1_r2" type="array">
+         <obj_property name="ElementShortName">enc1_r2[2:0]</obj_property>
+         <obj_property name="ObjectShortName">enc1_r2[2:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/fix_mul_8bits_tb/fix_mul_8bits_inst/enc2_r2" type="array">
+         <obj_property name="ElementShortName">enc2_r2[2:0]</obj_property>
+         <obj_property name="ObjectShortName">enc2_r2[2:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/fix_mul_8bits_tb/fix_mul_8bits_inst/enc3_r2" type="array">
+         <obj_property name="ElementShortName">enc3_r2[2:0]</obj_property>
+         <obj_property name="ObjectShortName">enc3_r2[2:0]</obj_property>
+      </wvobject>
    </wvobject>
-   <wvobject fp_name="/carry_sel_adder_32bit_tb/carry_sel_adder_32bit_inst/output_valid" type="logic">
-      <obj_property name="ElementShortName">output_valid</obj_property>
-      <obj_property name="ObjectShortName">output_valid</obj_property>
+   <wvobject fp_name="group43" type="group">
+      <obj_property name="label">s3</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <wvobject fp_name="/fix_mul_8bits_tb/fix_mul_8bits_inst/pp0_w3" type="array">
+         <obj_property name="ElementShortName">pp0_w3[15:0]</obj_property>
+         <obj_property name="ObjectShortName">pp0_w3[15:0]</obj_property>
+         <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/fix_mul_8bits_tb/fix_mul_8bits_inst/pp1_w3" type="array">
+         <obj_property name="ElementShortName">pp1_w3[15:0]</obj_property>
+         <obj_property name="ObjectShortName">pp1_w3[15:0]</obj_property>
+         <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/fix_mul_8bits_tb/fix_mul_8bits_inst/pp2_w3" type="array">
+         <obj_property name="ElementShortName">pp2_w3[15:0]</obj_property>
+         <obj_property name="ObjectShortName">pp2_w3[15:0]</obj_property>
+         <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/fix_mul_8bits_tb/fix_mul_8bits_inst/pp3_w3" type="array">
+         <obj_property name="ElementShortName">pp3_w3[15:0]</obj_property>
+         <obj_property name="ObjectShortName">pp3_w3[15:0]</obj_property>
+         <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/fix_mul_8bits_tb/fix_mul_8bits_inst/neg0_w3" type="logic">
+         <obj_property name="ElementShortName">neg0_w3</obj_property>
+         <obj_property name="ObjectShortName">neg0_w3</obj_property>
+      </wvobject>
+      <wvobject fp_name="/fix_mul_8bits_tb/fix_mul_8bits_inst/neg1_w3" type="logic">
+         <obj_property name="ElementShortName">neg1_w3</obj_property>
+         <obj_property name="ObjectShortName">neg1_w3</obj_property>
+      </wvobject>
+      <wvobject fp_name="/fix_mul_8bits_tb/fix_mul_8bits_inst/neg2_w3" type="logic">
+         <obj_property name="ElementShortName">neg2_w3</obj_property>
+         <obj_property name="ObjectShortName">neg2_w3</obj_property>
+      </wvobject>
+      <wvobject fp_name="/fix_mul_8bits_tb/fix_mul_8bits_inst/neg3_w3" type="logic">
+         <obj_property name="ElementShortName">neg3_w3</obj_property>
+         <obj_property name="ObjectShortName">neg3_w3</obj_property>
+      </wvobject>
+      <wvobject fp_name="/fix_mul_8bits_tb/fix_mul_8bits_inst/enable_r3" type="logic">
+         <obj_property name="ElementShortName">enable_r3</obj_property>
+         <obj_property name="ObjectShortName">enable_r3</obj_property>
+      </wvobject>
+      <wvobject fp_name="/fix_mul_8bits_tb/fix_mul_8bits_inst/pp0_r3" type="array">
+         <obj_property name="ElementShortName">pp0_r3[15:0]</obj_property>
+         <obj_property name="ObjectShortName">pp0_r3[15:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/fix_mul_8bits_tb/fix_mul_8bits_inst/pp1_r3" type="array">
+         <obj_property name="ElementShortName">pp1_r3[15:0]</obj_property>
+         <obj_property name="ObjectShortName">pp1_r3[15:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/fix_mul_8bits_tb/fix_mul_8bits_inst/pp2_r3" type="array">
+         <obj_property name="ElementShortName">pp2_r3[15:0]</obj_property>
+         <obj_property name="ObjectShortName">pp2_r3[15:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/fix_mul_8bits_tb/fix_mul_8bits_inst/pp3_r3" type="array">
+         <obj_property name="ElementShortName">pp3_r3[15:0]</obj_property>
+         <obj_property name="ObjectShortName">pp3_r3[15:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/fix_mul_8bits_tb/fix_mul_8bits_inst/neg0_r3" type="logic">
+         <obj_property name="ElementShortName">neg0_r3</obj_property>
+         <obj_property name="ObjectShortName">neg0_r3</obj_property>
+      </wvobject>
+      <wvobject fp_name="/fix_mul_8bits_tb/fix_mul_8bits_inst/neg1_r3" type="logic">
+         <obj_property name="ElementShortName">neg1_r3</obj_property>
+         <obj_property name="ObjectShortName">neg1_r3</obj_property>
+      </wvobject>
+      <wvobject fp_name="/fix_mul_8bits_tb/fix_mul_8bits_inst/neg2_r3" type="logic">
+         <obj_property name="ElementShortName">neg2_r3</obj_property>
+         <obj_property name="ObjectShortName">neg2_r3</obj_property>
+      </wvobject>
+      <wvobject fp_name="/fix_mul_8bits_tb/fix_mul_8bits_inst/neg3_r3" type="logic">
+         <obj_property name="ElementShortName">neg3_r3</obj_property>
+         <obj_property name="ObjectShortName">neg3_r3</obj_property>
+      </wvobject>
    </wvobject>
-   <wvobject fp_name="/carry_sel_adder_32bit_tb/carry_sel_adder_32bit_inst/sel" type="logic">
-      <obj_property name="ElementShortName">sel</obj_property>
-      <obj_property name="ObjectShortName">sel</obj_property>
-   </wvobject>
-   <wvobject fp_name="/carry_sel_adder_32bit_tb/carry_sel_adder_32bit_inst/sum_temp0" type="array">
-      <obj_property name="ElementShortName">sum_temp0[15:0]</obj_property>
-      <obj_property name="ObjectShortName">sum_temp0[15:0]</obj_property>
-   </wvobject>
-   <wvobject fp_name="/carry_sel_adder_32bit_tb/carry_sel_adder_32bit_inst/sum_temp1" type="array">
-      <obj_property name="ElementShortName">sum_temp1[15:0]</obj_property>
-      <obj_property name="ObjectShortName">sum_temp1[15:0]</obj_property>
-   </wvobject>
-   <wvobject fp_name="/carry_sel_adder_32bit_tb/carry_sel_adder_32bit_inst/cout_temp0" type="logic">
-      <obj_property name="ElementShortName">cout_temp0</obj_property>
-      <obj_property name="ObjectShortName">cout_temp0</obj_property>
-   </wvobject>
-   <wvobject fp_name="/carry_sel_adder_32bit_tb/carry_sel_adder_32bit_inst/cout_temp1" type="logic">
-      <obj_property name="ElementShortName">cout_temp1</obj_property>
-      <obj_property name="ObjectShortName">cout_temp1</obj_property>
-   </wvobject>
-   <wvobject fp_name="/carry_sel_adder_32bit_tb/carry_sel_adder_32bit_inst/SUM" type="array">
-      <obj_property name="ElementShortName">SUM[31:0]</obj_property>
-      <obj_property name="ObjectShortName">SUM[31:0]</obj_property>
-   </wvobject>
-   <wvobject fp_name="/carry_sel_adder_32bit_tb/carry_sel_adder_32bit_inst/COUT" type="logic">
-      <obj_property name="ElementShortName">COUT</obj_property>
-      <obj_property name="ObjectShortName">COUT</obj_property>
-   </wvobject>
-   <wvobject fp_name="/carry_sel_adder_32bit_tb/carry_sel_adder_32bit_inst/A" type="array">
-      <obj_property name="ElementShortName">A[31:0]</obj_property>
-      <obj_property name="ObjectShortName">A[31:0]</obj_property>
-      <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
-   </wvobject>
-   <wvobject fp_name="/carry_sel_adder_32bit_tb/carry_sel_adder_32bit_inst/B" type="array">
-      <obj_property name="ElementShortName">B[31:0]</obj_property>
-      <obj_property name="ObjectShortName">B[31:0]</obj_property>
-      <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
-   </wvobject>
-   <wvobject fp_name="/carry_sel_adder_32bit_tb/carry_sel_adder_32bit_inst/CIN" type="logic">
-      <obj_property name="ElementShortName">CIN</obj_property>
-      <obj_property name="ObjectShortName">CIN</obj_property>
-   </wvobject>
-   <wvobject fp_name="/carry_sel_adder_32bit_tb/carry_sel_adder_32bit_inst/ENABLE" type="logic">
-      <obj_property name="ElementShortName">ENABLE</obj_property>
-      <obj_property name="ObjectShortName">ENABLE</obj_property>
-   </wvobject>
-   <wvobject fp_name="/carry_sel_adder_32bit_tb/is_add" type="logic">
-      <obj_property name="ElementShortName">is_add</obj_property>
-      <obj_property name="ObjectShortName">is_add</obj_property>
-   </wvobject>
-   <wvobject fp_name="/carry_sel_adder_32bit_tb/overflow" type="logic">
-      <obj_property name="ElementShortName">overflow</obj_property>
-      <obj_property name="ObjectShortName">overflow</obj_property>
+   <wvobject fp_name="group44" type="group">
+      <obj_property name="label">s4</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <wvobject fp_name="/fix_mul_8bits_tb/fix_mul_8bits_inst/sum_w4" type="array">
+         <obj_property name="ElementShortName">sum_w4[21:0]</obj_property>
+         <obj_property name="ObjectShortName">sum_w4[21:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/fix_mul_8bits_tb/fix_mul_8bits_inst/carry_w4" type="array">
+         <obj_property name="ElementShortName">carry_w4[21:0]</obj_property>
+         <obj_property name="ObjectShortName">carry_w4[21:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/fix_mul_8bits_tb/fix_mul_8bits_inst/neg_cnt_w4" type="array">
+         <obj_property name="ElementShortName">neg_cnt_w4[2:0]</obj_property>
+         <obj_property name="ObjectShortName">neg_cnt_w4[2:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/fix_mul_8bits_tb/fix_mul_8bits_inst/product_w4" type="array">
+         <obj_property name="ElementShortName">product_w4[31:0]</obj_property>
+         <obj_property name="ObjectShortName">product_w4[31:0]</obj_property>
+      </wvobject>
    </wvobject>
 </wave_config>

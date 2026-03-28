@@ -52,11 +52,11 @@ module fix_mul_8bits (
     /******************************* reg信号 ***********************************/
     //第一级输入寄存
     reg [7:0] a_r1, b_r1;
-    reg enable_r1;
+    reg       enable_r1;
 
     // 第二级流水级寄存器
-    reg a_r2;
-    reg enable_r2;
+    reg [7:0] a_r2;
+    reg       enable_r2;
     reg [2:0] enc0_r2, enc1_r2, enc2_r2, enc3_r2;
 
     //第三级流水线
@@ -81,9 +81,9 @@ module fix_mul_8bits (
             b_r1 <= b;
             enable_r1 <= 1'b1;
         end else begin
-            a_r1 <= 8'd0;
-            b_r1 <= 8'd0;
             enable_r1 <= 1'b0;
+            // a_r1 <= 8'd0;
+            // b_r1 <= 8'd0;
         end
     end
 
@@ -100,10 +100,11 @@ module fix_mul_8bits (
             enc2_r2 <= enc2_w1;
             enc3_r2 <= enc3_w1;
         end else begin
-            enc0_r2 <= 3'd0;
-            enc1_r2 <= 3'd0;
-            enc2_r2 <= 3'd0;
-            enc3_r2 <= 3'd0;
+            enable_r2 <= 1'b0;
+            // enc0_r2   <= 3'd0;
+            // enc1_r2   <= 3'd0;
+            // enc2_r2   <= 3'd0;
+            // enc3_r2   <= 3'd0;
         end
     end
 
@@ -130,14 +131,15 @@ module fix_mul_8bits (
             neg2_r3 <= neg2_w3;
             neg3_r3 <= neg3_w3;
         end else begin
-            pp0_r3  <= 16'd0;
-            pp1_r3  <= 16'd0;
-            pp2_r3  <= 16'd0;
-            pp3_r3  <= 16'd0;
-            neg0_r3 <= 1'b0;
-            neg1_r3 <= 1'b0;
-            neg2_r3 <= 1'b0;
-            neg3_r3 <= 1'b0;
+            enable_r3 <= 1'b0;
+            // pp0_r3  <= 16'd0;
+            // pp1_r3  <= 16'd0;
+            // pp2_r3  <= 16'd0;
+            // pp3_r3  <= 16'd0;
+            // neg0_r3 <= 1'b0;
+            // neg1_r3 <= 1'b0;
+            // neg2_r3 <= 1'b0;
+            // neg3_r3 <= 1'b0;
         end
     end
 
@@ -182,19 +184,19 @@ module fix_mul_8bits (
 
     //第四级：压缩树
     compress_tree_8bits compressor_tree_8bits_inst (
-        .pp0_w3(pp0_r3),
-        .pp1_w3(pp1_r3),
-        .pp2_w3(pp2_r3),
-        .pp3_w3(pp3_r3),
-        .sum   (sum_w4),
-        .carry (carry_w4)
+        .pp0  (pp0_r3),
+        .pp1  (pp1_r3),
+        .pp2  (pp2_r3),
+        .pp3  (pp3_r3),
+        .sum  (sum_w4),
+        .carry(carry_w4)
     );
 
     //第四级，加法器
     final_adder final_adder_inst (
-        .sum       (sum_w4),
-        .carry     (carry_w4),
-        .neg_cnt_w4(neg_cnt_w4),
-        .product_w4(product_w4)
+        .sum    (sum_w4),
+        .carry  (carry_w4),
+        .neg_cnt(neg_cnt_w4),
+        .product(product_w4)
     );
 endmodule
