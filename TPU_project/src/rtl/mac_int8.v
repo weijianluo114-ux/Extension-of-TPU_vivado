@@ -9,79 +9,51 @@
 // Copyright(C)            Please Write Company name
 // All rights reserved     
 // File name:              
-// Last modified Date:     2026/03/28 20:56:23
+// Last modified Date:     2026/03/28 21:48:59
 // Last Version:           V1.0
 // Descriptions:           
 //----------------------------------------------------------------------------------------
 // Created by:             Please Write You Name 
-// Created date:           2026/03/28 20:56:23
+// Created date:           2026/03/28 21:48:59
 // mail      :             Please Write mail 
 // Version:                V1.0
-// TEXT NAME:              fix_mul_8bits_tb.v
-// PATH:                   E:\electronic2\project\verilog_pro\TPU_vivado\TPU_project\src\sim\fix_mul_8bits_tb.v
-// Descriptions:           
+// TEXT NAME:              mac_int8.v
+// PATH:                   E:\electronic2\project\verilog_pro\TPU_vivado\TPU_project\src\rtl\mac_int8.v
+// Descriptions:           8位的最小乘积累加单元
 //                         
 //----------------------------------------------------------------------------------------
 //****************************************************************************************//
 
-module fix_mul_8bits_tb;
-    /******************************* 网表信号 ***********************************/
-    wire        output_valid;
-    wire [31:0] p;
+module mac_int8 (
+    //控制信号
+    input wire clk,
+    input wire rst_n,
+    input wire valid_in,
+
+    //输入信号
+    input wire signed [ 7:0] a,
+    input wire signed [ 7:0] b,
+    input wire signed [31:0] c_in,
+
+    //输出信号
+    output reg signed [31:0] c_out,
+    output reg               valid_out
+);
 
     /******************************* reg信号 ***********************************/
-    reg         clk;
-    reg         rst_n;
-    reg         enable;
-    reg  [ 7:0] a;
-    reg  [ 7:0] b;
-
-    reg         mismatch;
+    //4级延时存储
+    reg [31:0] C[3:0];
 
     /******************************* 时序逻辑 ***********************************/
-    always #5 clk = !clk;
 
-    /******************************* 仿真过程 ***********************************/
-    integer i;
-    integer j;
-    initial begin
-        clk = 0;
-        rst_n = 0;
-        enable = 0;
-        #100;
-        rst_n = 1;
-
-        for (i = -128; i < 128; i = i + 1) begin
-            for (j = -128; j < 128; j = j + 1) begin
-                @(posedge clk);
-                #1;
-                enable = 1;
-                a = i[7:0];
-                b = j[7:0];
-                @(posedge clk);
-                #1;
-                enable = 0;
-                if (p !== i * j) begin
-                    $error("Mismatch");
-                    mismatch <= 0;
-                end
-            end
-        end
-
-        #100;
-        $stop;
-
-    end
-
+    //8位乘法器，四级流水线
     fix_mul_8bits fix_mul_8bits_inst (
         .clk         (clk),
         .rst_n       (rst_n),
-        .enable      (enable),
+        .enable      (valid_in),
         .a           (a),
         .b           (b),
         .output_valid(output_valid),
         .p           (p)
     );
-
-
 endmodule
