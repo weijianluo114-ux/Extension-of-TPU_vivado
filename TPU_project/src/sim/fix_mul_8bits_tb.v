@@ -43,7 +43,7 @@ module fix_mul_8bits_tb;
 
     /******************************* 仿真过程 ***********************************/
     integer i;
-    integer j = -38;
+    integer j;
     initial begin
         clk = 0;
         rst_n = 0;
@@ -52,16 +52,18 @@ module fix_mul_8bits_tb;
         rst_n = 1;
 
         for (i = -128; i < 128; i = i + 1) begin
-            @(posedge clk);
-            enable = 1;
-            a = i[7:0];
-            b = j[7:0];
-            @(posedge clk);
-            enable = 0;
-            #1;  // 等待输出稳定
-            if (p !== i * j) begin
-                $error("Mismatch");
-                mismatch <= 0;
+            for (j = -128; j < 128; j = j + 1) begin
+                @(posedge clk);
+                enable = 1;
+                a = i[7:0];
+                b = j[7:0];
+                @(posedge clk);
+                enable = 0;
+                #1;  // 等待输出稳定
+                if (p !== i * j) begin
+                    $error("Mismatch");
+                    mismatch <= 0;
+                end
             end
         end
 
