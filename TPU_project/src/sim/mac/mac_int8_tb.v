@@ -7,7 +7,7 @@ module mac_int8_tb;
     wire               overflow_output;
     wire signed [31:0] c_out_gold;
     wire signed [31:0] fix_mul_gold;
-
+    wire               mismatch;
 
     /******************************* reg信号 ***********************************/
     reg                clk;
@@ -20,8 +20,9 @@ module mac_int8_tb;
     reg signed  [31:0] r_fix_mul_gold  [6:0];
 
     /******************************* 组合逻辑 ***********************************/
-    assign c_out_gold   = a * b + c_in;
+    assign c_out_gold = a * b + c_in;
     assign fix_mul_gold = a * b;
+    assign mismatch = r_c_out_gold[6] ^ c_out;
 
     /******************************* 时序逻辑 ***********************************/
     always #5 clk = !clk;
