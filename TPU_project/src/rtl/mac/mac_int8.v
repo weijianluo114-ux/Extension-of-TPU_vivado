@@ -93,15 +93,16 @@ module mac_int8 (
         .p           (p)
     );
 
+    //32位定点数加法器
     carry_sel_adder_32bit carry_sel_adder_32bit_inst (
         .clk         (clk),
-        .enable      (enable),
+        .valid_input (valid_input),
         .is_add      (is_add),
         .a           (a),
         .b           (b),
         .sum         (sum),
         .cout        (cout),
-        .output_valid(output_valid),
+        .valid_output(valid_output),
         .overflow    (overflow)
     );
 endmodule
