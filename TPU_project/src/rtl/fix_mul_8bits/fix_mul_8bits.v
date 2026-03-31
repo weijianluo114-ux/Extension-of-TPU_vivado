@@ -27,11 +27,11 @@
 module fix_mul_8bits (
     input       clk,
     input       rst_n,
-    input       enable,
+    input       valid_input,
     input [7:0] a,
     input [7:0] b,
 
-    output reg        output_valid,  //输出有效
+    output reg        valid_output,  //输出有效
     output reg [31:0] p              //乘积输出
 );
 
@@ -74,7 +74,7 @@ module fix_mul_8bits (
             a_r1 <= 8'd0;
             b_r1 <= 8'd0;
             enable_r1 <= 1'b0;
-        end else if (enable) begin
+        end else if (valid_input) begin
             a_r1 <= a;
             b_r1 <= b;
             enable_r1 <= 1'b1;
@@ -131,10 +131,10 @@ module fix_mul_8bits (
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) p <= 0;
         else if (enable_r3) begin
-            output_valid <= 1'b1;
+            valid_output <= 1'b1;
             p <= product_w4;
         end else begin
-            output_valid <= 1'b0;
+            valid_output <= 1'b0;
             p <= 32'd0;
         end
     end

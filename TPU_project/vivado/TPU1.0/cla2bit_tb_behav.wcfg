@@ -11,15 +11,15 @@
       </db_ref>
    </db_ref_list>
    <zoom_setting>
-      <ZoomStartTime time="1310872916666fs"></ZoomStartTime>
-      <ZoomEndTime time="1310924616667fs"></ZoomEndTime>
-      <Cursor1Time time="1310916000000fs"></Cursor1Time>
+      <ZoomStartTime time="71777383334fs"></ZoomStartTime>
+      <ZoomEndTime time="71829083335fs"></ZoomEndTime>
+      <Cursor1Time time="71825000000fs"></Cursor1Time>
    </zoom_setting>
    <column_width_setting>
       <NameColumnWidth column_width="221"></NameColumnWidth>
       <ValueColumnWidth column_width="287"></ValueColumnWidth>
    </column_width_setting>
-   <WVObjectSize size="12" />
+   <WVObjectSize size="10" />
    <wvobject fp_name="/fix_mul_8bits_tb/fix_mul_8bits_inst/clk" type="logic">
       <obj_property name="ElementShortName">clk</obj_property>
       <obj_property name="ObjectShortName">clk</obj_property>
@@ -42,19 +42,14 @@
       <obj_property name="ObjectShortName">b[7:0]</obj_property>
       <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
    </wvobject>
-   <wvobject fp_name="/fix_mul_8bits_tb/fix_mul_8bits_inst/output_valid" type="logic">
-      <obj_property name="ElementShortName">output_valid</obj_property>
-      <obj_property name="ObjectShortName">output_valid</obj_property>
-   </wvobject>
-   <wvobject fp_name="/fix_mul_8bits_tb/fix_mul_8bits_inst/p" type="array">
-      <obj_property name="ElementShortName">p[31:0]</obj_property>
-      <obj_property name="ObjectShortName">p[31:0]</obj_property>
-      <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
-   </wvobject>
    <wvobject fp_name="group42" type="group">
       <obj_property name="label">s1</obj_property>
       <obj_property name="DisplayName">label</obj_property>
       <obj_property name="isExpanded"></obj_property>
+      <wvobject fp_name="/fix_mul_8bits_tb/fix_mul_8bits_inst/enable_r1" type="logic">
+         <obj_property name="ElementShortName">enable_r1</obj_property>
+         <obj_property name="ObjectShortName">enable_r1</obj_property>
+      </wvobject>
       <wvobject fp_name="/fix_mul_8bits_tb/fix_mul_8bits_inst/enc0_w1" type="array">
          <obj_property name="ElementShortName">enc0_w1[2:0]</obj_property>
          <obj_property name="ObjectShortName">enc0_w1[2:0]</obj_property>
@@ -83,22 +78,18 @@
          <obj_property name="ElementShortName">b_r1[7:0]</obj_property>
          <obj_property name="ObjectShortName">b_r1[7:0]</obj_property>
       </wvobject>
-      <wvobject fp_name="/fix_mul_8bits_tb/fix_mul_8bits_inst/enable_r1" type="logic">
-         <obj_property name="ElementShortName">enable_r1</obj_property>
-         <obj_property name="ObjectShortName">enable_r1</obj_property>
-      </wvobject>
    </wvobject>
    <wvobject fp_name="group45" type="group">
       <obj_property name="label">s2</obj_property>
       <obj_property name="DisplayName">label</obj_property>
       <obj_property name="isExpanded"></obj_property>
-      <wvobject fp_name="/fix_mul_8bits_tb/fix_mul_8bits_inst/a_r2" type="array">
-         <obj_property name="ElementShortName">a_r2[7:0]</obj_property>
-         <obj_property name="ObjectShortName">a_r2[7:0]</obj_property>
-      </wvobject>
       <wvobject fp_name="/fix_mul_8bits_tb/fix_mul_8bits_inst/enable_r2" type="logic">
          <obj_property name="ElementShortName">enable_r2</obj_property>
          <obj_property name="ObjectShortName">enable_r2</obj_property>
+      </wvobject>
+      <wvobject fp_name="/fix_mul_8bits_tb/fix_mul_8bits_inst/a_r2" type="array">
+         <obj_property name="ElementShortName">a_r2[7:0]</obj_property>
+         <obj_property name="ObjectShortName">a_r2[7:0]</obj_property>
       </wvobject>
       <wvobject fp_name="/fix_mul_8bits_tb/fix_mul_8bits_inst/enc0_r2" type="array">
          <obj_property name="ElementShortName">enc0_r2[2:0]</obj_property>
@@ -121,6 +112,10 @@
       <obj_property name="label">s3</obj_property>
       <obj_property name="DisplayName">label</obj_property>
       <obj_property name="isExpanded"></obj_property>
+      <wvobject fp_name="/fix_mul_8bits_tb/fix_mul_8bits_inst/enable_r3" type="logic">
+         <obj_property name="ElementShortName">enable_r3</obj_property>
+         <obj_property name="ObjectShortName">enable_r3</obj_property>
+      </wvobject>
       <wvobject fp_name="/fix_mul_8bits_tb/fix_mul_8bits_inst/pp0_w3" type="array">
          <obj_property name="ElementShortName">pp0_w3[15:0]</obj_property>
          <obj_property name="ObjectShortName">pp0_w3[15:0]</obj_property>
@@ -156,10 +151,6 @@
       <wvobject fp_name="/fix_mul_8bits_tb/fix_mul_8bits_inst/neg3_w3" type="logic">
          <obj_property name="ElementShortName">neg3_w3</obj_property>
          <obj_property name="ObjectShortName">neg3_w3</obj_property>
-      </wvobject>
-      <wvobject fp_name="/fix_mul_8bits_tb/fix_mul_8bits_inst/enable_r3" type="logic">
-         <obj_property name="ElementShortName">enable_r3</obj_property>
-         <obj_property name="ObjectShortName">enable_r3</obj_property>
       </wvobject>
       <wvobject fp_name="/fix_mul_8bits_tb/fix_mul_8bits_inst/pp0_r3" type="array">
          <obj_property name="ElementShortName">pp0_r3[15:0]</obj_property>
@@ -198,6 +189,10 @@
       <obj_property name="label">s4</obj_property>
       <obj_property name="DisplayName">label</obj_property>
       <obj_property name="isExpanded"></obj_property>
+      <wvobject fp_name="/fix_mul_8bits_tb/fix_mul_8bits_inst/output_valid" type="logic">
+         <obj_property name="ElementShortName">output_valid</obj_property>
+         <obj_property name="ObjectShortName">output_valid</obj_property>
+      </wvobject>
       <wvobject fp_name="/fix_mul_8bits_tb/fix_mul_8bits_inst/sum_w4" type="array">
          <obj_property name="ElementShortName">sum_w4[21:0]</obj_property>
          <obj_property name="ObjectShortName">sum_w4[21:0]</obj_property>
@@ -213,6 +208,11 @@
       <wvobject fp_name="/fix_mul_8bits_tb/fix_mul_8bits_inst/product_w4" type="array">
          <obj_property name="ElementShortName">product_w4[31:0]</obj_property>
          <obj_property name="ObjectShortName">product_w4[31:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/fix_mul_8bits_tb/fix_mul_8bits_inst/p" type="array">
+         <obj_property name="ElementShortName">p[31:0]</obj_property>
+         <obj_property name="ObjectShortName">p[31:0]</obj_property>
+         <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
       </wvobject>
    </wvobject>
    <wvobject fp_name="/fix_mul_8bits_tb/mismatch" type="logic">
