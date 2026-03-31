@@ -92,4 +92,16 @@ module mac_int8 (
         .output_valid(output_valid),
         .p           (p)
     );
+
+    carry_sel_adder_32bit carry_sel_adder_32bit_inst (
+        .clk         (clk),
+        .enable      (enable),
+        .is_add      (is_add),
+        .a           (a),
+        .b           (b),
+        .sum         (sum),
+        .cout        (cout),
+        .output_valid(output_valid),
+        .overflow    (overflow)
+    );
 endmodule

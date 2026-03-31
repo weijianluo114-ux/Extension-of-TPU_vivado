@@ -26,7 +26,7 @@
 
 module carry_sel_adder_32bit (
     input        clk,     //时钟
-    input        enable,  //使能信号
+    input        valid_input,  //使能信号
     input        is_add,  //判断是加法还是减法运算a+b或者a-b
     input [31:0] a,       //32位加数a
     input [31:0] b,       //32位加数b
@@ -34,7 +34,7 @@ module carry_sel_adder_32bit (
 
     output reg [31:0] sum,           //和sum
     output reg        cout,          //输出进位cout
-    output reg        output_valid,  //输出有效信号
+    output reg        valid_output,  //输出有效信号
     output            overflow       //溢出标志
 );
     /******************************* 网表信号 ***********************************/
@@ -66,7 +66,7 @@ module carry_sel_adder_32bit (
     //再对输出的进位进行选择
     assign COUT = sel ? cout_temp1 : cout_temp0;
 
-    assign overflow = OVERFLOW && output_valid;
+    assign overflow = OVERFLOW && valid_output;
 
     /******************************* 时序逻辑 ***********************************/
     //对输入打一拍
@@ -74,7 +74,7 @@ module carry_sel_adder_32bit (
         A <= a;
         B <= (is_add) ? b : (~b + 1);  //减法即加补码
         CIN <= 1'b0;  //给cin的默认值为0
-        ENABLE <= enable;
+        ENABLE <= valid_input;
     end
 
     //对输出打一拍
@@ -82,7 +82,7 @@ module carry_sel_adder_32bit (
         sum <= SUM;
         cout <= COUT;
 
-        output_valid <= ENABLE;
+        valid_output <= ENABLE;
         //溢出检测，符号位相同相加后不同
         OVERFLOW <= (A[31] == B[31]) && (SUM[31] != A[31]);
     end
