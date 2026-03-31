@@ -43,14 +43,19 @@ module mac_int8 (
     /******************************* 网表信号 ***********************************/
     wire        fix_mul_output;  //记录定点数乘法器输出
     wire        valid_output_fix_mul;  //记录定点数乘法器输出有效
+    wire        fix_adder_output;  //记录定点数加法器输出
+    wire        valid_output_fix_adder;  // 记录定点数加法器输出有效
 
     /******************************* reg信号 ***********************************/
     //4级延时存储
-    reg  [31:0] C                                                             [3:0];
-    reg  [ 3:0] r_valid_input;
+    reg  [31:0] C                                                                [3:0];  //C[4]无用
+    reg  [ 7:0] r_valid_input;
 
     /******************************* 组合逻辑 ***********************************/
-    assign valid_output = r_valid_input[3];
+    assign valid_output = r_valid_input[7];
+
+    //定点数加法器有效信号
+    assign valid_input_fix_adder = valid_output_fix_mul & r_valid_input[3];
 
     /******************************* 时序逻辑 ***********************************/
     // 对第一级的寄存
@@ -73,7 +78,7 @@ module mac_int8 (
     integer i;
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
-            r_valid_input[3:1] <= 4'b0;
+            r_valid_input[4:1] <= 4'b0;
         end else begin
             // 使用for循环创建一个状态跟随流水线
             for (i = 0; i < 3; i = i + 1) begin
@@ -84,9 +89,22 @@ module mac_int8 (
                     r_valid_input[i+1] <= 1'b0;
                 end
             end
+
+            for (i = 3; i < 7; i = i + 1) begin
+                if (r_valid_input[i]) begin
+                    r_valid_input[i+1] <= 1'b1;
+                end else begin
+                    r_valid_input[i+1] <= 1'b0;
+                end
+            end
+
+            if (r_valid_input[6]) begin
+                c_out <= fix_adder_output;
+            end else begin
+                c_out <= 32'd0;
+            end
         end
     end
-
 
     /******************************* 模块例化 ***********************************/
     //8位乘法器，四级流水线
@@ -103,13 +121,13 @@ module mac_int8 (
     //32位定点数加法器
     carry_sel_adder_32bit carry_sel_adder_32bit_inst (
         .clk         (clk),
-        .valid_input (valid_input),
-        .is_add      (1'b1),          //恒定作为加法器
-        .a           (a),
-        .b           (b),
-        .sum         (sum),
-        .cout        (cout),
-        .valid_output(valid_output),
-        .overflow    (overflow)
+        .valid_input (valid_input_fix_adder),
+        .is_add      (1'b1),                    //恒定作为加法器
+        .a           (fix_mul_output),
+        .b           (C[3]),
+        .sum         (fix_adder_output),
+        .cout        (),                        //不需要cout
+        .valid_output(valid_output_fix_adder),
+        .overflow    ()                         //不需要检测溢出
     );
 endmodule
