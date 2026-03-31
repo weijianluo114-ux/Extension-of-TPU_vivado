@@ -37,18 +37,21 @@ module mac_int8 (
 
     //输出信号
     output reg signed [31:0] c_out,
-    output                   valid_output
+    output                   valid_output,
+    output reg               overflow_output
 );
 
     /******************************* 网表信号 ***********************************/
-    wire        fix_mul_output;  //记录定点数乘法器输出
+    wire [31:0] fix_mul_output;  //记录定点数乘法器输出
     wire        valid_output_fix_mul;  //记录定点数乘法器输出有效
-    wire        fix_adder_output;  //记录定点数加法器输出
+
+    wire [31:0] fix_adder_output;  //记录定点数加法器输出
     wire        valid_output_fix_adder;  // 记录定点数加法器输出有效
+    wire        overflow_output_fix_adder;  // 记录定点数加法器输出有效
 
     /******************************* reg信号 ***********************************/
     //4级延时存储
-    reg  [31:0] C                                                                [3:0];  //C[4]无用
+    reg  [31:0] C                                                                   [3:0];  //C[4]无用
     reg  [ 7:0] r_valid_input;
 
     /******************************* 组合逻辑 ***********************************/
@@ -100,8 +103,10 @@ module mac_int8 (
 
             if (r_valid_input[6]) begin
                 c_out <= fix_adder_output;
+                overflow_output <= overflow_output_fix_adder;
             end else begin
                 c_out <= 32'd0;
+                overflow_output <= 1'b0;
             end
         end
     end
@@ -122,12 +127,12 @@ module mac_int8 (
     carry_sel_adder_32bit carry_sel_adder_32bit_inst (
         .clk         (clk),
         .valid_input (valid_input_fix_adder),
-        .is_add      (1'b1),                    //恒定作为加法器
+        .is_add      (1'b1),                      //恒定作为加法器
         .a           (fix_mul_output),
         .b           (C[3]),
         .sum         (fix_adder_output),
-        .cout        (),                        //不需要cout
+        .cout        (),                          //不需要cout
         .valid_output(valid_output_fix_adder),
-        .overflow    ()                         //不需要检测溢出
+        .overflow    (overflow_output_fix_adder)  //不需要检测溢出
     );
 endmodule
