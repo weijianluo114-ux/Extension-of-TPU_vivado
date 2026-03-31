@@ -89,9 +89,9 @@ module carry_sel_adder_32bit_pipeline1_tb;
         .sum         (sum),
         .cout        (cout),
         .is_add      (is_add),
-        .enable      (enable),
+        .valid_input (enable),
         .overflow    (overflow),
-        .output_valid(output_valid)
+        .valid_output(output_valid)
     );
 
 endmodule

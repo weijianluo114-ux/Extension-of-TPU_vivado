@@ -19,7 +19,7 @@
 // Version:                V1.0
 // TEXT NAME:              carry_sel_adder_32bit.v
 // PATH:                   E:\electronic2\project\verilog_pro\TPU_vivado\TPU_project\src\rtl\carry_sel_adder_32bit.v
-// Descriptions:           32位有符号加法器，添加了控制逻辑
+// Descriptions:           32位有符号加法器，添加了控制逻辑，无最低进位
 //                         
 //----------------------------------------------------------------------------------------
 //****************************************************************************************//
@@ -78,7 +78,7 @@ module carry_sel_adder_32bit_pipeline1 (
     carry_sel_adder_16bit carry_sel_adder_16bit_inst_lower (
         .a   (a[15:0]),
         .b   (b[15:0]),
-        .cin (cin),
+        .cin (1'b0),
         .sum (SUM[15:0]),
         .cout(sel)
     );
