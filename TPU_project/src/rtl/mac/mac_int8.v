@@ -28,7 +28,7 @@ module mac_int8 (
     //控制信号
     input wire clk,
     input wire rst_n,
-    input wire valid_in,
+    input wire valid_input,
 
     //输入信号
     input wire signed [ 7:0] a,
@@ -37,13 +37,20 @@ module mac_int8 (
 
     //输出信号
     output reg signed [31:0] c_out,
-    output reg               valid_out
+    output                   valid_output
 );
+
+    /******************************* 网表信号 ***********************************/
+    wire        fix_mul_output;  //记录定点数乘法器输出
+    wire        valid_output_fix_mul;  //记录定点数乘法器输出有效
 
     /******************************* reg信号 ***********************************/
     //4级延时存储
-    reg [31:0] C          [3:0];
-    reg [ 3:0] r_valid_in;
+    reg  [31:0] C                                                             [3:0];
+    reg  [ 3:0] r_valid_input;
+
+    /******************************* 组合逻辑 ***********************************/
+    assign valid_output = r_valid_input[3];
 
     /******************************* 时序逻辑 ***********************************/
     // 对第一级的寄存
@@ -53,12 +60,12 @@ module mac_int8 (
             C[1] <= 32'b0;
             C[2] <= 32'b0;
             C[3] <= 32'b0;
-            r_valid_in[0] <= 4'd0;
-        end else if (valid_in) begin
+            r_valid_input[0] <= 4'd0;
+        end else if (valid_input) begin
             C[0] <= c_in;
-            r_valid_in[0] <= 1'b1;
+            r_valid_input[0] <= 1'b1;
         end else begin
-            r_valid_in[0] <= 1'b0;
+            r_valid_input[0] <= 1'b0;
         end
     end
 
@@ -66,15 +73,15 @@ module mac_int8 (
     integer i;
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
-            r_valid_in[3:1] <= 4'b0;
+            r_valid_input[3:1] <= 4'b0;
         end else begin
             // 使用for循环创建一个状态跟随流水线
             for (i = 0; i < 3; i = i + 1) begin
-                if (r_valid_in[i]) begin
+                if (r_valid_input[i]) begin
                     C[i+1] <= C[i];
-                    r_valid_in[i+1] <= 1'b1;
+                    r_valid_input[i+1] <= 1'b1;
                 end else begin
-                    r_valid_in[i+1] <= 1'b0;
+                    r_valid_input[i+1] <= 1'b0;
                 end
             end
         end
@@ -86,18 +93,18 @@ module mac_int8 (
     fix_mul_8bits fix_mul_8bits_inst (
         .clk         (clk),
         .rst_n       (rst_n),
-        .enable      (valid_in),
+        .valid_input (valid_input),
         .a           (a),
         .b           (b),
-        .output_valid(output_valid),
-        .p           (p)
+        .valid_output(valid_output_fix_mul),
+        .p           (fix_mul_output)
     );
 
     //32位定点数加法器
     carry_sel_adder_32bit carry_sel_adder_32bit_inst (
         .clk         (clk),
         .valid_input (valid_input),
-        .is_add      (is_add),
+        .is_add      (1'b1),          //恒定作为加法器
         .a           (a),
         .b           (b),
         .sum         (sum),
