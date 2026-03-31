@@ -27,14 +27,16 @@
 module final_adder (
     input  [21:0] sum,
     input  [21:0] carry,
-    input  [ 2:0] neg_cnt,  // 负部分积个数 (0~4)
     output [31:0] product
 );
 
     /******************************* 网表信号 ***********************************/
-    wire [21:0] sum_carry;
+    wire [31:0] sum_32bits;
+    wire [31:0] carry_32bits;
+    wire [31:0] sum_carry_32bits;
 
     /******************************* 组合逻辑 ***********************************/
-    assign sum_carry = sum + (carry << 1) + neg_cnt;
-    assign product   = {{10{sum_carry[21]}}, sum_carry};  // 补高位作为乘积结果
+    assign sum_32bits = {{10{sum[21]}}, sum};
+    assign carry_32bits = {{10{carry[21]}}, carry};
+    assign product = sum_32bits + (carry_32bits << 1);
 endmodule

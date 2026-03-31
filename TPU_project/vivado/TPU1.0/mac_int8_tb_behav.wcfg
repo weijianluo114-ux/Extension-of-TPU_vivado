@@ -1,0 +1,462 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wave_config>
+   <wave_state>
+   </wave_state>
+   <db_ref_list>
+      <db_ref path="mac_int8_tb_behav.wdb" id="1">
+         <top_modules>
+            <top_module name="glbl" />
+            <top_module name="mac_int8_tb" />
+         </top_modules>
+      </db_ref>
+   </db_ref_list>
+   <zoom_setting>
+      <ZoomStartTime time="146341667fs"></ZoomStartTime>
+      <ZoomEndTime time="198291668fs"></ZoomEndTime>
+      <Cursor1Time time="184092000fs"></Cursor1Time>
+   </zoom_setting>
+   <column_width_setting>
+      <NameColumnWidth column_width="221"></NameColumnWidth>
+      <ValueColumnWidth column_width="282"></ValueColumnWidth>
+   </column_width_setting>
+   <WVObjectSize size="3" />
+   <wvobject fp_name="group119" type="group">
+      <obj_property name="label">mac_top</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="isExpanded"></obj_property>
+      <wvobject fp_name="/mac_int8_tb/clk" type="logic">
+         <obj_property name="ElementShortName">clk</obj_property>
+         <obj_property name="ObjectShortName">clk</obj_property>
+      </wvobject>
+      <wvobject fp_name="/mac_int8_tb/rst_n" type="logic">
+         <obj_property name="ElementShortName">rst_n</obj_property>
+         <obj_property name="ObjectShortName">rst_n</obj_property>
+      </wvobject>
+      <wvobject fp_name="/mac_int8_tb/valid_input" type="logic">
+         <obj_property name="ElementShortName">valid_input</obj_property>
+         <obj_property name="ObjectShortName">valid_input</obj_property>
+      </wvobject>
+      <wvobject fp_name="/mac_int8_tb/valid_output" type="logic">
+         <obj_property name="ElementShortName">valid_output</obj_property>
+         <obj_property name="ObjectShortName">valid_output</obj_property>
+      </wvobject>
+      <wvobject fp_name="/mac_int8_tb/overflow_output" type="logic">
+         <obj_property name="ElementShortName">overflow_output</obj_property>
+         <obj_property name="ObjectShortName">overflow_output</obj_property>
+      </wvobject>
+      <wvobject fp_name="/mac_int8_tb/mac_int8_inst/a" type="array">
+         <obj_property name="ElementShortName">a[7:0]</obj_property>
+         <obj_property name="ObjectShortName">a[7:0]</obj_property>
+         <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/mac_int8_tb/mac_int8_inst/b" type="array">
+         <obj_property name="ElementShortName">b[7:0]</obj_property>
+         <obj_property name="ObjectShortName">b[7:0]</obj_property>
+         <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/mac_int8_tb/mac_int8_inst/c_in" type="array">
+         <obj_property name="ElementShortName">c_in[31:0]</obj_property>
+         <obj_property name="ObjectShortName">c_in[31:0]</obj_property>
+         <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/mac_int8_tb/c_out_gold" type="array">
+         <obj_property name="ElementShortName">c_out_gold[31:0]</obj_property>
+         <obj_property name="ObjectShortName">c_out_gold[31:0]</obj_property>
+         <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/mac_int8_tb/r_c_out_gold" type="array">
+         <obj_property name="ElementShortName">r_c_out_gold[6:0][31:0]</obj_property>
+         <obj_property name="ObjectShortName">r_c_out_gold[6:0][31:0]</obj_property>
+         <wvobject fp_name="/mac_int8_tb/r_c_out_gold[6]" type="array">
+            <obj_property name="ElementShortName">[6][31:0]</obj_property>
+            <obj_property name="ObjectShortName">[6][31:0]</obj_property>
+            <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+         </wvobject>
+         <wvobject fp_name="/mac_int8_tb/r_c_out_gold[5]" type="array">
+            <obj_property name="ElementShortName">[5][31:0]</obj_property>
+            <obj_property name="ObjectShortName">[5][31:0]</obj_property>
+            <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+         </wvobject>
+         <wvobject fp_name="/mac_int8_tb/r_c_out_gold[4]" type="array">
+            <obj_property name="ElementShortName">[4][31:0]</obj_property>
+            <obj_property name="ObjectShortName">[4][31:0]</obj_property>
+            <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+         </wvobject>
+         <wvobject fp_name="/mac_int8_tb/r_c_out_gold[3]" type="array">
+            <obj_property name="ElementShortName">[3][31:0]</obj_property>
+            <obj_property name="ObjectShortName">[3][31:0]</obj_property>
+            <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+         </wvobject>
+         <wvobject fp_name="/mac_int8_tb/r_c_out_gold[2]" type="array">
+            <obj_property name="ElementShortName">[2][31:0]</obj_property>
+            <obj_property name="ObjectShortName">[2][31:0]</obj_property>
+            <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+         </wvobject>
+         <wvobject fp_name="/mac_int8_tb/r_c_out_gold[1]" type="array">
+            <obj_property name="ElementShortName">[1][31:0]</obj_property>
+            <obj_property name="ObjectShortName">[1][31:0]</obj_property>
+            <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+         </wvobject>
+         <wvobject fp_name="/mac_int8_tb/r_c_out_gold[0]" type="array">
+            <obj_property name="ElementShortName">[0][31:0]</obj_property>
+            <obj_property name="ObjectShortName">[0][31:0]</obj_property>
+            <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+         </wvobject>
+      </wvobject>
+      <wvobject fp_name="/mac_int8_tb/c_out" type="array">
+         <obj_property name="ElementShortName">c_out[31:0]</obj_property>
+         <obj_property name="ObjectShortName">c_out[31:0]</obj_property>
+         <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/mac_int8_tb/r_c_out_gold[6]" type="array">
+         <obj_property name="ElementShortName">[6][31:0]</obj_property>
+         <obj_property name="ObjectShortName">[6][31:0]</obj_property>
+         <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/mac_int8_tb/r_fix_mul_gold" type="array">
+         <obj_property name="ElementShortName">r_fix_mul_gold[6:0][31:0]</obj_property>
+         <obj_property name="ObjectShortName">r_fix_mul_gold[6:0][31:0]</obj_property>
+         <wvobject fp_name="/mac_int8_tb/r_fix_mul_gold[6]" type="array">
+            <obj_property name="ElementShortName">[6][31:0]</obj_property>
+            <obj_property name="ObjectShortName">[6][31:0]</obj_property>
+            <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+         </wvobject>
+         <wvobject fp_name="/mac_int8_tb/r_fix_mul_gold[5]" type="array">
+            <obj_property name="ElementShortName">[5][31:0]</obj_property>
+            <obj_property name="ObjectShortName">[5][31:0]</obj_property>
+            <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+         </wvobject>
+         <wvobject fp_name="/mac_int8_tb/r_fix_mul_gold[4]" type="array">
+            <obj_property name="ElementShortName">[4][31:0]</obj_property>
+            <obj_property name="ObjectShortName">[4][31:0]</obj_property>
+            <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+         </wvobject>
+         <wvobject fp_name="/mac_int8_tb/r_fix_mul_gold[3]" type="array">
+            <obj_property name="ElementShortName">[3][31:0]</obj_property>
+            <obj_property name="ObjectShortName">[3][31:0]</obj_property>
+            <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+         </wvobject>
+         <wvobject fp_name="/mac_int8_tb/r_fix_mul_gold[2]" type="array">
+            <obj_property name="ElementShortName">[2][31:0]</obj_property>
+            <obj_property name="ObjectShortName">[2][31:0]</obj_property>
+            <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+         </wvobject>
+         <wvobject fp_name="/mac_int8_tb/r_fix_mul_gold[1]" type="array">
+            <obj_property name="ElementShortName">[1][31:0]</obj_property>
+            <obj_property name="ObjectShortName">[1][31:0]</obj_property>
+            <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+         </wvobject>
+         <wvobject fp_name="/mac_int8_tb/r_fix_mul_gold[0]" type="array">
+            <obj_property name="ElementShortName">[0][31:0]</obj_property>
+            <obj_property name="ObjectShortName">[0][31:0]</obj_property>
+            <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+         </wvobject>
+      </wvobject>
+      <wvobject fp_name="/mac_int8_tb/mac_int8_inst/fix_mul_output" type="array">
+         <obj_property name="ElementShortName">fix_mul_output[31:0]</obj_property>
+         <obj_property name="ObjectShortName">fix_mul_output[31:0]</obj_property>
+         <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/mac_int8_tb/mac_int8_inst/valid_output_fix_mul" type="logic">
+         <obj_property name="ElementShortName">valid_output_fix_mul</obj_property>
+         <obj_property name="ObjectShortName">valid_output_fix_mul</obj_property>
+      </wvobject>
+      <wvobject fp_name="/mac_int8_tb/mac_int8_inst/fix_adder_output" type="array">
+         <obj_property name="ElementShortName">fix_adder_output[31:0]</obj_property>
+         <obj_property name="ObjectShortName">fix_adder_output[31:0]</obj_property>
+         <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/mac_int8_tb/mac_int8_inst/valid_output_fix_adder" type="logic">
+         <obj_property name="ElementShortName">valid_output_fix_adder</obj_property>
+         <obj_property name="ObjectShortName">valid_output_fix_adder</obj_property>
+      </wvobject>
+      <wvobject fp_name="/mac_int8_tb/mac_int8_inst/overflow_output_fix_adder" type="logic">
+         <obj_property name="ElementShortName">overflow_output_fix_adder</obj_property>
+         <obj_property name="ObjectShortName">overflow_output_fix_adder</obj_property>
+      </wvobject>
+      <wvobject fp_name="/mac_int8_tb/mac_int8_inst/C" type="array">
+         <obj_property name="ElementShortName">C[3:0][31:0]</obj_property>
+         <obj_property name="ObjectShortName">C[3:0][31:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/mac_int8_tb/mac_int8_inst/r_valid_input" type="array">
+         <obj_property name="ElementShortName">r_valid_input[5:0]</obj_property>
+         <obj_property name="ObjectShortName">r_valid_input[5:0]</obj_property>
+         <obj_property name="Radix">BINARYRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/mac_int8_tb/mac_int8_inst/i" type="array">
+         <obj_property name="ElementShortName">i[31:0]</obj_property>
+         <obj_property name="ObjectShortName">i[31:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/mac_int8_tb/mac_int8_inst/valid_input_fix_adder" type="logic">
+         <obj_property name="ElementShortName">valid_input_fix_adder</obj_property>
+         <obj_property name="ObjectShortName">valid_input_fix_adder</obj_property>
+      </wvobject>
+   </wvobject>
+   <wvobject fp_name="group161" type="group">
+      <obj_property name="label">fix_mul</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <wvobject fp_name="/mac_int8_tb/mac_int8_inst/fix_mul_8bits_inst/clk" type="logic">
+         <obj_property name="ElementShortName">clk</obj_property>
+         <obj_property name="ObjectShortName">clk</obj_property>
+      </wvobject>
+      <wvobject fp_name="/mac_int8_tb/mac_int8_inst/fix_mul_8bits_inst/rst_n" type="logic">
+         <obj_property name="ElementShortName">rst_n</obj_property>
+         <obj_property name="ObjectShortName">rst_n</obj_property>
+      </wvobject>
+      <wvobject fp_name="/mac_int8_tb/mac_int8_inst/fix_mul_8bits_inst/valid_input" type="logic">
+         <obj_property name="ElementShortName">valid_input</obj_property>
+         <obj_property name="ObjectShortName">valid_input</obj_property>
+      </wvobject>
+      <wvobject fp_name="/mac_int8_tb/mac_int8_inst/fix_mul_8bits_inst/a" type="array">
+         <obj_property name="ElementShortName">a[7:0]</obj_property>
+         <obj_property name="ObjectShortName">a[7:0]</obj_property>
+         <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/mac_int8_tb/mac_int8_inst/fix_mul_8bits_inst/b" type="array">
+         <obj_property name="ElementShortName">b[7:0]</obj_property>
+         <obj_property name="ObjectShortName">b[7:0]</obj_property>
+         <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/mac_int8_tb/mac_int8_inst/fix_mul_8bits_inst/a" type="array">
+         <obj_property name="ElementShortName">a[7:0]</obj_property>
+         <obj_property name="ObjectShortName">a[7:0]</obj_property>
+         <obj_property name="Radix">BINARYRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/mac_int8_tb/mac_int8_inst/fix_mul_8bits_inst/b" type="array">
+         <obj_property name="ElementShortName">b[7:0]</obj_property>
+         <obj_property name="ObjectShortName">b[7:0]</obj_property>
+         <obj_property name="Radix">BINARYRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/mac_int8_tb/mac_int8_inst/fix_mul_8bits_inst/valid_output" type="logic">
+         <obj_property name="ElementShortName">valid_output</obj_property>
+         <obj_property name="ObjectShortName">valid_output</obj_property>
+      </wvobject>
+      <wvobject fp_name="/mac_int8_tb/mac_int8_inst/fix_mul_8bits_inst/p" type="array">
+         <obj_property name="ElementShortName">p[31:0]</obj_property>
+         <obj_property name="ObjectShortName">p[31:0]</obj_property>
+         <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="group162" type="group">
+         <obj_property name="label">s1</obj_property>
+         <obj_property name="DisplayName">label</obj_property>
+         <obj_property name="isExpanded"></obj_property>
+         <wvobject fp_name="/mac_int8_tb/mac_int8_inst/fix_mul_8bits_inst/enc0_w1" type="array">
+            <obj_property name="ElementShortName">enc0_w1[2:0]</obj_property>
+            <obj_property name="ObjectShortName">enc0_w1[2:0]</obj_property>
+            <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+         </wvobject>
+         <wvobject fp_name="/mac_int8_tb/mac_int8_inst/fix_mul_8bits_inst/enc1_w1" type="array">
+            <obj_property name="ElementShortName">enc1_w1[2:0]</obj_property>
+            <obj_property name="ObjectShortName">enc1_w1[2:0]</obj_property>
+            <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+         </wvobject>
+         <wvobject fp_name="/mac_int8_tb/mac_int8_inst/fix_mul_8bits_inst/enc2_w1" type="array">
+            <obj_property name="ElementShortName">enc2_w1[2:0]</obj_property>
+            <obj_property name="ObjectShortName">enc2_w1[2:0]</obj_property>
+            <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+         </wvobject>
+         <wvobject fp_name="/mac_int8_tb/mac_int8_inst/fix_mul_8bits_inst/enc3_w1" type="array">
+            <obj_property name="ElementShortName">enc3_w1[2:0]</obj_property>
+            <obj_property name="ObjectShortName">enc3_w1[2:0]</obj_property>
+            <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+         </wvobject>
+         <wvobject fp_name="/mac_int8_tb/mac_int8_inst/fix_mul_8bits_inst/a_r1" type="array">
+            <obj_property name="ElementShortName">a_r1[7:0]</obj_property>
+            <obj_property name="ObjectShortName">a_r1[7:0]</obj_property>
+            <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+         </wvobject>
+         <wvobject fp_name="/mac_int8_tb/mac_int8_inst/fix_mul_8bits_inst/b_r1" type="array">
+            <obj_property name="ElementShortName">b_r1[7:0]</obj_property>
+            <obj_property name="ObjectShortName">b_r1[7:0]</obj_property>
+            <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+         </wvobject>
+         <wvobject fp_name="/mac_int8_tb/mac_int8_inst/fix_mul_8bits_inst/enable_r1" type="logic">
+            <obj_property name="ElementShortName">enable_r1</obj_property>
+            <obj_property name="ObjectShortName">enable_r1</obj_property>
+         </wvobject>
+      </wvobject>
+      <wvobject fp_name="group165" type="group">
+         <obj_property name="label">s2</obj_property>
+         <obj_property name="DisplayName">label</obj_property>
+         <obj_property name="isExpanded"></obj_property>
+         <wvobject fp_name="/mac_int8_tb/mac_int8_inst/fix_mul_8bits_inst/a_r2" type="array">
+            <obj_property name="ElementShortName">a_r2[7:0]</obj_property>
+            <obj_property name="ObjectShortName">a_r2[7:0]</obj_property>
+            <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+         </wvobject>
+         <wvobject fp_name="/mac_int8_tb/mac_int8_inst/fix_mul_8bits_inst/enable_r2" type="logic">
+            <obj_property name="ElementShortName">enable_r2</obj_property>
+            <obj_property name="ObjectShortName">enable_r2</obj_property>
+         </wvobject>
+         <wvobject fp_name="/mac_int8_tb/mac_int8_inst/fix_mul_8bits_inst/enc0_r2" type="array">
+            <obj_property name="ElementShortName">enc0_r2[2:0]</obj_property>
+            <obj_property name="ObjectShortName">enc0_r2[2:0]</obj_property>
+            <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+         </wvobject>
+         <wvobject fp_name="/mac_int8_tb/mac_int8_inst/fix_mul_8bits_inst/enc1_r2" type="array">
+            <obj_property name="ElementShortName">enc1_r2[2:0]</obj_property>
+            <obj_property name="ObjectShortName">enc1_r2[2:0]</obj_property>
+            <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+         </wvobject>
+         <wvobject fp_name="/mac_int8_tb/mac_int8_inst/fix_mul_8bits_inst/enc2_r2" type="array">
+            <obj_property name="ElementShortName">enc2_r2[2:0]</obj_property>
+            <obj_property name="ObjectShortName">enc2_r2[2:0]</obj_property>
+            <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+         </wvobject>
+         <wvobject fp_name="/mac_int8_tb/mac_int8_inst/fix_mul_8bits_inst/enc3_r2" type="array">
+            <obj_property name="ElementShortName">enc3_r2[2:0]</obj_property>
+            <obj_property name="ObjectShortName">enc3_r2[2:0]</obj_property>
+            <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+         </wvobject>
+      </wvobject>
+      <wvobject fp_name="group163" type="group">
+         <obj_property name="label">s3</obj_property>
+         <obj_property name="DisplayName">label</obj_property>
+         <obj_property name="isExpanded"></obj_property>
+         <wvobject fp_name="/mac_int8_tb/mac_int8_inst/fix_mul_8bits_inst/pp0_w3" type="array">
+            <obj_property name="ElementShortName">pp0_w3[15:0]</obj_property>
+            <obj_property name="ObjectShortName">pp0_w3[15:0]</obj_property>
+            <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+         </wvobject>
+         <wvobject fp_name="/mac_int8_tb/mac_int8_inst/fix_mul_8bits_inst/pp1_w3" type="array">
+            <obj_property name="ElementShortName">pp1_w3[15:0]</obj_property>
+            <obj_property name="ObjectShortName">pp1_w3[15:0]</obj_property>
+            <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+         </wvobject>
+         <wvobject fp_name="/mac_int8_tb/mac_int8_inst/fix_mul_8bits_inst/pp2_w3" type="array">
+            <obj_property name="ElementShortName">pp2_w3[15:0]</obj_property>
+            <obj_property name="ObjectShortName">pp2_w3[15:0]</obj_property>
+            <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+         </wvobject>
+         <wvobject fp_name="/mac_int8_tb/mac_int8_inst/fix_mul_8bits_inst/pp3_w3" type="array">
+            <obj_property name="ElementShortName">pp3_w3[15:0]</obj_property>
+            <obj_property name="ObjectShortName">pp3_w3[15:0]</obj_property>
+            <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+         </wvobject>
+         <wvobject fp_name="/mac_int8_tb/mac_int8_inst/fix_mul_8bits_inst/enable_r3" type="logic">
+            <obj_property name="ElementShortName">enable_r3</obj_property>
+            <obj_property name="ObjectShortName">enable_r3</obj_property>
+         </wvobject>
+         <wvobject fp_name="/mac_int8_tb/mac_int8_inst/fix_mul_8bits_inst/pp0_r3" type="array">
+            <obj_property name="ElementShortName">pp0_r3[15:0]</obj_property>
+            <obj_property name="ObjectShortName">pp0_r3[15:0]</obj_property>
+            <obj_property name="Radix">BINARYRADIX</obj_property>
+         </wvobject>
+         <wvobject fp_name="/mac_int8_tb/mac_int8_inst/fix_mul_8bits_inst/pp1_r3" type="array">
+            <obj_property name="ElementShortName">pp1_r3[15:0]</obj_property>
+            <obj_property name="ObjectShortName">pp1_r3[15:0]</obj_property>
+            <obj_property name="Radix">BINARYRADIX</obj_property>
+         </wvobject>
+         <wvobject fp_name="/mac_int8_tb/mac_int8_inst/fix_mul_8bits_inst/pp2_r3" type="array">
+            <obj_property name="ElementShortName">pp2_r3[15:0]</obj_property>
+            <obj_property name="ObjectShortName">pp2_r3[15:0]</obj_property>
+            <obj_property name="Radix">BINARYRADIX</obj_property>
+         </wvobject>
+         <wvobject fp_name="/mac_int8_tb/mac_int8_inst/fix_mul_8bits_inst/pp3_r3" type="array">
+            <obj_property name="ElementShortName">pp3_r3[15:0]</obj_property>
+            <obj_property name="ObjectShortName">pp3_r3[15:0]</obj_property>
+            <obj_property name="Radix">BINARYRADIX</obj_property>
+         </wvobject>
+      </wvobject>
+      <wvobject fp_name="group164" type="group">
+         <obj_property name="label">s4</obj_property>
+         <obj_property name="DisplayName">label</obj_property>
+         <obj_property name="isExpanded"></obj_property>
+         <wvobject fp_name="/mac_int8_tb/mac_int8_inst/fix_mul_8bits_inst/sum_w4" type="array">
+            <obj_property name="ElementShortName">sum_w4[21:0]</obj_property>
+            <obj_property name="ObjectShortName">sum_w4[21:0]</obj_property>
+            <obj_property name="Radix">BINARYRADIX</obj_property>
+         </wvobject>
+         <wvobject fp_name="/mac_int8_tb/mac_int8_inst/fix_mul_8bits_inst/carry_w4" type="array">
+            <obj_property name="ElementShortName">carry_w4[21:0]</obj_property>
+            <obj_property name="ObjectShortName">carry_w4[21:0]</obj_property>
+            <obj_property name="Radix">BINARYRADIX</obj_property>
+         </wvobject>
+         <wvobject fp_name="/mac_int8_tb/mac_int8_inst/fix_mul_8bits_inst/product_w4" type="array">
+            <obj_property name="ElementShortName">product_w4[31:0]</obj_property>
+            <obj_property name="ObjectShortName">product_w4[31:0]</obj_property>
+            <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+         </wvobject>
+      </wvobject>
+   </wvobject>
+   <wvobject fp_name="group217" type="group">
+      <obj_property name="label">compressor</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <wvobject fp_name="/mac_int8_tb/mac_int8_inst/fix_mul_8bits_inst/compressor_tree_8bits_inst/pp0" type="array">
+         <obj_property name="ElementShortName">pp0[15:0]</obj_property>
+         <obj_property name="ObjectShortName">pp0[15:0]</obj_property>
+         <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/mac_int8_tb/mac_int8_inst/fix_mul_8bits_inst/compressor_tree_8bits_inst/pp1" type="array">
+         <obj_property name="ElementShortName">pp1[15:0]</obj_property>
+         <obj_property name="ObjectShortName">pp1[15:0]</obj_property>
+         <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/mac_int8_tb/mac_int8_inst/fix_mul_8bits_inst/compressor_tree_8bits_inst/pp2" type="array">
+         <obj_property name="ElementShortName">pp2[15:0]</obj_property>
+         <obj_property name="ObjectShortName">pp2[15:0]</obj_property>
+         <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/mac_int8_tb/mac_int8_inst/fix_mul_8bits_inst/compressor_tree_8bits_inst/pp3" type="array">
+         <obj_property name="ElementShortName">pp3[15:0]</obj_property>
+         <obj_property name="ObjectShortName">pp3[15:0]</obj_property>
+         <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/mac_int8_tb/mac_int8_inst/fix_mul_8bits_inst/compressor_tree_8bits_inst/sum" type="array">
+         <obj_property name="ElementShortName">sum[21:0]</obj_property>
+         <obj_property name="ObjectShortName">sum[21:0]</obj_property>
+         <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/mac_int8_tb/mac_int8_inst/fix_mul_8bits_inst/compressor_tree_8bits_inst/carry" type="array">
+         <obj_property name="ElementShortName">carry[21:0]</obj_property>
+         <obj_property name="ObjectShortName">carry[21:0]</obj_property>
+         <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/mac_int8_tb/mac_int8_inst/fix_mul_8bits_inst/compressor_tree_8bits_inst/pp0_aligned" type="array">
+         <obj_property name="ElementShortName">pp0_aligned[21:0]</obj_property>
+         <obj_property name="ObjectShortName">pp0_aligned[21:0]</obj_property>
+         <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/mac_int8_tb/mac_int8_inst/fix_mul_8bits_inst/compressor_tree_8bits_inst/pp1_aligned" type="array">
+         <obj_property name="ElementShortName">pp1_aligned[21:0]</obj_property>
+         <obj_property name="ObjectShortName">pp1_aligned[21:0]</obj_property>
+         <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/mac_int8_tb/mac_int8_inst/fix_mul_8bits_inst/compressor_tree_8bits_inst/pp2_aligned" type="array">
+         <obj_property name="ElementShortName">pp2_aligned[21:0]</obj_property>
+         <obj_property name="ObjectShortName">pp2_aligned[21:0]</obj_property>
+         <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/mac_int8_tb/mac_int8_inst/fix_mul_8bits_inst/compressor_tree_8bits_inst/pp3_aligned" type="array">
+         <obj_property name="ElementShortName">pp3_aligned[21:0]</obj_property>
+         <obj_property name="ObjectShortName">pp3_aligned[21:0]</obj_property>
+         <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/mac_int8_tb/mac_int8_inst/fix_mul_8bits_inst/compressor_tree_8bits_inst/s1" type="array">
+         <obj_property name="ElementShortName">s1[21:0]</obj_property>
+         <obj_property name="ObjectShortName">s1[21:0]</obj_property>
+         <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/mac_int8_tb/mac_int8_inst/fix_mul_8bits_inst/compressor_tree_8bits_inst/c1" type="array">
+         <obj_property name="ElementShortName">c1[21:0]</obj_property>
+         <obj_property name="ObjectShortName">c1[21:0]</obj_property>
+         <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
+      </wvobject>
+      <wvobject fp_name="/mac_int8_tb/mac_int8_inst/fix_mul_8bits_inst/compressor_tree_8bits_inst/SHIFT0" type="array">
+         <obj_property name="ElementShortName">SHIFT0[31:0]</obj_property>
+         <obj_property name="ObjectShortName">SHIFT0[31:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/mac_int8_tb/mac_int8_inst/fix_mul_8bits_inst/compressor_tree_8bits_inst/SHIFT1" type="array">
+         <obj_property name="ElementShortName">SHIFT1[31:0]</obj_property>
+         <obj_property name="ObjectShortName">SHIFT1[31:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/mac_int8_tb/mac_int8_inst/fix_mul_8bits_inst/compressor_tree_8bits_inst/SHIFT2" type="array">
+         <obj_property name="ElementShortName">SHIFT2[31:0]</obj_property>
+         <obj_property name="ObjectShortName">SHIFT2[31:0]</obj_property>
+      </wvobject>
+      <wvobject fp_name="/mac_int8_tb/mac_int8_inst/fix_mul_8bits_inst/compressor_tree_8bits_inst/SHIFT3" type="array">
+         <obj_property name="ElementShortName">SHIFT3[31:0]</obj_property>
+         <obj_property name="ObjectShortName">SHIFT3[31:0]</obj_property>
+      </wvobject>
+   </wvobject>
+</wave_config>

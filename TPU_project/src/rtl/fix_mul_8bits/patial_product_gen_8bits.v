@@ -33,40 +33,36 @@ module patial_product_gen_8bits (
     output reg [15:0] pp0,
     pp1,
     pp2,
-    pp3,
-    output reg        neg0,
-    neg1,
-    neg2,
-    neg3  // 1 表示该部分积为负
+    pp3
 );
     /******************************* 网表信号 ***********************************/
     wire [15:0] a_ext = {{8{a[7]}}, a};  // 符号扩展到16位
     wire [15:0] a_ext_shl = {{7{a[7]}}, a, 1'b0};  // 左移1位并符号扩展
 
     /******************************* 函数 ***********************************/
-    function [16:0] gen_pp;  //注意这里最高位用于存储符号位，0表示正，1表示负
+    function [15:0] gen_pp;  //注意这里最高位用于存储符号位，0表示正，1表示负
         input [2:0] enc;
         input [15:0] a_ext;
         input [15:0] a_ext_shl;
         begin
             case (enc)  //波兹编码最终只有5种情况，0，+-1，+-2
                 3'b000: begin
-                    gen_pp = {1'b0, 16'b0};
+                    gen_pp = 16'b0;
                 end
                 3'b001: begin
-                    gen_pp = {1'b0, a_ext};
+                    gen_pp = a_ext;
                 end
                 3'b010: begin
-                    gen_pp = {1'b0, a_ext_shl};
+                    gen_pp = a_ext_shl;
                 end
                 3'b111: begin
-                    gen_pp = {1'b1, ~a_ext};
-                end  // -1倍：取反，不加1
+                    gen_pp = ~a_ext + 1'b1;
+                end  // -1倍：取反，加1
                 3'b110: begin
-                    gen_pp = {1'b1, ~a_ext_shl};
-                end  // -2倍：取反，不加1
+                    gen_pp = ~a_ext_shl + 1'b1;
+                end  // -2倍：取反，加1
                 default: begin
-                    gen_pp = {1'b0, 16'b0};
+                    gen_pp = 16'b0;
                 end
             endcase
         end
@@ -74,9 +70,9 @@ module patial_product_gen_8bits (
 
     /******************************* 组合逻辑 ***********************************/
     always @(*) begin
-        {neg0, pp0} = gen_pp(enc0, a_ext, a_ext_shl);
-        {neg1, pp1} = gen_pp(enc1, a_ext, a_ext_shl);
-        {neg2, pp2} = gen_pp(enc2, a_ext, a_ext_shl);
-        {neg3, pp3} = gen_pp(enc3, a_ext, a_ext_shl);
+        pp0 = gen_pp(enc0, a_ext, a_ext_shl);
+        pp1 = gen_pp(enc1, a_ext, a_ext_shl);
+        pp2 = gen_pp(enc2, a_ext, a_ext_shl);
+        pp3 = gen_pp(enc3, a_ext, a_ext_shl);
     end
 endmodule

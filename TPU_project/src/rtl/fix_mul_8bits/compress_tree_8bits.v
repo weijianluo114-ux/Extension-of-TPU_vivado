@@ -64,7 +64,7 @@ module compress_tree_8bits (
         .WIDTH(22)
     ) csa_3to2_inst2 (
         .a    (s1),
-        .b    (c1),
+        .b    (c1 << 1),
         .c    (pp3_aligned),
         .s    (sum),
         .c_out(carry)

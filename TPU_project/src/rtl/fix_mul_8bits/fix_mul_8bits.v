@@ -45,7 +45,6 @@ module fix_mul_8bits (
 
     // 第四级：压缩树 + 最终加法（组合逻辑）
     wire [21:0] sum_w4, carry_w4;
-    wire [ 2:0] neg_cnt_w4;
     wire [31:0] product_w4;
 
     //输出寄存
@@ -65,7 +64,6 @@ module fix_mul_8bits (
     reg neg0_r3, neg1_r3, neg2_r3, neg3_r3;
 
     /******************************* 组合逻辑 ***********************************/
-    assign neg_cnt_w4 = neg0_r3 + neg1_r3 + neg2_r3 + neg3_r3;  // 负部分积个数
 
     /******************************* 时序逻辑 ***********************************/
     //第一级流水线，首先存储输入
@@ -159,11 +157,7 @@ module fix_mul_8bits (
         .pp0 (pp0_w3),
         .pp1 (pp1_w3),
         .pp2 (pp2_w3),
-        .pp3 (pp3_w3),
-        .neg0(neg0_w3),
-        .neg1(neg1_w3),
-        .neg2(neg2_w3),
-        .neg3(neg3_w3)
+        .pp3 (pp3_w3)
     );
 
     //第四级：压缩树
@@ -180,7 +174,6 @@ module fix_mul_8bits (
     final_adder final_adder_inst (
         .sum    (sum_w4),
         .carry  (carry_w4),
-        .neg_cnt(neg_cnt_w4),
         .product(product_w4)
     );
 endmodule
