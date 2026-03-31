@@ -82,7 +82,7 @@ module carry_sel_adder_32bit_pipeline1_tb;
     end
 
     /******************************* 模块例化 ***********************************/
-    carry_sel_adder_32bit carry_sel_adder_32bit_inst (
+    carry_sel_adder_32bit_pipeline1 carry_sel_adder_32bit_pipeline1_inst (
         .clk         (clk),
         .a           (a),
         .b           (b),
