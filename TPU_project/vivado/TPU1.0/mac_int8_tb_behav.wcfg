@@ -11,9 +11,9 @@
       </db_ref>
    </db_ref_list>
    <zoom_setting>
-      <ZoomStartTime time="146341667fs"></ZoomStartTime>
-      <ZoomEndTime time="198291668fs"></ZoomEndTime>
-      <Cursor1Time time="184092000fs"></Cursor1Time>
+      <ZoomStartTime time="0fs"></ZoomStartTime>
+      <ZoomEndTime time="10100000001fs"></ZoomEndTime>
+      <Cursor1Time time="1176227000fs"></Cursor1Time>
    </zoom_setting>
    <column_width_setting>
       <NameColumnWidth column_width="221"></NameColumnWidth>
@@ -31,6 +31,10 @@
       <wvobject fp_name="/mac_int8_tb/rst_n" type="logic">
          <obj_property name="ElementShortName">rst_n</obj_property>
          <obj_property name="ObjectShortName">rst_n</obj_property>
+      </wvobject>
+      <wvobject fp_name="/mac_int8_tb/mismatch" type="logic">
+         <obj_property name="ElementShortName">mismatch</obj_property>
+         <obj_property name="ObjectShortName">mismatch</obj_property>
       </wvobject>
       <wvobject fp_name="/mac_int8_tb/valid_input" type="logic">
          <obj_property name="ElementShortName">valid_input</obj_property>
