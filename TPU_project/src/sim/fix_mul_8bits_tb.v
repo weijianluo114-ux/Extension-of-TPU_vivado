@@ -76,10 +76,10 @@ module fix_mul_8bits_tb;
     fix_mul_8bits fix_mul_8bits_inst (
         .clk         (clk),
         .rst_n       (rst_n),
-        .enable      (enable),
+        .valid_input (enable),
         .a           (a),
         .b           (b),
-        .output_valid(output_valid),
+        .valid_output(output_valid),
         .p           (p)
     );
 

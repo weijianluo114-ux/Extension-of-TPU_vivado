@@ -37,8 +37,8 @@ module fix_mul_8bits #(
     input [WIDTH_INT8-1:0] a,
     input [WIDTH_INT8-1:0] b,
 
-    output reg                   valid_output,  //输出有效
-    output reg [WIDTH_INT32-1:0] p              //乘积输出
+    output                   valid_output,  //输出有效
+    output [WIDTH_INT32-1:0] p              //乘积输出
 );
 
     /******************************* 网表信号 ***********************************/
@@ -111,6 +111,7 @@ module fix_mul_8bits #(
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             {enc0_r2, enc1_r2, enc2_r2, enc3_r2} <= 0;
+            enable_r2 <= 1'b0;
         end else if (enable_r1) begin
             a_r2 <= a_r1;
             enable_r2 <= enable_r1;
@@ -131,6 +132,7 @@ module fix_mul_8bits #(
             pp1_r3 <= 16'd0;
             pp2_r3 <= 16'd0;
             pp3_r3 <= 16'd0;
+            enable_r3 <= 1'b0;
         end else if (enable_r2) begin
             enable_r3 <= enable_r2;
 
