@@ -89,7 +89,7 @@ module fix_mul_8bits #(
 
     //将补高位后的值赋值给加法器输入
     assign adder_input_a = {{(WIDTH_INT32 - WIDTH_PRODUCT_SHIFT) {sum_w3[WIDTH_PRODUCT_SHIFT-1]}}, sum_w3};  //对于sum，不需要左移
-    assign adder_input_b = {{(WIDTH_INT32 - WIDTH_PRODUCT_SHIFT - 1) {sum_w3[WIDTH_PRODUCT_SHIFT-1]}}, sum_w3, 1'b0};  //对于cin，要左移一位
+    assign adder_input_b = {{(WIDTH_INT32 - WIDTH_PRODUCT_SHIFT - 1) {carry_w3[WIDTH_PRODUCT_SHIFT-1]}}, carry_w3, 1'b0};  //对于cin，要左移一位
 
     /******************************* 时序逻辑 ***********************************/
     //第一级流水线，首先存储输入

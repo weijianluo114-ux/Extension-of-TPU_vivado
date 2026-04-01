@@ -22,7 +22,7 @@ module mac_int8_tb;
     /******************************* 组合逻辑 ***********************************/
     assign c_out_gold = a * b + c_in;
     assign fix_mul_gold = a * b;
-    assign mismatch = r_c_out_gold[6] ^ c_out;
+    assign mismatch = (r_c_out_gold[6] != c_out);
 
     /******************************* 时序逻辑 ***********************************/
     always #5 clk = !clk;

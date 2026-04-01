@@ -69,6 +69,7 @@ module mac_int8 #(
     //直接将输出连接至32位加法器的输出
     assign c_out = fix_adder_output;
     assign valid_output = valid_output_fix_adder;
+    assign overflow_output = overflow_output_fix_adder;
 
     /******************************* 时序逻辑 ***********************************/
     // 对第一级的寄存
