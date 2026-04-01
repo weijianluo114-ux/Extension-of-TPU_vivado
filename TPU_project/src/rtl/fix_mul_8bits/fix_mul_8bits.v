@@ -41,12 +41,14 @@ module fix_mul_8bits (
 
     // 第三级：部分积生成
     wire [15:0] pp0_w3, pp1_w3, pp2_w3, pp3_w3;
-    wire neg0_w3, neg1_w3, neg2_w3, neg3_w3;
 
     // 第四级：压缩树 + 最终加法（组合逻辑）
     wire [21:0] sum_w4, carry_w4;
     wire [31:0] product_w4;
 
+    //加法器输入有效信号
+    wire        valid_input_fix_adder;
+    
     /******************************* reg信号 ***********************************/
     //第一级输入寄存
     reg [7:0] a_r1, b_r1;
@@ -60,7 +62,9 @@ module fix_mul_8bits (
     //第三级流水线
     reg enable_r3;
     reg [15:0] pp0_r3, pp1_r3, pp2_r3, pp3_r3;
-    reg neg0_r3, neg1_r3, neg2_r3, neg3_r3;
+
+    //第四级流水线
+    reg enable_r4;
 
     /******************************* 组合逻辑 ***********************************/
 
@@ -101,14 +105,10 @@ module fix_mul_8bits (
     //第三级流水线
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
-            pp0_r3  <= 16'd0;
-            pp1_r3  <= 16'd0;
-            pp2_r3  <= 16'd0;
-            pp3_r3  <= 16'd0;
-            neg0_r3 <= 1'b0;
-            neg1_r3 <= 1'b0;
-            neg2_r3 <= 1'b0;
-            neg3_r3 <= 1'b0;
+            pp0_r3 <= 16'd0;
+            pp1_r3 <= 16'd0;
+            pp2_r3 <= 16'd0;
+            pp3_r3 <= 16'd0;
         end else if (enable_r2) begin
             enable_r3 <= enable_r2;
 
@@ -116,10 +116,6 @@ module fix_mul_8bits (
             pp1_r3 <= pp1_w3;
             pp2_r3 <= pp2_w3;
             pp3_r3 <= pp3_w3;
-            neg0_r3 <= neg0_w3;
-            neg1_r3 <= neg1_w3;
-            neg2_r3 <= neg2_w3;
-            neg3_r3 <= neg3_w3;
         end else begin
             enable_r3 <= 1'b0;
         end
@@ -129,16 +125,19 @@ module fix_mul_8bits (
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) p <= 0;
         else if (enable_r3) begin
+            enable_r4 <= 1'b1;
+
             valid_output <= 1'b1;
             p <= product_w4;
         end else begin
             valid_output <= 1'b0;
             p <= 32'd0;
+            enable_r4 <= 1'b0;
         end
     end
 
     /******************************* 模块例化 ***********************************/
-    //第二级，波兹编码
+    //第一级，波兹编码
     booth_encoder_8bits booth_encoder_8bits_inst (
         .b   (b_r1),
         .enc0(enc0_w1),
@@ -147,7 +146,7 @@ module fix_mul_8bits (
         .enc3(enc3_w1)
     );
 
-    //第三级，部分积生成
+    //第二级，部分积生成
     patial_product_gen_8bits patial_product_gen_8bits_inst (
         .a   (a_r2),
         .enc0(enc0_r2),
@@ -175,5 +174,18 @@ module fix_mul_8bits (
         .sum    (sum_w4),
         .carry  (carry_w4),
         .product(product_w4)
+    );
+
+    //最后使用一个2级流水加法器
+    carry_sel_adder_32bit carry_sel_adder_32bit_inst (
+        .clk         (clk),
+        .valid_input (valid_input_fix_adder),
+        .is_add      (is_add),
+        .a           (a),
+        .b           (b),
+        .sum         (sum),
+        .cout        (cout),
+        .valid_output(valid_output),
+        .overflow    (overflow)
     );
 endmodule
