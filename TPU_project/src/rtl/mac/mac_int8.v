@@ -41,30 +41,35 @@ module mac_int8 #(
     input wire signed [WIDTH_INT32-1:0] c_in,
 
     //输出信号
-    output reg signed [WIDTH_INT32-1:0] c_out,
-    output reg                          valid_output,
-    output reg                          overflow_output
+    output signed [WIDTH_INT32-1:0] c_out,
+    output                          valid_output,
+    output                          overflow_output
 );
 
     /******************************* 参数 ***********************************/
     localparam DEPTH_PIPELINE = 6;  //流水线深度
+    localparam DEPTH_PIPELINE_MUL = 4;  //流水线深度
 
     /******************************* 网表信号 ***********************************/
-    wire [WIDTH_INT32-1:0] fix_mul_output;  //记录定点数乘法器输出
-    wire                   valid_output_fix_mul;  //记录定点数乘法器输出有效
+    wire [ WIDTH_INT32-1:0] fix_mul_output;  //记录定点数乘法器输出
+    wire                    valid_output_fix_mul;  //记录定点数乘法器输出有效
 
-    wire [WIDTH_INT32-1:0] fix_adder_output;  //记录定点数加法器输出
-    wire                   valid_output_fix_adder;  // 记录定点数加法器输出有效
-    wire                   overflow_output_fix_adder;  // 记录定点数加法器输出有效
+    wire [ WIDTH_INT32-1:0] fix_adder_output;  //记录定点数加法器输出
+    wire                    valid_output_fix_adder;  // 记录定点数加法器输出有效
+    wire                    overflow_output_fix_adder;  // 记录定点数加法器输出有效
 
     /******************************* reg信号 ***********************************/
     //4级延时存储
-    reg  [WIDTH_INT32-1:0] C                                                                   [3:0];  //C[4]无用
-    reg  [            5:0] r_valid_input;
+    reg  [ WIDTH_INT32-1:0] C                                                                   [DEPTH_PIPELINE_MUL:0];
+    reg  [DEPTH_PIPELINE:0] r_valid_input;
 
     /******************************* 组合逻辑 ***********************************/
     //定点数加法器有效信号
-    assign valid_input_fix_adder = valid_output_fix_mul & r_valid_input[3];
+    assign valid_input_fix_adder = valid_output_fix_mul & r_valid_input[DEPTH_PIPELINE_MUL];
+
+    //直接将输出连接至32位加法器的输出
+    assign c_out = fix_adder_output;
+    assign valid_output = valid_output_fix_adder;
 
     /******************************* 时序逻辑 ***********************************/
     // 对第一级的寄存
@@ -90,31 +95,13 @@ module mac_int8 #(
             r_valid_input[5:1] <= 4'b0;
         end else begin
             // 使用for循环创建一个状态跟随流水线
-            for (i = 0; i < 3; i = i + 1) begin
+            for (i = 0; i < DEPTH_PIPELINE_MUL; i = i + 1) begin
                 if (r_valid_input[i]) begin
                     C[i+1] <= C[i];
                     r_valid_input[i+1] <= 1'b1;
                 end else begin
                     r_valid_input[i+1] <= 1'b0;
                 end
-            end
-
-            for (i = 3; i < 5; i = i + 1) begin
-                if (r_valid_input[i]) begin
-                    r_valid_input[i+1] <= 1'b1;
-                end else begin
-                    r_valid_input[i+1] <= 1'b0;
-                end
-            end
-
-            if (r_valid_input[5]) begin
-                valid_output <= 1'b1;
-                c_out <= fix_adder_output;
-                overflow_output <= overflow_output_fix_adder;
-            end else begin
-                c_out <= 32'd0;
-                overflow_output <= 1'b0;
-                valid_output <= 1'b0;
             end
         end
     end
@@ -137,7 +124,7 @@ module mac_int8 #(
         .valid_input (valid_input_fix_adder),
         .is_add      (1'b1),                      //恒定作为加法器
         .a           (fix_mul_output),
-        .b           (C[3]),
+        .b           (C[DEPTH_PIPELINE_MUL]),
         .sum         (fix_adder_output),
         .cout        (),                          //不需要cout
         .valid_output(valid_output_fix_adder),
