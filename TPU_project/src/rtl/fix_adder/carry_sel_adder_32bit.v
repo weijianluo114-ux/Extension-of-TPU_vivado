@@ -24,52 +24,54 @@
 //----------------------------------------------------------------------------------------
 //****************************************************************************************//
 
-module carry_sel_adder_32bit (
-    input        clk,     //时钟
-    input        valid_input,  //使能信号
-    input        is_add,  //判断是加法还是减法运算a+b或者a-b
-    input [31:0] a,       //32位加数a
-    input [31:0] b,       //32位加数b
-    // input        cin,     //低位进位cin
+module carry_sel_adder_32bit #(
+    parameter WIDTH_INT32 = 32,
+    parameter WIDTH_INT16 = 16
+) (
+    input                   clk,          //时钟
+    input                   valid_input,  //使能信号
+    input                   is_add,       //判断是加法还是减法运算a+b或者a-b
+    input [WIDTH_INT32-1:0] a,            //32位加数a
+    input [WIDTH_INT32-1:0] b,            //32位加数b
 
-    output reg [31:0] sum,           //和sum
-    output reg        cout,          //输出进位cout
-    output reg        valid_output,  //输出有效信号
-    output            overflow       //溢出标志
+    output reg [WIDTH_INT32-1:0] sum,           //和sum
+    output reg                   cout,          //输出进位cout
+    output reg                   valid_output,  //输出有效信号
+    output                       overflow       //溢出标志
 );
     /******************************* 网表信号 ***********************************/
-    wire        sel;  //进位选择中间信号
+    wire                   sel;  //进位选择中间信号
 
     //进位选择的两个输出和信号
-    wire [15:0] sum_temp0;
-    wire [15:0] sum_temp1;
+    wire [WIDTH_INT16-1:0] sum_temp0;
+    wire [WIDTH_INT16-1:0] sum_temp1;
 
     //输出进位的两个中间信号
-    wire        cout_temp0;
-    wire        cout_temp1;
+    wire                   cout_temp0;
+    wire                   cout_temp1;
 
     //输出信号组合逻辑
-    wire [31:0] SUM;
-    wire        COUT;
+    wire [WIDTH_INT32-1:0] SUM;
+    wire                   COUT;
 
     /******************************* reg信号 ***********************************/
     //对各信号进行寄存
-    reg  [31:0] A;
-    reg  [31:0] B;
-    reg         CIN;
-    reg         ENABLE;
-    reg         OVERFLOW;
+    reg  [WIDTH_INT32-1:0] A;
+    reg  [WIDTH_INT32-1:0] B;
+    reg                    CIN;
+    reg                    ENABLE;
+    reg                    OVERFLOW;
 
     /******************************* 组合逻辑 ***********************************/
     //首先对输出的和进行选择
-    assign SUM[31:16] = sel ? sum_temp1 : sum_temp0;
+    assign SUM[WIDTH_INT32-1:WIDTH_INT16] = sel ? sum_temp1 : sum_temp0;
     //再对输出的进位进行选择
     assign COUT = sel ? cout_temp1 : cout_temp0;
 
     assign overflow = OVERFLOW && valid_output;
 
     /******************************* 时序逻辑 ***********************************/
-    //对输入打一拍
+    //对输入打一拍，第一级流水线
     always @(posedge clk) begin
         A <= a;
         B <= (is_add) ? b : (~b + 1);  //减法即加补码
@@ -84,30 +86,30 @@ module carry_sel_adder_32bit (
 
         valid_output <= ENABLE;
         //溢出检测，符号位相同相加后不同
-        OVERFLOW <= (A[31] == B[31]) && (SUM[31] != A[31]);
+        OVERFLOW <= (A[WIDTH_INT32-1] == B[WIDTH_INT32-1]) && (SUM[WIDTH_INT32-1] != A[WIDTH_INT32-1]);
     end
     /******************************* 模块例化 ***********************************/
     //1个16位的加法器作为低位，2个作为进位选择的高位
     carry_sel_adder_16bit carry_sel_adder_16bit_inst_lower (
-        .a   (A[15:0]),
-        .b   (B[15:0]),
+        .a   (A[WIDTH_INT16-1:0]),
+        .b   (B[WIDTH_INT16-1:0]),
         .cin (CIN),
-        .sum (SUM[15:0]),
+        .sum (SUM[WIDTH_INT16-1:0]),
         .cout(sel)
     );
 
     //进位输入为0
     carry_sel_adder_16bit carry_sel_adder_16bit_inst_upper0 (
-        .a   (A[31:16]),
-        .b   (B[31:16]),
+        .a   (A[WIDTH_INT32-1:WIDTH_INT16]),
+        .b   (B[WIDTH_INT32-1:WIDTH_INT16]),
         .cin (1'b0),
         .sum (sum_temp0),
         .cout(cout_temp0)
     );
     //进位输入为1
     carry_sel_adder_16bit carry_sel_adder_16bit_inst_upper1 (
-        .a   (A[31:16]),
-        .b   (B[31:16]),
+        .a   (A[WIDTH_INT32-1:WIDTH_INT16]),
+        .b   (B[WIDTH_INT32-1:WIDTH_INT16]),
         .cin (1'b1),
         .sum (sum_temp1),
         .cout(cout_temp1)
