@@ -39,6 +39,7 @@ module carry_sel_adder_32bit #(
     output reg                   valid_output,  //输出有效信号
     output                       overflow       //溢出标志
 );
+
     /******************************* 网表信号 ***********************************/
     wire                   sel;  //进位选择中间信号
 
