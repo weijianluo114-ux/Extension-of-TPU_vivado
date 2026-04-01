@@ -47,21 +47,20 @@ module mac_int8 #(
 );
 
     /******************************* 参数 ***********************************/
-    localparam DEPTH_PIPELINE = 6;  //流水线深度
-    localparam DEPTH_PIPELINE_MUL = 4;  //流水线深度
+    localparam DEPTH_PIPELINE_MUL = 4;  //加法器流水线深度
 
     /******************************* 网表信号 ***********************************/
-    wire [ WIDTH_INT32-1:0] fix_mul_output;  //记录定点数乘法器输出
-    wire                    valid_output_fix_mul;  //记录定点数乘法器输出有效
+    wire [     WIDTH_INT32-1:0] fix_mul_output;  //记录定点数乘法器输出
+    wire                        valid_output_fix_mul;  //记录定点数乘法器输出有效
 
-    wire [ WIDTH_INT32-1:0] fix_adder_output;  //记录定点数加法器输出
-    wire                    valid_output_fix_adder;  // 记录定点数加法器输出有效
-    wire                    overflow_output_fix_adder;  // 记录定点数加法器输出有效
+    wire [     WIDTH_INT32-1:0] fix_adder_output;  //记录定点数加法器输出
+    wire                        valid_output_fix_adder;  // 记录定点数加法器输出有效
+    wire                        overflow_output_fix_adder;  // 记录定点数加法器输出有效
 
     /******************************* reg信号 ***********************************/
     //4级延时存储
-    reg  [ WIDTH_INT32-1:0] C                                                                   [DEPTH_PIPELINE_MUL:0];
-    reg  [DEPTH_PIPELINE:0] r_valid_input;
+    reg  [     WIDTH_INT32-1:0] C                                                                   [DEPTH_PIPELINE_MUL:0];
+    reg  [DEPTH_PIPELINE_MUL:0] r_valid_input;
 
     /******************************* 组合逻辑 ***********************************/
     //定点数加法器有效信号
@@ -92,7 +91,7 @@ module mac_int8 #(
     integer i;
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
-            r_valid_input[5:1] <= 4'b0;
+            r_valid_input[4:1] <= 4'b0;
         end else begin
             // 使用for循环创建一个状态跟随流水线
             for (i = 0; i < DEPTH_PIPELINE_MUL; i = i + 1) begin
