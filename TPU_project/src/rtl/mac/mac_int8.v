@@ -24,35 +24,43 @@
 //----------------------------------------------------------------------------------------
 //****************************************************************************************//
 
-module mac_int8 (
+module mac_int8 #(
+    //参数
+    parameter WIDTH_INT8  = 8,
+    parameter WIDTH_INT32 = 32
+
+) (
     //控制信号
     input wire clk,
     input wire rst_n,
     input wire valid_input,
 
     //输入信号
-    input wire signed [ 7:0] a,
-    input wire signed [ 7:0] b,
-    input wire signed [31:0] c_in,
+    input wire signed [ WIDTH_INT8-1:0] a,
+    input wire signed [ WIDTH_INT8-1:0] b,
+    input wire signed [WIDTH_INT32-1:0] c_in,
 
     //输出信号
-    output reg signed [31:0] c_out,
-    output reg               valid_output,
-    output reg               overflow_output
+    output reg signed [WIDTH_INT32-1:0] c_out,
+    output reg                          valid_output,
+    output reg                          overflow_output
 );
 
-    /******************************* 网表信号 ***********************************/
-    wire [31:0] fix_mul_output;  //记录定点数乘法器输出
-    wire        valid_output_fix_mul;  //记录定点数乘法器输出有效
+    /******************************* 参数 ***********************************/
+    localparam DEPTH_PIPELINE = 6;  //流水线深度
 
-    wire [31:0] fix_adder_output;  //记录定点数加法器输出
-    wire        valid_output_fix_adder;  // 记录定点数加法器输出有效
-    wire        overflow_output_fix_adder;  // 记录定点数加法器输出有效
+    /******************************* 网表信号 ***********************************/
+    wire [WIDTH_INT32-1:0] fix_mul_output;  //记录定点数乘法器输出
+    wire                   valid_output_fix_mul;  //记录定点数乘法器输出有效
+
+    wire [WIDTH_INT32-1:0] fix_adder_output;  //记录定点数加法器输出
+    wire                   valid_output_fix_adder;  // 记录定点数加法器输出有效
+    wire                   overflow_output_fix_adder;  // 记录定点数加法器输出有效
 
     /******************************* reg信号 ***********************************/
     //4级延时存储
-    reg  [31:0] C                                                                   [3:0];  //C[4]无用
-    reg  [ 5:0] r_valid_input;
+    reg  [WIDTH_INT32-1:0] C                                                                   [3:0];  //C[4]无用
+    reg  [            5:0] r_valid_input;
 
     /******************************* 组合逻辑 ***********************************/
     //定点数加法器有效信号
@@ -62,10 +70,10 @@ module mac_int8 (
     // 对第一级的寄存
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
-            C[0] <= 32'b0;
-            C[1] <= 32'b0;
-            C[2] <= 32'b0;
-            C[3] <= 32'b0;
+            C[0] <= {WIDTH_INT32{1'b0}};
+            C[1] <= {WIDTH_INT32{1'b0}};
+            C[2] <= {WIDTH_INT32{1'b0}};
+            C[3] <= {WIDTH_INT32{1'b0}};
             r_valid_input[0] <= 4'd0;
         end else if (valid_input) begin
             C[0] <= c_in;
