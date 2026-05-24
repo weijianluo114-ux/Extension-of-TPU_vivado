@@ -27,13 +27,13 @@
 module patial_product_gen_8bits (
     input      [ 7:0] a,
     input      [ 2:0] enc0,
-    enc1,
-    enc2,
-    enc3,
+    input      [ 2:0] enc1,
+    input      [ 2:0] enc2,
+    input      [ 2:0] enc3,
     output reg [15:0] pp0,
-    pp1,
-    pp2,
-    pp3
+    output reg [15:0] pp1,
+    output reg [15:0] pp2,
+    output reg [15:0] pp3
 );
     /******************************* 网表信号 ***********************************/
     wire [15:0] a_ext = {{8{a[7]}}, a};  // 符号扩展到16位
@@ -46,21 +46,27 @@ module patial_product_gen_8bits (
         input [15:0] a_ext_shl;
         begin
             case (enc)  //波兹编码最终只有5种情况，0，+-1，+-2
-                3'b000: begin
+                //0
+                3'b000, 3'b111: begin
                     gen_pp = 16'b0;
                 end
-                3'b001: begin
+                //+1
+                3'b001, 3'b010: begin
                     gen_pp = a_ext;
                 end
-                3'b010: begin
+                //+2
+                3'b011: begin
                     gen_pp = a_ext_shl;
                 end
-                3'b111: begin
+                //-2
+                3'b100: begin
                     gen_pp = ~a_ext + 1'b1;
-                end  // -1倍：取反，加1
-                3'b110: begin
+                end
+                //-1
+                3'b110, 3'b101: begin
                     gen_pp = ~a_ext_shl + 1'b1;
-                end  // -2倍：取反，加1
+                end
+                //默认是0
                 default: begin
                     gen_pp = 16'b0;
                 end

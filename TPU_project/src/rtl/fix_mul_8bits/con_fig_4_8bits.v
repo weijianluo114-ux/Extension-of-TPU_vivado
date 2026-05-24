@@ -36,6 +36,7 @@ module config_mul_4_8bits #(
     input                  valid_input,
     input [WIDTH_INT8-1:0] a,
     input [WIDTH_INT8-1:0] b,
+    input                  is_8bits,     //是否是8位的输入
 
     output                   valid_output,  //输出有效
     output [WIDTH_INT32-1:0] p              //乘积输出
@@ -147,16 +148,17 @@ module config_mul_4_8bits #(
 
     /******************************* 模块例化 ***********************************/
     //第一级，波兹编码
-    booth_encoder_8bits booth_encoder_8bits_inst (
-        .b   (b_r1),
-        .enc0(enc0_w1),
-        .enc1(enc1_w1),
-        .enc2(enc2_w1),
-        .enc3(enc3_w1)
+    booth_encoder_4_8bits booth_encoder_4_8bits_inst (
+        .b       (b_r1),
+        .is_8bits(is_8bits),
+        .enc0    (enc0_w1),
+        .enc1    (enc1_w1),
+        .enc2    (enc2_w1),
+        .enc3    (enc3_w1)
     );
 
     //第二级，部分积生成
-    patial_product_gen_8bits patial_product_gen_8bits_inst (
+    patial_product_gen_4_8bits patial_product_gen_8bits_inst (
         .a   (a_r2),
         .enc0(enc0_r2),
         .enc1(enc1_r2),
