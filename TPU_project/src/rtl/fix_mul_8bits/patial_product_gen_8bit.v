@@ -47,23 +47,23 @@ module patial_product_gen_8bits (
         begin
             case (enc)  //波兹编码最终只有5种情况，0，+-1，+-2
                 //0
-                3'b000, 3'b111: begin
+                3'b000: begin
                     gen_pp = 16'b0;
                 end
                 //+1
-                3'b001, 3'b010: begin
+                3'b001: begin
                     gen_pp = a_ext;
                 end
                 //+2
-                3'b011: begin
+                3'b010: begin
                     gen_pp = a_ext_shl;
                 end
                 //-2
-                3'b100: begin
+                3'b110: begin
                     gen_pp = ~a_ext + 1'b1;
                 end
                 //-1
-                3'b110, 3'b101: begin
+                3'b111: begin
                     gen_pp = ~a_ext_shl + 1'b1;
                 end
                 //默认是0

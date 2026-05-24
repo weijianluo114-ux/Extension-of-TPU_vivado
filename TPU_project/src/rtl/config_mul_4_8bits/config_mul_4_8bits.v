@@ -39,7 +39,9 @@ module config_mul_4_8bits #(
     input                  is_8bits,     //是否是8位的输入
 
     output                   valid_output,  //输出有效
-    output [WIDTH_INT32-1:0] p              //乘积输出
+    output [WIDTH_INT32-1:0] p,             //乘积输出
+    output [WIDTH_INT32-1:0] p_4bits_low,   //第一个4位的输出
+    output [WIDTH_INT32-1:0] p_4bits_high   //第二个4位的输出
 );
 
     /******************************* 网表信号 ***********************************/
@@ -56,8 +58,15 @@ module config_mul_4_8bits #(
     wire [      WIDTH_PRODUCT-1:0] pp3_w2;
 
     // 第三级：压缩树 + 最终加法（组合逻辑）
+    wire                           compress_enable;
     wire [WIDTH_PRODUCT_SHIFT-1:0] sum_w3;
     wire [WIDTH_PRODUCT_SHIFT-1:0] carry_w3;
+    //8位压缩树生成的要求和的值
+    wire [        WIDTH_INT32-1:0] compress_8bits_sum;
+    wire [        WIDTH_INT32-1:0] compress_8bits_carry;
+    //4位波兹编码只需要累加部分积即可
+    wire [        WIDTH_INT32-1:0] pp_4bits_a;
+    wire [        WIDTH_INT32-1:0] pp_4bits_b;
     wire [        WIDTH_INT32-1:0] adder_input_a;
     wire [        WIDTH_INT32-1:0] adder_input_b;
 
@@ -69,6 +78,7 @@ module config_mul_4_8bits #(
     reg  [         WIDTH_INT8-1:0] a_r1;
     reg  [         WIDTH_INT8-1:0] b_r1;
     reg                            enable_r1;
+    reg                            is_8bits_r1;
 
     // 第二级流水级寄存器
     reg  [         WIDTH_INT8-1:0] a_r2;
@@ -77,6 +87,7 @@ module config_mul_4_8bits #(
     reg  [        WIDTH_BOOTH-1:0] enc1_r2;
     reg  [        WIDTH_BOOTH-1:0] enc2_r2;
     reg  [        WIDTH_BOOTH-1:0] enc3_r2;
+    reg                            is_8bits_r2;
 
     //第三级流水线
     reg                            enable_r3;
@@ -84,13 +95,24 @@ module config_mul_4_8bits #(
     reg  [      WIDTH_PRODUCT-1:0] pp1_r3;
     reg  [      WIDTH_PRODUCT-1:0] pp2_r3;
     reg  [      WIDTH_PRODUCT-1:0] pp3_r3;
+    reg                            is_8bits_r3;
 
     /******************************* 组合逻辑 ***********************************/
     assign valid_input_fix_adder = enable_r3;
+    assign compress_enable = is_8bits_r3;
+
+    assign compress_8bits_sum = {{(WIDTH_INT32 - WIDTH_PRODUCT_SHIFT) {sum_w3[WIDTH_PRODUCT_SHIFT-1]}}, sum_w3};
+    assign compress_8bits_carry = {{(WIDTH_INT32 - WIDTH_PRODUCT_SHIFT - 1) {carry_w3[WIDTH_PRODUCT_SHIFT-1]}}, carry_w3, 1'b0};
+
+    assign pp_4bits_a = {pp3_r3 << 2, pp1_r3 << 2};
+    assign pp_4bits_b = {pp2_r3, pp0_r3};
+
+    assign p_4bits_low = {{24{p[7]}}, p[7:0]};
+    assign p_4bits_high = {{24{p[23]}}, p[23:16]};
 
     //将补高位后的值赋值给加法器输入
-    assign adder_input_a = {{(WIDTH_INT32 - WIDTH_PRODUCT_SHIFT) {sum_w3[WIDTH_PRODUCT_SHIFT-1]}}, sum_w3};  //对于sum，不需要左移
-    assign adder_input_b = {{(WIDTH_INT32 - WIDTH_PRODUCT_SHIFT - 1) {carry_w3[WIDTH_PRODUCT_SHIFT-1]}}, carry_w3, 1'b0};  //对于cin，要左移一位
+    assign adder_input_a = is_8bits_r3 ? compress_8bits_sum : pp_4bits_a;  //对于sum，不需要左移
+    assign adder_input_b = is_8bits_r3 ? compress_8bits_carry : pp_4bits_b;  //对于cin，要左移一位
 
     /******************************* 时序逻辑 ***********************************/
     //第一级流水线，首先存储输入
@@ -99,23 +121,27 @@ module config_mul_4_8bits #(
             a_r1 <= 8'd0;
             b_r1 <= 8'd0;
             enable_r1 <= 1'b0;
+            is_8bits_r1 <= 1'b0;
         end else if (valid_input) begin
             a_r1 <= a;
             b_r1 <= b;
+            is_8bits_r1 <= is_8bits;
             enable_r1 <= 1'b1;
         end else begin
             enable_r1 <= 1'b0;
         end
     end
 
-    //第二级流水线
+    //第二级流水线，部分积生成
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             {enc0_r2, enc1_r2, enc2_r2, enc3_r2} <= 0;
             enable_r2 <= 1'b0;
+            is_8bits_r2 <= 1'b0;
         end else if (enable_r1) begin
             a_r2 <= a_r1;
             enable_r2 <= enable_r1;
+            is_8bits_r2 <= is_8bits_r1;
 
             enc0_r2 <= enc0_w1;
             enc1_r2 <= enc1_w1;
@@ -134,8 +160,10 @@ module config_mul_4_8bits #(
             pp2_r3 <= 16'd0;
             pp3_r3 <= 16'd0;
             enable_r3 <= 1'b0;
+            is_8bits_r3 <= 1'b0;
         end else if (enable_r2) begin
             enable_r3 <= enable_r2;
+            is_8bits_r3 <= is_8bits_r2;
 
             pp0_r3 <= pp0_w2;
             pp1_r3 <= pp1_w2;
@@ -150,7 +178,7 @@ module config_mul_4_8bits #(
     //第一级，波兹编码
     booth_encoder_4_8bits booth_encoder_4_8bits_inst (
         .b       (b_r1),
-        .is_8bits(is_8bits),
+        .is_8bits(is_8bits_r1),
         .enc0    (enc0_w1),
         .enc1    (enc1_w1),
         .enc2    (enc2_w1),
@@ -159,25 +187,27 @@ module config_mul_4_8bits #(
 
     //第二级，部分积生成
     patial_product_gen_4_8bits patial_product_gen_8bits_inst (
-        .a   (a_r2),
-        .enc0(enc0_r2),
-        .enc1(enc1_r2),
-        .enc2(enc2_r2),
-        .enc3(enc3_r2),
-        .pp0 (pp0_w2),
-        .pp1 (pp1_w2),
-        .pp2 (pp2_w2),
-        .pp3 (pp3_w2)
+        .is_8bits(is_8bits_r2),
+        .a       (a_r2),
+        .enc0    (enc0_r2),
+        .enc1    (enc1_r2),
+        .enc2    (enc2_r2),
+        .enc3    (enc3_r2),
+        .pp0     (pp0_w2),
+        .pp1     (pp1_w2),
+        .pp2     (pp2_w2),
+        .pp3     (pp3_w2)
     );
 
     //第三级：压缩树
-    compress_tree_8bits compressor_tree_8bits_inst (
-        .pp0  (pp0_r3),
-        .pp1  (pp1_r3),
-        .pp2  (pp2_r3),
-        .pp3  (pp3_r3),
-        .sum  (sum_w3),
-        .carry(carry_w3)
+    compress_tree_4_8bits compressor_tree_8bits_inst (
+        .enable(compress_enable),
+        .pp0   (pp0_r3),
+        .pp1   (pp1_r3),
+        .pp2   (pp2_r3),
+        .pp3   (pp3_r3),
+        .sum   (sum_w3),
+        .carry (carry_w3)
     );
 
     //最后使用一个2级流水加法器

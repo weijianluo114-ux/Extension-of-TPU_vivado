@@ -36,38 +36,45 @@ module patial_product_gen_4_8bits (
     output reg [15:0] pp2,
     output reg [15:0] pp3
 );
+    /******************************* 参数 ***********************************/
+    parameter IS_HIGH = 1'b1;
+    parameter IS_LOW = 1'b0;
+
     /******************************* 网表信号 ***********************************/
-    wire [15:0] a_ext = is_8bits ? {{8{a[7]}}, a} : {{4{a[7]}}, a[7:4], {4{a[3]}}, a[3:0]};  // 符号扩展到16位
-    wire [15:0] a_ext_shl = is_8bits ? {{7{a[7]}}, a, 1'b0} : {{3{a[7]}}, a[7:4], 1'b0, {3{a[3]}}, a[3:0], 1'b0};  // 左移1位并符号扩展
+    wire [7:0] a_ext_low = is_8bits ? a : {{4{a[3]}}, a[3:0]};  // 符号扩展到16位
+    wire [7:0] a_ext_high = is_8bits ? {8{a[7]}} : {{4{a[7]}}, a[7:4]};  // 符号扩展到16位
+    wire [7:0] a_ext_shl_low = is_8bits ? {a[6:0], 1'b0} : {{3{a[3]}}, a[3:0], 1'b0};  // 左移1位并符号扩展
+    wire [7:0] a_ext_shl_high = is_8bits ? {8{a[7]}} : {{3{a[7]}}, a[7:4], 1'b0};  // 左移1位并符号扩展
 
     /******************************* 函数 ***********************************/
     function [15:0] gen_pp;  //
         input is_8bits;
+        input is_high;
         input [2:0] enc;
         input [15:0] a_ext;
         input [15:0] a_ext_shl;
         begin
-            case (enc)  //波兹编码最终只有5种情况，0，+-1，+-2
+            case (enc)  //波兹编码最终只有5种情况，0，+-1，+-2  ，注意这里4位的部分积，只有8位，故高8位存0，只在低4位存
                 //0
-                3'b000, 3'b111: begin
+                3'b000: begin
                     gen_pp = 16'b0;
                 end
                 //+1
-                3'b001, 3'b010: begin
-                    gen_pp = a_ext;
+                3'b001: begin
+                    gen_pp = is_8bits ? a_ext : is_high ? {8'b0, a_ext[15:8]} : {8'b0, a_ext[7:0]};
                 end
                 //+2
-                3'b011: begin
-                    gen_pp = a_ext_shl;
+                3'b010: begin
+                    gen_pp = is_8bits ? a_ext_shl : is_high ? {8'b0, a_ext_shl[15:8]} : {8'b0, a_ext_shl[7:0]};
                 end
                 //以下逻辑需要区分4位和8位
                 //-2
-                3'b100: begin
-                    gen_pp = is_8bits ? ~a_ext + 1'b1 : {{~a_ext[15:8] + 1'b1}, {~a_ext[7:0] + 1'b1}};
+                3'b110: begin
+                    gen_pp = is_8bits ? {~a_ext_shl + 1'b1} : is_high ? {8'b0, {~a_ext_shl[15:8] + 1'b1}} : {8'b0, {~a_ext_shl[7:0] + 1'b1}};
                 end
                 //-1
-                3'b110, 3'b101: begin
-                    gen_pp = is_8bits ? ~a_ext_shl + 1'b1 : {{~a_ext_shl[15:8] + 1'b1}, {~a_ext_shl[7:0] + 1'b1}};
+                3'b111, 3'b101: begin
+                    gen_pp = is_8bits ? {~a_ext + 1'b1} : is_high ? {8'b0, {~a_ext[15:8] + 1'b1}} : {8'b0, {~a_ext[7:0] + 1'b1}};
                 end
                 //默认是0
                 default: begin
@@ -78,10 +85,10 @@ module patial_product_gen_4_8bits (
     endfunction
 
     /******************************* 组合逻辑 ***********************************/
-    always @(*) begin
-        pp0 = gen_pp(is_8bits, enc0, a_ext, a_ext_shl);
-        pp1 = gen_pp(is_8bits, enc1, a_ext, a_ext_shl);
-        pp2 = gen_pp(is_8bits, enc2, a_ext, a_ext_shl);
-        pp3 = gen_pp(is_8bits, enc3, a_ext, a_ext_shl);
+    always @(*) begin  //enc0,1对应的是a的高位
+        pp0 = gen_pp(is_8bits, IS_LOW, enc0, {a_ext_high, a_ext_low}, {a_ext_shl_high, a_ext_shl_low});
+        pp1 = gen_pp(is_8bits, IS_LOW, enc1, {a_ext_high, a_ext_low}, {a_ext_shl_high, a_ext_shl_low});
+        pp2 = gen_pp(is_8bits, IS_HIGH, enc2, {a_ext_high, a_ext_low}, {a_ext_shl_high, a_ext_shl_low});
+        pp3 = gen_pp(is_8bits, IS_HIGH, enc3, {a_ext_high, a_ext_low}, {a_ext_shl_high, a_ext_shl_low});
     end
 endmodule
