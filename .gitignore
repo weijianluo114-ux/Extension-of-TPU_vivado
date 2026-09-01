@@ -90,3 +90,8 @@ transcript
 **/sources_1/ip/**/*.bxml
 **/sources_1/ip/**/*_mcs.hwdef
 **/sources_1/ip/**/*_mcs_bd.tcl
+
+# ================================
+# Vivado ???????????????
+# ================================
+*.xpr
