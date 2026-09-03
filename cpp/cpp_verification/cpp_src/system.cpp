@@ -1,4 +1,4 @@
-﻿#define _CRT_SECURE_NO_WARNINGS
+#define _CRT_SECURE_NO_WARNINGS
 #include "Matrix.h"
 #include <iostream>
 #include <fstream>
@@ -128,12 +128,10 @@ float FP16_to_FP32(short n)
 
 	if (frac == 0 && exp == 0x1f)
 		m = INFINITY;
-	else if (frac && exp)
+	else if (exp)
 		m = (frac | 0x400) * pow(2, exp - bias - 10);
-	else if (!exp)
-		m = frac * pow(2, 1 - bias - 10);
 	else
-		m = 0;
+		m = frac * pow(2, 1 - bias - 10);
 
 	return (n & 0x8000) ? -m : m;
 }
