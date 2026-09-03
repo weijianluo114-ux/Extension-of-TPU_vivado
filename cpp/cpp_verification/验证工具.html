@@ -1,0 +1,845 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TPU cpp_verification 验证工具</title>
+<style>
+:root{--bg:#0f172a;--panel:#1e293b;--border:#334155;--text:#e2e8f0;--muted:#94a3b8;--green:#22c55e;--red:#ef4444;--amber:#f59e0b;--blue:#3b82f6}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Segoe UI",system-ui,sans-serif;background:var(--bg);color:var(--text);font-size:15px}
+header{padding:14px 20px;background:var(--panel);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+h1{font-size:17px;margin:0}
+main{padding:16px 20px;max-width:1900px;margin:0 auto}
+section{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:14px}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+label{color:var(--muted);font-size:13px}
+select,input[type=checkbox]{background:#0f172a;color:var(--text);border:1px solid var(--border);border-radius:6px;padding:6px 8px;font-size:13px}
+input[type=text]{background:#0f172a;color:var(--text);border:1px solid var(--border);border-radius:6px;padding:6px 8px;font-size:13px}
+button{background:var(--blue);color:#fff;border:0;border-radius:6px;padding:7px 14px;font-size:13px;cursor:pointer}
+button:hover{filter:brightness(1.1)}
+button:disabled{opacity:.5;cursor:not-allowed}
+button.ghost{background:transparent;border:1px solid var(--border);color:var(--muted)}
+.path{color:var(--amber);font-family:Consolas,monospace;font-size:12px;word-break:break-all}
+.cards{display:flex;gap:12px;flex-wrap:wrap}
+.card{flex:1;min-width:130px;background:#0f172a;border:1px solid var(--border);border-radius:8px;padding:10px 14px}
+.card .num{font-size:22px;font-weight:700}
+.card .lbl{color:var(--muted);font-size:12px}
+.green{color:var(--green)}.red{color:var(--red)}.amber{color:var(--amber)}
+details{border:1px solid var(--border);border-radius:8px;margin-top:10px;overflow:hidden}
+summary{cursor:pointer;padding:10px 12px;background:#0f172a;user-select:none;font-weight:600}
+summary .badge{margin-left:8px;font-size:12px;padding:1px 8px;border-radius:10px}
+.badge.ok{background:rgba(34,197,94,.15);color:var(--green)}
+.badge.bad{background:rgba(239,68,68,.15);color:var(--red)}
+.tblwrap{overflow-x:auto;overflow-y:visible;padding:8px}
+.cmp{display:flex;flex-direction:column;gap:12px;align-items:stretch}
+.half{width:100%;min-width:0}
+.half h3{margin:2px 0 6px;font-size:13px;color:var(--muted);font-weight:600}
+table{border-collapse:collapse;font-family:Consolas,monospace;font-size:13px}
+th,td{border:1px solid var(--border);padding:3px 7px;text-align:right;white-space:nowrap}
+th{position:sticky;top:0;background:#334155;color:var(--text)}
+td.err{background:rgba(239,68,68,.35);color:#fff;font-weight:700}
+td.gold{background:rgba(34,197,94,.4);color:#fff;font-weight:700}
+td.dim{opacity:.25}
+#log{background:#0f172a;border:1px solid var(--border);border-radius:8px;padding:10px;font-family:Consolas,monospace;font-size:12px;max-height:200px;overflow:auto;white-space:pre-wrap}
+.errlist{font-family:Consolas,monospace;font-size:12px;max-height:180px;overflow:auto}
+.errlist div{padding:2px 0;border-bottom:1px dashed var(--border)}
+.hint{color:var(--muted);font-size:12px}
+</style>
+</head>
+<body>
+<header>
+  <h1>TPU cpp_verification 验证工具</h1>
+  <span class="hint">默认目录: E:\electronic2\project\verilog_pro\TPU_vivado\cpp\cpp_verification · 首次请点「选择目录」授权，之后自动记住</span>
+</header>
+<main>
+
+<section>
+  <div class="row">
+    <button id="btnPick">① 选择目录（可读写）</button>
+    <button id="btnPickRO" class="ghost">① 选择目录（只读）</button>
+    <button id="btnRestore" class="ghost">↻ 恢复上次目录</button>
+    <span id="dirPath" class="path">未选择目录</span>
+    <input type="file" id="dirInput" webkitdirectory multiple style="display:none">
+  </div>
+</section>
+
+<section>
+  <div class="row">
+    <label>数据集类型</label>
+    <select id="dtype">
+      <option value="int4">int4</option>
+      <option value="int8">int8</option>
+      <option value="fp16">fp16</option>
+      <option value="fp32">fp32</option>
+      <option value="int4_int32">int4_int32</option>
+      <option value="int8_int32">int8_int32</option>
+      <option value="all" selected>全部 18 组</option>
+    </select>
+    <label>规模</label>
+    <select id="dsize">
+      <option value="m16n16k16">m16n16k16</option>
+      <option value="m32n8k16">m32n8k16</option>
+      <option value="m8n32k16">m8n32k16</option>
+      <option value="all" selected>全部 3 种</option>
+    </select>
+    <button id="btnRun">② 加载并验证</button>
+    <button id="btnCoe" class="ghost">③ 生成 dataset.coe</button>
+    <label><input type="checkbox" id="onlyErr"> 只看错误元素</label>
+  </div>
+  <div class="row">
+    <label>日志备份</label>
+    <input type="text" id="logName" placeholder="自定义文件名（可选）" style="width:240px">
+    <span class="hint">每次验证后自动保存一份日志：可读写模式存到 logs/，否则浏览器下载；留空则用 verify_时间戳.txt</span>
+  </div>
+</section>
+
+<section id="statsSection" style="display:none">
+  <div class="cards" id="cards"></div>
+</section>
+
+<section id="matrixSection" style="display:none"></section>
+
+<section id="logManageSection">
+  <div class="row"><b>日志管理</b></div>
+  <div class="row">
+    <button id="btnReadLog">读取日志文件</button>
+    <button id="btnListLogs" class="ghost">列出 logs/ 目录</button>
+    <input type="file" id="logFileInput" accept=".json,.json.gz" multiple style="display:none">
+    <span class="hint">日志为 gzip JSON（.json.gz），人无需看源文件，加载后自动渲染到本界面</span>
+  </div>
+  <div class="row">
+    <b>gold 矩阵</b>
+    <input type="text" id="goldDir" value="gold" style="width:120px" title="gold 存放目录（与 logs/ 分开，相对 cpp_verification）">
+    <button id="btnEnsureGold" class="ghost">生成/刷新 gold</button>
+    <span id="goldStatus" class="hint"></span>
+  </div>
+  <div id="logList"></div>
+</section>
+
+<section>
+  <div class="row"><b>日志</b></div>
+  <div id="log"></div>
+</section>
+
+</main>
+<script>
+"use strict";
+const $ = id => document.getElementById(id);
+const logEl = $("log");
+function log(msg){ logEl.textContent += msg + "\n"; logEl.scrollTop = logEl.scrollHeight; }
+
+// ---------- 目录访问 ----------
+let dirHandle = null;          // File System Access API（可写）
+let readOnlyFiles = null;      // webkitdirectory 只读 fallback
+const TYPES = [
+  {t:"int4",      a:1,b:1,c:1},
+  {t:"int8",      a:2,b:2,c:2},
+  {t:"fp16",      a:3,b:3,c:3},
+  {t:"fp32",      a:4,b:4,c:4},
+  {t:"int4_int32",a:1,b:1,c:5},
+  {t:"int8_int32",a:2,b:2,c:5},
+];
+const SIZES = [
+  {s:"m16n16k16", m:16,n:16,k:16},
+  {s:"m32n8k16",  m:32,n:8, k:16},
+  {s:"m8n32k16",  m:8, n:32,k:16},
+];
+const PREC = {INT4:1, INT8:2, FP16:3, FP32:4, INT32:5};
+
+const DEFAULT_DIR_HINT = "E:\\electronic2\\project\\verilog_pro\\TPU_vivado\\cpp\\cpp_verification";
+
+// ---------- 目录记忆（IndexedDB） ----------
+function idbOpen(){ return new Promise((res,rej)=>{ const r=indexedDB.open("tpu-verify",1); r.onupgradeneeded=()=>r.result.createObjectStore("kv"); r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error); }); }
+async function idbSet(k,v){ const db=await idbOpen(); return new Promise((res,rej)=>{ const tx=db.transaction("kv","readwrite"); tx.objectStore("kv").put(v,k); tx.oncomplete=()=>res(); tx.onerror=()=>rej(tx.error); }); }
+async function idbGet(k){ const db=await idbOpen(); return new Promise((res,rej)=>{ const tx=db.transaction("kv","readonly"); const rq=tx.objectStore("kv").get(k); rq.onsuccess=()=>res(rq.result); rq.onerror=()=>rej(rq.error); }); }
+
+// ---------- 目录结构检查 ----------
+async function checkStructure(h){
+  const missing = [];
+  try { await h.getFileHandle("path.txt"); } catch(e){ missing.push("path.txt"); }
+  try { await h.getDirectoryHandle("dataset"); } catch(e){ missing.push("dataset/"); }
+  try { await h.getDirectoryHandle("output"); } catch(e){ missing.push("output/"); }
+  try { const t = await h.getDirectoryHandle("txt"); await t.getFileHandle("D_result.txt"); } catch(e){ missing.push("txt/D_result.txt"); }
+  return missing;
+}
+
+// ---------- 采用目录句柄：检查结构 + 记忆 ----------
+async function adoptDirHandle(h){
+  dirHandle = h;
+  readOnlyFiles = null;
+  const missing = await checkStructure(h);
+  if (missing.length === 0) {
+    await idbSet("lastDir", h);
+    $("dirPath").textContent = h.name + " （可读写 · 结构完整 · 已记住）";
+    log("目录结构完整，已就绪并记住: " + h.name);
+  } else {
+    $("dirPath").textContent = h.name + " （⚠ 结构不完整，缺少: " + missing.join("、") + "）";
+    log("⚠ 目录结构不完整，缺少: " + missing.join("、") + "。请选择 cpp_verification 目录。");
+  }
+  return missing.length === 0;
+}
+
+$("btnPick").onclick = async () => {
+  try {
+    if (!window.showDirectoryPicker) { log("当前浏览器不支持 showDirectoryPicker，请用 [只读] 方式或换 Edge/Chrome"); return; }
+    const h = await window.showDirectoryPicker();
+    await adoptDirHandle(h);
+  } catch(e){ if (e.name !== "AbortError") log("选择目录失败: " + e.message); }
+};
+$("btnRestore").onclick = async () => {
+  try {
+    const h = await idbGet("lastDir");
+    if (!h) { log("没有已保存的上次目录，请先选择一次"); return; }
+    let perm = await h.queryPermission({mode:"readwrite"});
+    if (perm === "prompt") perm = await h.requestPermission({mode:"readwrite"});
+    if (perm !== "granted") { log("未获得上次目录的访问授权，请重新选择"); return; }
+    await adoptDirHandle(h);
+  } catch(e){ log("恢复上次目录失败: " + e.message); }
+};
+$("btnPickRO").onclick = () => $("dirInput").click();
+$("dirInput").onchange = async e => {
+  readOnlyFiles = Array.from(e.target.files);
+  dirHandle = null;
+  $("dirPath").textContent = "只读模式，共 " + readOnlyFiles.length + " 个文件";
+  const has = p => readOnlyFiles.some(f => f.webkitRelativePath.replace(/\\/g,"/").includes(p));
+  const missing = ["path.txt","dataset/","output/","txt/D_result.txt"].filter(p => !has(p));
+  if (missing.length) log("⚠ 只读目录结构不完整，缺少: " + missing.join("、") + "。请选择 cpp_verification 目录。");
+  else log("只读目录结构完整，就绪");
+};
+
+// ---------- 页面加载：自动恢复上次目录（仅查询授权，不弹窗） ----------
+async function restoreLastDir(){
+  try {
+    const h = await idbGet("lastDir");
+    if (!h) { $("dirPath").textContent = "未选择目录 · 默认目录: " + DEFAULT_DIR_HINT; return; }
+    const perm = await h.queryPermission({mode:"readwrite"});
+    if (perm === "granted") {
+      await adoptDirHandle(h);
+    } else {
+      $("dirPath").textContent = "上次目录已保存但未授权：" + h.name + "，请点 [↻ 恢复上次目录] 重新授权";
+    }
+  } catch(e){ $("dirPath").textContent = "默认目录: " + DEFAULT_DIR_HINT; }
+}
+
+async function readFile(relPath){
+  if (dirHandle) {
+    const parts = relPath.split("/");
+    let h = dirHandle;
+    for (let i=0;i<parts.length-1;i++) h = await h.getDirectoryHandle(parts[i]);
+    const fh = await h.getFileHandle(parts[parts.length-1]);
+    const f = await fh.getFile();
+    return new Uint8Array(await f.arrayBuffer());
+  } else if (readOnlyFiles) {
+    const f = readOnlyFiles.find(x => x.webkitRelativePath.endsWith(relPath.replace(/\//g,"\\")) || x.webkitRelativePath.endsWith(relPath));
+    if (!f) throw new Error("找不到文件: " + relPath);
+    return new Uint8Array(await f.arrayBuffer());
+  }
+  throw new Error("请先选择目录");
+}
+
+// ---------- bin 解析（与 C++ get_from_bin 一致） ----------
+function halfToFloat(h){
+  const s = (h & 0x8000) ? -1 : 1;
+  const e = (h >> 10) & 0x1f;
+  const m = h & 0x3ff;
+  if (e === 0) return s * m * Math.pow(2,-24);
+  if (e === 31) return m ? NaN : s * Infinity;
+  return s * (1 + m/1024) * Math.pow(2, e-15);
+}
+function parseBin(bytes, prec, row, col){
+  const dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  const arr = [];
+  let off = 0;
+  for (let i=0;i<row*col;i++){
+    let v;
+    if (prec === PREC.INT4) {
+      const b = bytes[Math.floor(i/2)];
+      let d = (i%2===0) ? ((b & 0xf0)>>4) : (b & 0x0f);
+      if (d & 0x08) d |= 0xf0;
+      v = (d << 24) >> 24;
+    } else if (prec === PREC.INT8) { v = (bytes[off]<<24)>>24; off += 1; }
+    else if (prec === PREC.FP16) { v = halfToFloat(dv.getUint16(off,true)); off += 2; }
+    else if (prec === PREC.FP32) { v = dv.getFloat32(off,true); off += 4; }
+    else if (prec === PREC.INT32){ v = dv.getInt32(off,true); off += 4; }
+    arr.push(v);
+  }
+  return arr;
+}
+
+// ---------- 黄金模型 D = A*B + C（与 C++ operator* / operator+ 一致） ----------
+function goldMulAdd(A,B,C,aPrec,bPrec,cPrec,m,n,k){
+  const isFp = (p) => p===PREC.FP16 || p===PREC.FP32;
+  const fpMode = isFp(aPrec) || isFp(bPrec) || isFp(cPrec);
+  const D = [];
+  for (let i=0;i<m;i++){
+    for (let j=0;j<n;j++){
+      let acc = fpMode ? 0 : 0;
+      for (let t=0;t<k;t++){
+        const ai = A[i*k+t], bt = B[t*n+j];
+        if (fpMode) acc += ai * bt;
+        else acc = (acc + Math.imul(ai|0, bt|0)) | 0;
+      }
+      const cv = C[i*n+j];
+      if (fpMode) acc += cv;
+      else acc = (acc + (cv|0)) | 0;
+      D.push(acc);
+    }
+  }
+  return {D, goldPrec: fpMode ? PREC.FP32 : PREC.INT32};
+}
+
+// ---------- COE 生成（与 C++ to_coe mode=3 一致：128bit 一行，大端字节序） ----------
+function toCoeVec(mat, prec, row, col){
+  const lines = [];
+  let line = "";
+  const bitsPerWord = 128;
+  for (let i=0;i<row;i++){
+    for (let j=0;j<col;j++){
+      const v = mat[i*col+j];
+      let bitstr;
+      if (prec === PREC.FP32 || prec === PREC.INT32) {
+        const b = new Uint8Array(4);
+        const dv = new DataView(b.buffer);
+        if (prec === PREC.FP32) dv.setFloat32(0, v, false); else dv.setInt32(0, v|0, false);
+        bitstr = Array.from(b).map(x=>x.toString(2).padStart(8,"0")).join("");
+      } else if (prec === PREC.FP16) {
+        const b = new Uint8Array(2);
+        const dv = new DataView(b.buffer);
+        dv.setUint16(0, floatToHalf(v), false);
+        bitstr = Array.from(b).map(x=>x.toString(2).padStart(8,"0")).join("");
+      } else if (prec === PREC.INT8) {
+        bitstr = ((v<<24)>>24 & 0xff).toString(2).padStart(8,"0");
+      } else if (prec === PREC.INT4) {
+        bitstr = (v & 0x0f).toString(2).padStart(4,"0");
+      }
+      line += bitstr;
+      if (line.length >= bitsPerWord) { lines.push(line); line = ""; }
+    }
+  }
+  if (line.length > 0) lines.push(line);
+  return lines;
+}
+function floatToHalf(f){
+  if (f === Infinity) return 0x7c00;
+  if (f === -Infinity) return 0xfc00;
+  const b = new Uint8Array(4);
+  const dv = new DataView(b.buffer);
+  dv.setFloat32(0, f, false);
+  const u = dv.getUint32(0, false);
+  const sign = (u >> 16) & 0x8000;
+  let exp = ((u >> 23) & 0xff) - 127 + 15;
+  const mant = u & 0x7fffff;
+  if (exp <= 0) {
+    if (exp < -10) return sign;
+    const m2 = (mant | 0x800000) >> (14 - exp);
+    return sign | m2;
+  }
+  if (exp >= 31) return sign | 0x7c00;
+  return sign | ((exp & 0x1f) << 10) | (mant >> 13);
+}
+
+// ---------- D_result.txt 解析（按组顺序消费 txt 行：每行 128bit -> 4 个 32bit） ----------
+function parseTxtLines(txtLines, pos, m, n){
+  const total = m*n;
+  const need = Math.ceil(total/4);
+  if (pos + need > txtLines.length) throw new Error(`txt 行数不足: 位置 ${pos} 需要 ${need} 行，实际只剩 ${txtLines.length - pos} 行`);
+  const vals = [];
+  for (let r=pos; r<pos+need; r++){
+    const line = txtLines[r];
+    for (let w=0;w<4;w++) vals.push(parseBitsToUint32(line.substr(w*32, 32)));
+  }
+  return vals.slice(0, total);
+}
+function parseBitsToUint32(s){
+  let u = 0;
+  for (let i=0;i<32;i++) u = (u*2) + (s[i]==="1" ? 1 : 0);
+  return u >>> 0;
+}
+function u2f(u){ const b = new ArrayBuffer(4); new DataView(b).setUint32(0,u,true); return new DataView(b).getFloat32(0,true); }
+
+// ---------- 对比（与 C++ matrix_compare 一致） ----------
+function compareVec(gold, rtl, goldPrec){
+  const errs = [];
+  for (let i=0;i<gold.length;i++){
+    let ok;
+    if (goldPrec === PREC.FP32) {
+      const a = gold[i], b = rtl[i];
+      if (Number.isNaN(a) && Number.isNaN(b)) ok = true;
+      else if (!Number.isFinite(a) && !Number.isFinite(b) && (a<0)===(b<0)) ok = true;
+      else {
+        const rel = Math.abs(a-b) / Math.abs(a);
+        ok = rel <= 1e-4;
+      }
+    } else {
+      ok = ((gold[i]|0) === (rtl[i]|0));
+    }
+    if (!ok) errs.push({idx:i, gold:gold[i], rtl:rtl[i]});
+  }
+  return errs;
+}
+
+// ---------- 文件读取辅助 ----------
+async function readText(relPath){
+  const bytes = await readFile(relPath);
+  return new TextDecoder("utf-8").decode(bytes);
+}
+
+// ---------- 主要流程 ----------
+$("btnRun").onclick = async () => {
+  try {
+    logEl.textContent = "";
+    log("开始验证...");
+    if (!dirHandle && !readOnlyFiles) { log("请先选择目录"); return; }
+    const dtype = $("dtype").value, dsize = $("dsize").value;
+    const types = dtype === "all" ? TYPES : TYPES.filter(x => x.t === dtype);
+    const sizes = dsize === "all" ? SIZES : SIZES.filter(x => x.s === dsize);
+    const groups = [];
+    for (const ty of types) for (const sz of sizes) groups.push({ty, sz});
+
+    const stats = {total:0, errElems:0, totalElems:0, okGroups:0, badGroups:0};
+    const out = [];
+    let txtLines = null;
+    let txtPos = 0;
+    try { txtLines = (await readText("txt/D_result.txt")).split(/\r?\n/).filter(l => l.length >= 128); } catch(e) { log("未读取到 txt/D_result.txt（跳过 RTL 对比）: " + e.message); }
+    const expectedTxtLines = groups.length * 64;
+    if (txtLines && txtLines.length !== expectedTxtLines) log(`⚠ 警告: D_result.txt 行数 ${txtLines.length} ≠ 预期 ${expectedTxtLines}（${groups.length}组×64行），可能数据不完整或目录选择不对`);
+
+    let goldData = null;
+    try { goldData = await ensureGold(); } catch(e){ log("gold 加载/生成失败（继续在线计算）: " + e.message); }
+
+    for (let g=0; g<groups.length; g++){
+      const {ty, sz} = groups[g];
+      const {m,n,k} = sz;
+      const base = `dataset/${ty.t}/${sz.s}/`;
+      let A=null,B=null,C=null,D=null,goldPrec=2;
+      const goldEntry = goldData && goldData.groups.find(x => x.type===ty.t && x.size===sz.s);
+      if (goldEntry) { D = goldEntry.D; goldPrec = goldEntry.goldPrec; }
+      else {
+        const aName = base + `a_${ty.a===1?"int4":ty.a===2?"int8":ty.a===3?"fp16":"fp32"}_${sz.s}.bin`;
+        const bName = base + `b_${ty.a===1?"int4":ty.a===2?"int8":ty.a===3?"fp16":"fp32"}_${sz.s}.bin`;
+        const cName = base + `c_${ty.c===5?"int32":ty.c===1?"int4":ty.c===2?"int8":ty.c===3?"fp16":"fp32"}_${sz.s}.bin`;
+        A = parseBin(await readFile(aName), ty.a, m, k);
+        B = parseBin(await readFile(bName), ty.b, k, n);
+        C = parseBin(await readFile(cName), ty.c, m, n);
+        const r = goldMulAdd(A,B,C,ty.a,ty.b,ty.c,m,n,k);
+        D = r.D; goldPrec = r.goldPrec;
+      }
+      let rtl = null, errs = null;
+      if (txtLines) {
+        try {
+          const rtlBits = parseTxtLines(txtLines, txtPos, m, n);
+          txtPos += Math.ceil(m*n/4);
+          rtl = rtlBits.map(u => goldPrec === PREC.FP32 ? u2f(u) : (u|0));
+          errs = compareVec(D, rtl, goldPrec);
+        } catch(e){ log(`第[${g}]组 txt 解析失败: ${e.message}`); }
+      }
+      const ok = errs === null ? null : errs.length === 0;
+      stats.total++;
+      stats.totalElems += m*n;
+      if (errs) stats.errElems += errs.length;
+      if (ok === true) stats.okGroups++;
+      if (ok === false) stats.badGroups++;
+      out.push({g, ty, sz, m, n, k, A, B, C, D, rtl, errs, goldPrec, ok});
+      log(`第[${g}]组 ${ty.t}/${sz.s} 加载完成` + (ok===null?"（无RTL对比）":ok?"  ✓ 正确":"  ✗ 错误 "+errs.length+" 个元素"));
+    }
+
+    renderStats(stats);
+    renderGroups(out);
+    const logObj = buildLogJson(out, stats, dtype, dsize);
+    const saved = await saveLog(logObj, logFileName());
+    log("已保存验证日志: " + saved);
+  } catch(e) {
+    log("出错: " + (e.message || e));
+    console.error(e);
+  }
+};
+
+// ---------- 日志备份（gzip JSON，机器可读、体积小） ----------
+function padS(s,n){ return String(s).padEnd(n); }
+function fmtLogVal(v, prec){ return prec===PREC.FP32 ? v.toPrecision(4) : String(v|0); }
+function matToText(vals, m, n, prec){
+  const lines = [];
+  const w = Math.max(4, ...vals.map(v=>fmtLogVal(v,prec).length));
+  let header = padS("行\\列", w+2);
+  for (let j=0;j<n;j++) header += padS(j, w+1);
+  lines.push(header);
+  for (let i=0;i<m;i++){
+    let row = padS(i, w+2);
+    for (let j=0;j<n;j++) row += padS(fmtLogVal(vals[i*n+j], prec), w+1);
+    lines.push(row);
+  }
+  return lines.join("\n");
+}
+function buildLogJson(out, stats, dtype, dsize){
+  return {
+    format: 1,
+    savedAt: nowText(),
+    dtype: dtype,
+    dsize: dsize,
+    stats: {
+      total: stats.total,
+      okGroups: stats.okGroups,
+      badGroups: stats.badGroups,
+      errElems: stats.errElems,
+      totalElems: stats.totalElems,
+      accuracy: stats.totalElems ? +(((stats.totalElems - stats.errElems)/stats.totalElems*100).toFixed(2)) : null
+    },
+    groups: out.map(g => ({
+      idx: g.g, type: g.ty.t, size: g.sz.s, m: g.m, n: g.n, k: g.k,
+      ok: g.ok, goldPrec: g.goldPrec,
+      rtl: g.rtl,
+      errors: (g.errs || []).map(e => ({idx:e.idx, gold:e.gold, rtl:e.rtl}))
+    }))
+  };
+}
+function nowStamp(){ const d=new Date(), p=n=>String(n).padStart(2,"0"); return `${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}_${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}`; }
+function nowText(){ const d=new Date(), p=n=>String(n).padStart(2,"0"); return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`; }
+function logFileName(){
+  let base = ($("logName").value || "").trim();
+  const stamp = nowStamp();
+  if (!base) return `verify_${stamp}.json.gz`;
+  if (/\.txt$/i.test(base)) base = base.replace(/\.txt$/i, "");
+  return `${base}_${stamp}.json.gz`;
+}
+async function gzipBytes(buf){
+  if (!window.CompressionStream) return null;
+  try {
+    const cs = new CompressionStream("gzip");
+    const stream = new Blob([buf]).stream().pipeThrough(cs);
+    return new Uint8Array(await new Response(stream).arrayBuffer());
+  } catch(e){ return null; }
+}
+async function gunzipBytes(buf){
+  if (!window.DecompressionStream) return null;
+  try {
+    const ds = new DecompressionStream("gzip");
+    const stream = new Blob([buf]).stream().pipeThrough(ds);
+    return new Uint8Array(await new Response(stream).arrayBuffer());
+  } catch(e){ return null; }
+}
+async function saveLog(obj, name){
+  const json = JSON.stringify(obj);
+  const bytes = new TextEncoder().encode(json);
+  const gz = await gzipBytes(bytes);
+  const outBytes = gz || bytes;
+  const outName = gz ? name : name.replace(/\.gz$/,"");
+  if (dirHandle) {
+    try {
+      const logsDir = await dirHandle.getDirectoryHandle("logs", {create:true});
+      const fh = await logsDir.getFileHandle(outName, {create:true});
+      const w = await fh.createWritable();
+      await w.write(outBytes);
+      await w.close();
+      return "logs/" + outName + (gz ? " (gzip)" : " (json)");
+    } catch(e){ log("写入 logs/ 失败，改用下载: " + e.message); }
+  }
+  const blob = new Blob([outBytes], {type: gz ? "application/gzip" : "application/json"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = outName; a.click();
+  setTimeout(()=>URL.revokeObjectURL(url), 5000);
+  return outName + "（已下载）";
+}
+
+// ---------- gold 矩阵管理（独立于 logs/ 存放，可复用） ----------
+function goldDirName(){ const v = ($("goldDir").value || "gold").trim().replace(/[\\/]+$/,""); return v || "gold"; }
+function goldRelPath(){ return goldDirName() + "/gold.json.gz"; }
+async function loadGold(){
+  const rel = goldRelPath();
+  try {
+    const bytes = await readFile(rel);
+    let buf = bytes;
+    if (rel.endsWith(".gz")) { const dec = await gunzipBytes(bytes); if (dec) buf = dec; }
+    return JSON.parse(new TextDecoder().decode(buf));
+  } catch(e){ return null; }
+}
+async function saveGold(goldData){
+  const json = JSON.stringify(goldData);
+  const bytes = new TextEncoder().encode(json);
+  const gz = await gzipBytes(bytes);
+  const outBytes = gz || bytes;
+  const rel = gz ? goldRelPath() : goldRelPath().replace(/\.gz$/,"");
+  if (dirHandle) {
+    try {
+      const d = await dirHandle.getDirectoryHandle(goldDirName(), {create:true});
+      const fh = await d.getFileHandle(rel.split("/").pop(), {create:true});
+      const w = await fh.createWritable();
+      await w.write(outBytes);
+      await w.close();
+      return rel + (gz ? " (gzip)" : " (json)");
+    } catch(e){ log("gold 写入失败: " + e.message); }
+  }
+  return null;
+}
+async function computeAllGold(){
+  const groups = [];
+  let idx = 0;
+  for (const ty of TYPES) for (const sz of SIZES){
+    const {m,n,k} = sz;
+    const base = `dataset/${ty.t}/${sz.s}/`;
+    const aName = base + `a_${ty.a===1?"int4":ty.a===2?"int8":ty.a===3?"fp16":"fp32"}_${sz.s}.bin`;
+    const bName = base + `b_${ty.a===1?"int4":ty.a===2?"int8":ty.a===3?"fp16":"fp32"}_${sz.s}.bin`;
+    const cName = base + `c_${ty.c===5?"int32":ty.c===1?"int4":ty.c===2?"int8":ty.c===3?"fp16":"fp32"}_${sz.s}.bin`;
+    const A = parseBin(await readFile(aName), ty.a, m, k);
+    const B = parseBin(await readFile(bName), ty.b, k, n);
+    const C = parseBin(await readFile(cName), ty.c, m, n);
+    const {D, goldPrec} = goldMulAdd(A,B,C,ty.a,ty.b,ty.c,m,n,k);
+    groups.push({idx, type:ty.t, size:sz.s, m, n, k, goldPrec, D});
+    idx++;
+  }
+  return {format:1, savedAt:nowText(), dtype:"all", dsize:"all", groups};
+}
+async function ensureGold(){
+  const existing = await loadGold();
+  if (existing && existing.groups && existing.groups.length >= 18) {
+    $("goldStatus").textContent = "已存在，直接调用";
+    return existing;
+  }
+  log("gold 矩阵不存在，正在生成...");
+  const gold = await computeAllGold();
+  const saved = await saveGold(gold);
+  $("goldStatus").textContent = "已生成" + (saved ? "" : "（只读，未保存）");
+  log("gold 矩阵生成完成" + (saved ? "：" + saved : "（只读模式未保存）"));
+  return gold;
+}
+$("btnEnsureGold").onclick = async () => {
+  try {
+    const gold = await computeAllGold();
+    const saved = await saveGold(gold);
+    $("goldStatus").textContent = "已生成" + (saved ? " ("+saved+")" : "（只读，未保存）");
+    log("gold 矩阵已" + (saved ? "生成保存: " + saved : "计算完成（只读模式未保存）"));
+  } catch(e){ $("goldStatus").textContent = "失败"; log("gold 生成失败: " + e.message); }
+};
+
+
+
+// ---------- 日志读取与管理 ----------
+function logGroupToRender(g){
+  return {
+    g: g.idx, ty:{t:g.type}, sz:{s:g.size}, m:g.m, n:g.n, k:g.k,
+    D: null, rtl: g.rtl, errs: g.errors, goldPrec: g.goldPrec, ok: g.ok
+  };
+}
+async function loadLogIntoUI(data){
+  const s = data.stats;
+  renderStats({total:s.total, okGroups:s.okGroups, badGroups:s.badGroups, errElems:s.errElems, totalElems:s.totalElems});
+  const groups = data.groups.map(logGroupToRender);
+  // 尝试加载 gold 并挂到各组（存在则左侧显示正确结果）
+  try {
+    const gold = await ensureGold();
+    if (gold && gold.groups) {
+      for (const grp of groups) {
+        const g = gold.groups.find(x => x.type===grp.ty.t && x.size===grp.sz.s);
+        if (g) { grp.D = g.D; grp.goldPrec = g.goldPrec; }
+      }
+    }
+  } catch(e){ log("加载 gold 失败（日志仍可查看 RTL）: " + e.message); }
+  renderGroups(groups);
+  log("已加载日志: " + data.savedAt + " （" + data.dtype + " / " + data.dsize + "）");
+}
+async function parseLogBytes(bytes, isGz){
+  let buf = bytes;
+  if (isGz) {
+    const dec = await gunzipBytes(bytes);
+    if (!dec) throw new Error("gzip 解压失败或浏览器不支持");
+    buf = dec;
+  }
+  return JSON.parse(new TextDecoder().decode(buf));
+}
+$("btnReadLog").onclick = () => $("logFileInput").click();
+$("logFileInput").onchange = async e => {
+  for (const file of e.target.files) {
+    try {
+      const buf = new Uint8Array(await file.arrayBuffer());
+      const data = await parseLogBytes(buf, file.name.endsWith(".gz"));
+      loadLogIntoUI(data);
+    } catch(err){ log("读取日志失败 " + file.name + ": " + err.message); }
+  }
+  e.target.value = "";
+};
+async function listLogs(){
+  const listEl = $("logList");
+  if (!dirHandle) { log("请先选择可读写目录（需要 logs/ 目录授权）"); return; }
+  let logsDir;
+  try { logsDir = await dirHandle.getDirectoryHandle("logs"); }
+  catch(e){ log("logs/ 目录不存在，尚未保存过日志"); return; }
+  const entries = [];
+  for await (const [name, handle] of logsDir.entries()) {
+    if (name.endsWith(".json.gz") || name.endsWith(".json")) entries.push({name, handle});
+  }
+  entries.sort((a,b)=>b.name.localeCompare(a.name));
+  if (!entries.length) { listEl.innerHTML = '<span class="hint">logs/ 目录为空</span>'; return; }
+  const items = [];
+  for (const {name, handle} of entries) {
+    try {
+      const file = await handle.getFile();
+      const buf = new Uint8Array(await file.arrayBuffer());
+      const data = await parseLogBytes(buf, name.endsWith(".gz"));
+      const date = (data.savedAt||"").slice(0,10) || "未知日期";
+      items.push({name, date, data});
+    } catch(err){ items.push({name, date:"读取失败", error:err.message}); }
+  }
+  renderLogList(items);
+}
+function renderLogList(items){
+  const listEl = $("logList");
+  const byDate = {};
+  for (const it of items){ (byDate[it.date] = byDate[it.date]||[]).push(it); }
+  const dates = Object.keys(byDate).sort().reverse();
+  let html = '';
+  for (const date of dates) {
+    html += `<details class="logdate"><summary>${date}（${byDate[date].length} 份）</summary>`;
+    for (const it of byDate[date]) {
+      const acc = it.data && it.data.stats ? (it.data.stats.accuracy!==null ? it.data.stats.accuracy+"%" : "—") : "—";
+      const badge = it.data && it.data.stats && it.data.stats.badGroups ? `<span class="badge bad">${it.data.stats.badGroups} 组错</span>` : `<span class="badge ok">全对</span>`;
+      html += `<div class="logitem" data-name="${it.name}">
+        <span class="path" style="font-size:12px">${it.name}</span>
+        <span class="hint">${it.data ? (it.data.dtype+" / "+it.data.dsize+" · 正确率 "+acc) : "读取失败"}</span>
+        ${it.data ? badge : ""}
+        <button class="ghost" data-act="load">加载</button>
+        <button class="ghost" data-act="del" style="color:var(--red)">删除</button>
+        ${it.error ? `<span class="hint" style="color:var(--red)">${it.error}</span>` : ""}
+      </div>`;
+    }
+    html += '</details>';
+  }
+  listEl.innerHTML = html;
+  listEl.querySelectorAll('.logitem').forEach(div => {
+    div.querySelectorAll('button').forEach(btn => {
+      btn.onclick = async () => {
+        const name = div.dataset.name;
+        const it = items.find(x => x.name === name);
+        if (btn.dataset.act === 'load') {
+          if (it && it.data) loadLogIntoUI(it.data);
+        } else if (btn.dataset.act === 'del') {
+          if (!dirHandle) { log("只读模式下无法删除日志，请用可读写目录"); return; }
+          if (!confirm("确定删除日志文件 " + name + " ？")) return;
+          try {
+            const logsDir = await dirHandle.getDirectoryHandle("logs");
+            await logsDir.removeEntry(name);
+            log("已删除日志: " + name);
+            await listLogs();
+          } catch(err){ log("删除失败: " + err.message); }
+        }
+      };
+    });
+  });
+}
+$("btnListLogs").onclick = listLogs;
+
+// ---------- 渲染 ----------
+function renderStats(s){
+  $("statsSection").style.display = "block";
+  const acc = s.totalElems ? ((s.totalElems - s.errElems)/s.totalElems*100).toFixed(2) : "—";
+  $("cards").innerHTML = `
+    <div class="card"><div class="num">${s.total}</div><div class="lbl">验证组数</div></div>
+    <div class="card"><div class="num ${s.badGroups? 'red':'green'}">${s.okGroups}</div><div class="lbl">正确组数</div></div>
+    <div class="card"><div class="num ${s.badGroups? 'red':'green'}">${s.badGroups}</div><div class="lbl">错误组数</div></div>
+    <div class="card"><div class="num ${s.errElems? 'red':'green'}">${s.errElems}</div><div class="lbl">错误元素数</div></div>
+    <div class="card"><div class="num">${s.totalElems}</div><div class="lbl">总元素数</div></div>
+    <div class="card"><div class="num ${s.errElems? 'amber':'green'}">${acc}%</div><div class="lbl">元素正确率</div></div>`;
+}
+
+function fmtVal(v, prec){ if (v===null || v===undefined) return "—"; if (typeof v==="string") return v; if (!Number.isFinite(v)) return String(v); return prec===PREC.FP32 ? v.toPrecision(4) : String(v|0); }
+function fmtErrVal(v, prec){ if (v===null || v===undefined) return "—"; if (typeof v==="string") return v; if (!Number.isFinite(v)) return String(v); return prec===PREC.FP32 ? v.toPrecision(6) : String(v|0); }
+function makeTbl(vals, m, n, prec, errSet, onlyErr, markMode){
+  let tbl = `<table><thead><tr><th>#</th>`;
+  for (let j=0;j<n;j++) tbl += `<th>${j}</th>`;
+  tbl += `</tr></thead><tbody>`;
+  for (let i=0;i<m;i++){
+    tbl += `<tr><th>${i}</th>`;
+    for (let j=0;j<n;j++){
+      const idx = i*n+j;
+      const isErr = errSet.has(idx);
+      if (onlyErr && !isErr) { tbl += `<td></td>`; continue; }
+      const cls = (markMode==="err" && isErr) ? "err" : (markMode==="gold" && isErr) ? "gold" : "";
+      tbl += `<td class="${cls}">${fmtVal(vals[idx], prec)}</td>`;
+    }
+    tbl += `</tr>`;
+  }
+  tbl += `</tbody></table>`;
+  return tbl;
+}
+function renderGroups(groups){
+  window.__lastGroups = groups;
+  const sec = $("matrixSection");
+  sec.style.display = "block";
+  const onlyErr = $("onlyErr").checked;
+  let html = `<div class="hint" style="margin-bottom:10px">判定标准：浮点（FP16/FP32）= 相对误差 ≤ 1e-4（0.01%）；整数（INT4/INT8/INT32）= 逐位完全相等。正确率 = (总元素-错误元素)/总元素 × 100%。gold 中绿色 = 与输出错误对应位置。</div>`;
+  for (const grp of groups){
+    const {m,n,ty,sz,g,D,rtl,errs,goldPrec,ok} = grp;
+    const errSet = new Set(errs ? errs.map(e=>e.idx) : []);
+    const hasGold = !!(D && D.length);
+    const total = m*n;
+    const errCnt = errs ? errs.length : 0;
+    const acc = ok===null ? null : ((total-errCnt)/total*100).toFixed(2);
+    const goldTbl = hasGold ? makeTbl(D, m, n, goldPrec, errSet, onlyErr, "gold") : null;
+    const rtlTbl = rtl ? makeTbl(rtl, m, n, goldPrec, errSet, onlyErr, "err")
+                       : `<div class="hint">未读取到 RTL 结果</div>`;
+    const goldHalfHtml = hasGold
+      ? `<div class="half"><h3>正确结果（黄金模型 D=A×B+C · 绿色=输出错误对应位置）</h3><div class="tblwrap">${goldTbl}</div></div>`
+      : `<div class="half"><h3>正确结果（日志模式 · 不含 gold）</h3><div class="tblwrap"><div class="hint">日志中未保存 gold 矩阵（所有组 gold 一致）</div></div></div>`;
+    const accHtml = acc===null ? `<span class="badge">未对比</span>` : acc==="100.00" ? `<span class="badge ok">正确 100%</span>` : `<span class="badge bad">正确率 ${acc}% · 错误 ${errCnt}</span>`;
+    const badge = ok===null ? `<span class="badge">未对比</span>` : ok ? `<span class="badge ok">正确</span>` : `<span class="badge bad">错误 ${errs.length}</span>`;
+    let errlist = "";
+    if (errs && errs.length){
+      errlist = `<div class="errlist">`;
+      const show = errs.slice(0, 200);
+      for (const e of show){
+        const i = Math.floor(e.idx/n), j = e.idx%n;
+        const gv = fmtErrVal(e.gold, goldPrec), rv = fmtErrVal(e.rtl, goldPrec);
+        errlist += `<div>[${i},${j}] 期望=${gv}  实际=${rv}</div>`;
+      }
+      if (errs.length > show.length) errlist += `<div>... 还有 ${errs.length - show.length} 个</div>`;
+      errlist += `</div>`;
+    }
+    html += `<details ${groups.length===1?"open":""}>
+      <summary>第[${g}]组  ${ty.t} / ${sz.s}  (${m}×${n}, K=${grp.k}) ${accHtml} ${badge}</summary>
+      ${errlist}
+      <div class="cmp">
+        ${goldHalfHtml}
+        <div class="half"><h3>RTL 输出（D_result.txt · 红色=错误）</h3><div class="tblwrap">${rtlTbl}</div></div>
+      </div>
+    </details>`;
+  }
+  sec.innerHTML = html;
+}
+$("onlyErr").onchange = () => { if ($("matrixSection").style.display !== "none") renderGroups(window.__lastGroups || []); };
+// 最近一次结果已由 renderGroups 内部保存到 window.__lastGroups
+
+// ---------- 生成 dataset.coe ----------
+$("btnCoe").onclick = async () => {
+  try {
+    logEl.textContent = "";
+    if (!dirHandle) { log("生成 COE 需要 [可读写] 目录权限"); return; }
+    log("生成 dataset.coe 中（18 组）...");
+    let head = "MEMORY_INITIALIZATION_RADIX = 2;\nMEMORY_INITIALIZATION_VECTOR = \n";
+    let body = "";
+    for (const ty of TYPES) for (const sz of SIZES){
+      const {m,n,k} = sz;
+      const base = `dataset/${ty.t}/${sz.s}/`;
+      const aName = base + `a_${ty.a===1?"int4":ty.a===2?"int8":ty.a===3?"fp16":"fp32"}_${sz.s}.bin`;
+      const bName = base + `b_${ty.a===1?"int4":ty.a===2?"int8":ty.a===3?"fp16":"fp32"}_${sz.s}.bin`;
+      const cName = base + `c_${ty.c===5?"int32":ty.c===1?"int4":ty.c===2?"int8":ty.c===3?"fp16":"fp32"}_${sz.s}.bin`;
+      const A = parseBin(await readFile(aName), ty.a, m, k);
+      const B = parseBin(await readFile(bName), ty.b, k, n);
+      const C = parseBin(await readFile(cName), ty.c, m, n);
+      for (const vec of [toCoeVec(A,ty.a,m,k), toCoeVec(B,ty.b,k,n), toCoeVec(C,ty.c,m,n)]){
+        for (const line of vec) body += line + ",\n";
+      }
+    }
+    const full = head + body + ";";
+    // 写回 output/dataset.coe
+    const oh = await dirHandle.getDirectoryHandle("output");
+    const fh = await oh.getFileHandle("dataset.coe", {create:true});
+    const w = await fh.createWritable();
+    await w.write(full);
+    await w.close();
+    log("已写入 output/dataset.coe，共 " + (body.split("\n").length-1) + " 行数据");
+  } catch(e){ log("生成 COE 失败: " + (e.message||e)); }
+};
+restoreLastDir();
+</script>
+</body>
+</html>

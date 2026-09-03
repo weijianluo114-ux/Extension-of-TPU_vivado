@@ -49,7 +49,7 @@ module data_back_tb (
 /********************* 打开文件 *********************/
     initial begin
         //----------------------------------------注意！！！！！！！！！！！以下地址记得更改-------------------------------//
-        file_handle = $fopen("../../../../../cpp_verification/txt/D_result.txt", "w");      
+        file_handle = $fopen("../../../../../../../cpp/cpp_verification/txt/D_result.txt", "w");      
         if(!file_handle) begin
             $display("Error: Failed to open file!");
         end

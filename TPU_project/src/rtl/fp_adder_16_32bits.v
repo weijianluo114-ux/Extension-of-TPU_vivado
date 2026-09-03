@@ -50,13 +50,14 @@ module fp_adder_16_32bits #(  // 输入+三级流水（对阶 加减 规格化�
     parameter FP16_WIDTH = 16;
     parameter FP16_EXP_WIDTH = 5;  // FP32:8位阶码, FP16:5位阶码
     parameter FP16_FRAC_WIDTH = 10;  // FP32:23位尾数, FP16:10位尾数
-    parameter FP16_MANT_WIDTH = FP32_FRAC_WIDTH + 1;  // 包含隐含1的尾数宽度
+    parameter FP16_MANT_WIDTH = FP16_FRAC_WIDTH + 1;  // 包含隐含1的尾数宽度（FP16: 10+1=11）
     parameter FP16_BIAS = 15;  // FP32:偏移量127, FP16:偏移量15
 
     /******************************* 网表信号 ***********************************/
     // 输入信号处理
     wire [                         31:0] A;
     wire [                         31:0] B;
+    wire [                         31:0] half_to_float_b;
 
     //第一级流水线
     //将对指数和尾数是否均为0进行判断，即0
@@ -142,8 +143,14 @@ module fp_adder_16_32bits #(  // 输入+三级流水（对阶 加减 规格化�
     reg                                  en_stage5;
 
     /******************************* 组合逻辑 ***********************************/
+    // 输入信号预处理(fp16->fp32)
+    fp16_to_fp32 h2f_b (
+        .half_in  (input_B[15:0]),
+        .float_out(half_to_float_b)
+    );
+
     assign A = input_A;
-    assign B = input_B;
+    assign B = (input_b_precision == 'd16) ? half_to_float_b : input_B;
 
     //第一级流水线
     //对0的判断

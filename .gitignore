@@ -18,10 +18,30 @@
 *.gen/
 
 # ================================
+# IP 生成产物（只保留"图纸" .xci / .xdc / .bd）
+# ================================
+# IP 例化模板 / 元数据
+**/sources_1/ip/**/*.veo
+**/sources_1/ip/**/*.vho
+**/sources_1/ip/**/*.xml
+# IP 仿真网表 / stub
+**/sources_1/ip/**/*_stub.v
+**/sources_1/ip/**/*_stub.vhdl
+**/sources_1/ip/**/*_sim_netlist.v
+**/sources_1/ip/**/*_sim_netlist.vhdl
+# IP 内部生成目录（可由 .xci 重新生成）
+**/sources_1/ip/**/sim/
+**/sources_1/ip/**/simulation/
+**/sources_1/ip/**/synth/
+**/sources_1/ip/**/hdl/
+**/sources_1/ip/**/rtl/
+
+# ================================
 # ModelSim / 仿真内存初始化
 # ================================
 *.mif
 *.coe
+!cpp/cpp_verification/output/*.coe
 modelsim.ini
 *.do
 *.smi
@@ -58,3 +78,33 @@ wave_form/
 help.txt
 transcript
 
+# IP ??????doc/misc/simulation/data/hw_handoff/sw/tb/elf/bmm/bxml?
+**/sources_1/ip/**/doc/
+**/sources_1/ip/**/misc/
+**/sources_1/ip/**/simulation/
+**/sources_1/ip/**/data/
+**/sources_1/ip/**/hw_handoff/
+**/sources_1/ip/**/sw/
+**/sources_1/ip/**/tb/
+**/sources_1/ip/**/*.elf
+**/sources_1/ip/**/*.bmm
+**/sources_1/ip/**/*.bxml
+**/sources_1/ip/**/*_mcs.hwdef
+**/sources_1/ip/**/*_mcs_bd.tcl
+
+# ================================
+# Vivado ???????????????
+# ================================
+*.xpr
+
+# ================================
+# ???????????????????
+# ================================
+cpp/cpp_verification/txt/D_result.txt
+
+# ================================
+# ?????????????????
+# ================================
+cpp/cpp_verification/logs/
+cpp/cpp_verification/gold/
+cpp/cpp_verification/output/*.coe
