@@ -8,10 +8,15 @@
 #include <stdio.h>
 #include <fstream>
 #include <string>
+#include <vector>
 #include <Windows.h>
 
-#define DEBUG_MODE 1             //1为调试模式，0为发行模式
+#ifndef DEBUG_MODE
+#define DEBUG_MODE 0             //1为调试模式，0为发行模式
+#endif
+#ifndef MODE
 #define MODE 2				     //2为数据集矩阵验证模式，1为读取数据集模式，0为验证模式
+#endif
 
 #define INT4  1
 #define INT8  2
@@ -27,14 +32,14 @@ using namespace std;
 
 
 /*文件路径*/
-const char* txt_path = "C:/Users/30399/Desktop/result.txt";
-const char* A_coe_path = "D:/Program_Files/cpp_project/competition/matrix_1/output/A.coe";
-const char* B_coe_path = "D:/Program_Files/cpp_project/competition/matrix_1/output/B.coe";
-const char* C_coe_path = "D:/Program_Files/cpp_project/competition/matrix_1/output/C.coe";
-const char* dataset_coe_path = "D:/Program_Files/cpp_project/competition/matrix_1/output/dataset.coe";
+string txt_path = "txt/D_result.txt";
+string A_coe_path = "output/A.coe";
+string B_coe_path = "output/B.coe";
+string C_coe_path = "output/C.coe";
+string dataset_coe_path = "output/dataset.coe";
 
 //"D:/Flies/CS/C++/program/other/matrix/v4.0/dataset"
-string dataset_path = DEBUG_MODE ? "D:/Flies/CS/C++/program/other/matrix/v4.0/dataset" : "dataset";
+string dataset_path = "dataset";
 
 string A_bin_path;
 string B_bin_path;
@@ -50,43 +55,34 @@ int coe_flag = 0;
 int main() {
 
 	/*读写路径读入*/
+	/*读写路径读入（path.txt 覆盖默认相对路径）*/
 #if !DEBUG_MODE
-	ifstream read_path;
-	read_path.open("path.txt", ios::in);
-	if (!read_path.is_open())
 	{
-		set_font_color_red();
-		cout << "错误：";
-		reset_font_color();
-		cout << "无法打开path.txt文件，请重新配置" << endl;
-		Sleep(3000);
-		return 0;
+		ifstream read_path;
+		read_path.open("path.txt", ios::in);
+		if (read_path.is_open()) {
+			vector<string> paths;
+			string line;
+			while (getline(read_path, line)) {
+				if (!line.empty()) paths.push_back(line);
+			}
+			read_path.close();
+			if (paths.size() >= 1) txt_path = paths[0];
+			if (paths.size() >= 2) A_coe_path = paths[1];
+			if (paths.size() >= 3) B_coe_path = paths[2];
+			if (paths.size() >= 4) C_coe_path = paths[3];
+			if (paths.size() >= 5) dataset_coe_path = paths[4];
+			cout << "初始化成功" << endl;
+			cout << "输入.txt文件路径为：" << txt_path << endl;
+		}
+		else {
+			set_font_color_red();
+			cout << "错误：";
+			reset_font_color();
+			cout << "无法打开path.txt文件，将使用默认相对路径" << endl;
+			Sleep(3000);
+		}
 	}
-	string buf1/*, buf2, buf3, buf4, buf5*/;
-	getline(read_path, buf1);
-	/*getline(read_path, buf2);
-	getline(read_path, buf3);
-	getline(read_path, buf4);*/
-	//getline(read_path, buf5);
-	if (!buf1.compare("\0") /*|| !buf2.compare("\0") || !buf3.compare("\0") || !buf4.compare("\0")*/ /*|| !buf5.compare("\0")*/) {
-		set_font_color_red();
-		cout << "错误：";
-		reset_font_color();
-		cout << "文件path.txt中路径数据不完整，请检查是否按要求配置" << endl;
-	}
-	txt_path = buf1.data();
-	/*A_coe_path = buf2.data();
-	B_coe_path = buf3.data();
-	C_coe_path = buf4.data();*/
-	//dataset_coe_path = buf5.data();
-	read_path.close();
-	cout << "初始化成功" << endl;
-	cout << "输入.txt文件路径为：" << txt_path << endl;
-	/*cout << "输出A矩阵.coe文件路径为：" << A_coe_path << endl;
-	cout << "输出B矩阵.coe文件路径为：" << B_coe_path << endl;
-	cout << "输出C矩阵.coe文件路径为：" << C_coe_path << endl;*/
-	//cout << "输出dataset.coe文件路径为：" << dataset_coe_path << endl;
-	cout << endl;
 #endif
 
 	
@@ -253,7 +249,7 @@ int main() {
 		
 		/*随机矩阵输出至coe文件*/
 		while (1) {
-			coe_flag = coe_initial(A_coe_path);
+			coe_flag = coe_initial(A_coe_path.c_str());
 			if (coe_flag) {
 				for (int i = 0; i < num; i++) {
 					A[i].to_coe(ROW_MAJOR);
@@ -275,7 +271,7 @@ int main() {
 		}
 
 		while (1) {
-			coe_flag = coe_initial(B_coe_path);
+			coe_flag = coe_initial(B_coe_path.c_str());
 			if (coe_flag) {
 				for (int i = 0; i < num; i++) {
 					B[i].to_coe(COL_MAJOR);
@@ -297,7 +293,7 @@ int main() {
 		}
 
 		while (1) {
-			coe_flag = coe_initial(C_coe_path);
+			coe_flag = coe_initial(C_coe_path.c_str());
 			if (coe_flag) {
 				for (int i = 0; i < num; i++) {
 					C[i].to_coe();
@@ -389,7 +385,7 @@ int main() {
 #endif
 
 #if MODE == 1
-	coe_initial(dataset_coe_path);
+	coe_initial(dataset_coe_path.c_str());
 	for (precision = 1; precision <= 6; precision++) {
 		switch (precision) {
 		case 1:

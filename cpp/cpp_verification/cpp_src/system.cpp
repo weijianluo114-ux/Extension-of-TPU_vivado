@@ -14,8 +14,8 @@
 using namespace std;
 
 /*文件路径*/
-extern const char* txt_path;
-extern const char* A_coe_path;
+extern std::string txt_path;
+
 
 /*读写文件*/
 FILE* fid_write;
@@ -59,7 +59,7 @@ void coe_end() {
 
 /*读txt文件初始化，返回值0为初始化失败，1为成功*/
 int get_data_initial() {
-	infile.open(txt_path, ios::in);
+	infile.open(txt_path.c_str(), ios::in);
 	if (!infile.is_open())
 	{
 		set_font_color_red();
@@ -80,7 +80,8 @@ short FP32_to_FP16(float value)
 	union {
 		unsigned int u;
 		float f;
-	} input = { .f = value };
+		} input;
+	input.f = value;
 
 	unsigned int f = input.u;
 

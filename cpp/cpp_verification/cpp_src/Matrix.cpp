@@ -550,6 +550,7 @@ int Matrix::get_from_bin(string& bin_path) {
 			}
 		}
 	}
+	return 1;
 }
 
 /*比较两矩阵，相同返回1，不同返回0*/
