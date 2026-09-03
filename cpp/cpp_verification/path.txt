@@ -1,0 +1,4 @@
+txt/D_result.txt
+output/A.coe
+output/B.coe
+output/C.coe

@@ -41,6 +41,7 @@
 # ================================
 *.mif
 *.coe
+!cpp/cpp_verification/output/*.coe
 modelsim.ini
 *.do
 *.smi
