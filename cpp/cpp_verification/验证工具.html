@@ -6,51 +6,52 @@
 <title>TPU cpp_verification 验证工具</title>
 <style>
 :root{
+  --fs:16px;  /* 全局字号基准（设置菜单可调 12~28px） */
   --bg:#f4f6f2; --panel:#ffffff; --border:#d9ded8; --text:#26332f; --muted:#6c7a76;
   --teal:#0e7c66; --teal-soft:#e3f2ee; --orange:#e08a2d; --orange-soft:#fdf1e0;
   --green:#2e9e5b; --red:#d9534f; --amber:#e08a2d; --blue:#0e7c66;
 }
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
-body{margin:0;font-family:"Segoe UI",system-ui,sans-serif;background:var(--bg);color:var(--text);font-size:16px}
+body{margin:0;font-family:"Segoe UI",system-ui,sans-serif;background:var(--bg);color:var(--text);font-size:calc(var(--fs)*1)}
 
 /* ---------- 页首标题条 ---------- */
-#pageHeader{position:fixed;top:0;left:0;right:0;height:78px;background:var(--panel);border-bottom:1px solid var(--border);padding:10px 20px;z-index:25;display:flex;flex-direction:column;justify-content:center;gap:4px}
-#pageHeader h1{font-size:20px;margin:0;color:var(--teal)}
-#pageHeader .hint{font-size:12.5px;color:var(--muted)}
+#pageHeader{position:fixed;top:0;left:0;right:0;height:78px;background:var(--panel);border-bottom:1px solid var(--border);padding:10px 28px;z-index:25;display:flex;align-items:center;justify-content:space-between;gap:16px}
+#pageHeader h1{font-size:calc(var(--fs)*1.25);margin:0;color:var(--teal)}
+#pageHeader .hint{font-size:calc(var(--fs)*0.78125);color:var(--muted)}
 
 /* ---------- 左侧导航（标题条之下） ---------- */
 #sideNav{position:fixed;left:0;top:78px;bottom:0;width:160px;background:var(--panel);border-right:1px solid var(--border);padding:14px 10px 10px;overflow-y:auto;z-index:20;display:flex;flex-direction:column}
-#sideNav .nav-title{font-size:15px;font-weight:800;color:var(--teal);margin-bottom:14px;padding:0 6px}
-#sideNav a{display:block;padding:9px 10px;border-radius:8px;color:var(--text);text-decoration:none;font-size:14px;cursor:pointer;margin-bottom:4px;transition:background .15s,color .15s}
+#sideNav .nav-title{font-size:calc(var(--fs)*0.9375);font-weight:800;color:var(--teal);margin-bottom:14px;padding:0 6px}
+#sideNav a{display:block;padding:9px 10px;border-radius:8px;color:var(--text);text-decoration:none;font-size:calc(var(--fs)*0.875);cursor:pointer;margin-bottom:4px;transition:background .15s,color .15s}
 #sideNav a:hover{background:var(--teal-soft);color:var(--teal)}
 #sideNav a.active{background:var(--teal);color:#fff;font-weight:600}
 #sideNav .nav-bottom{margin-top:auto;padding-top:10px;border-top:1px solid var(--border)}
-#sideNav .nav-bottom .hint{display:block;margin-top:6px;font-size:12px;color:var(--muted);text-align:center}
-#termToggle{width:100%;background:var(--teal-soft);border:1px solid var(--teal);color:var(--teal);font-size:14px;font-weight:700;cursor:pointer;padding:8px 10px;border-radius:8px;transition:background .15s}
+#sideNav .nav-bottom .hint{display:block;margin-top:6px;font-size:calc(var(--fs)*0.75);color:var(--muted);text-align:center}
+#termToggle{width:100%;background:var(--teal-soft);border:1px solid var(--teal);color:var(--teal);font-size:calc(var(--fs)*0.875);font-weight:700;cursor:pointer;padding:8px 10px;border-radius:8px;transition:background .15s}
 #termToggle:hover{background:#d3ebe5}
 
 /* ---------- 主内容区 ---------- */
-#contentWrap{margin-left:160px;padding:94px 24px 60px;transition:padding-bottom .2s}
+#contentWrap{margin-left:160px;padding:94px 56px 60px;transition:padding-bottom .2s}
 body.term-collapsed #contentWrap{padding-bottom:14px}
-h1{font-size:21px;margin:0;color:var(--teal)}
-main{max-width:1500px;margin:0 auto}
-section{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:16px 18px;margin-bottom:16px}
+h1{font-size:calc(var(--fs)*1.3125);margin:0;color:var(--teal)}
+main{max-width:1080px;margin:0 auto}
+section{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:22px 26px;margin-bottom:20px}
 .row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
-label{color:var(--muted);font-size:14px}
-select,input[type=checkbox],input[type=text]{background:#fff;color:var(--text);border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:14px}
-button{background:var(--teal);color:#fff;border:0;border-radius:8px;padding:9px 16px;font-size:14px;cursor:pointer;transition:filter .15s,background .15s}
+label{color:var(--muted);font-size:calc(var(--fs)*0.875)}
+select,input[type=checkbox],input[type=text]{background:#fff;color:var(--text);border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:calc(var(--fs)*0.875)}
+button{background:var(--teal);color:#fff;border:0;border-radius:8px;padding:9px 16px;font-size:calc(var(--fs)*0.875);cursor:pointer;transition:filter .15s,background .15s}
 button:hover{filter:brightness(1.08)}
 button:disabled{opacity:.5;cursor:not-allowed}
 button.ghost{background:transparent;border:1px solid var(--border);color:var(--muted)}
 button.ghost:hover{color:var(--teal);border-color:var(--teal);background:var(--teal-soft)}
-.path{color:var(--orange);font-family:Consolas,monospace;font-size:13px;word-break:break-all}
+.path{color:var(--orange);font-family:Consolas,monospace;font-size:calc(var(--fs)*0.8125);word-break:break-all}
 
 /* ---------- 统计卡片 ---------- */
 .cards{display:flex;gap:12px;flex-wrap:wrap}
 .card{flex:1;min-width:130px;background:#fbfcf9;border:1px solid var(--border);border-radius:10px;padding:12px 14px}
-.card .num{font-size:24px;font-weight:700;color:var(--teal)}
-.card .lbl{color:var(--muted);font-size:13px}
+.card .num{font-size:calc(var(--fs)*1.5);font-weight:700;color:var(--teal)}
+.card .lbl{color:var(--muted);font-size:calc(var(--fs)*0.8125)}
 .green{color:var(--green)}.red{color:var(--red)}.amber{color:var(--orange)}
 
 /* ---------- 矩阵方格网格 ---------- */
@@ -58,11 +59,11 @@ button.ghost:hover{color:var(--teal);border-color:var(--teal);background:var(--t
 .grp-cell{background:#fbfcf9;border:1px solid var(--border);border-radius:10px;padding:10px 12px;cursor:pointer;transition:transform .15s ease,border-color .15s ease,box-shadow .15s ease;user-select:none}
 .grp-cell:hover{transform:scale(1.05);border-color:var(--teal);box-shadow:0 2px 10px rgba(14,124,102,.18)}
 .grp-cell.active{border-color:var(--teal);background:var(--teal-soft)}
-.grp-cell .cell-idx{display:block;font-size:15px;font-weight:800;color:var(--text)}
-.grp-cell .cell-type{display:block;font-size:14px;font-weight:700;color:var(--orange);margin-top:2px}
-.grp-cell .cell-size{display:block;font-size:13px;color:var(--text);margin-top:2px}
-.grp-cell .cell-mnk{display:block;font-size:12px;color:var(--muted);margin-top:2px}
-.grp-cell .cell-acc{display:inline-block;font-size:12px;margin-top:6px;padding:1px 8px;border-radius:10px}
+.grp-cell .cell-idx{display:block;font-size:calc(var(--fs)*0.9375);font-weight:800;color:var(--text)}
+.grp-cell .cell-type{display:block;font-size:calc(var(--fs)*0.875);font-weight:700;color:var(--orange);margin-top:2px}
+.grp-cell .cell-size{display:block;font-size:calc(var(--fs)*0.8125);color:var(--text);margin-top:2px}
+.grp-cell .cell-mnk{display:block;font-size:calc(var(--fs)*0.75);color:var(--muted);margin-top:2px}
+.grp-cell .cell-acc{display:inline-block;font-size:calc(var(--fs)*0.75);margin-top:6px;padding:1px 8px;border-radius:10px}
 .grp-cell.ok .cell-acc{background:rgba(46,158,91,.15);color:var(--green)}
 .grp-cell.bad .cell-acc{background:rgba(217,83,79,.15);color:var(--red)}
 .grp-cell.none .cell-acc{background:rgba(108,122,118,.15);color:var(--muted)}
@@ -70,14 +71,14 @@ button.ghost:hover{color:var(--teal);border-color:var(--teal);background:var(--t
 
 /* ---------- 详情区 ---------- */
 .grp-detail{border:1px solid var(--border);border-radius:10px;padding:12px;background:#fbfcf9;margin-top:8px}
-.grp-detail-head{font-weight:700;margin-bottom:8px;font-size:15px}
+.grp-detail-head{font-weight:700;margin-bottom:8px;font-size:calc(var(--fs)*0.9375)}
 .tblwrap{overflow-x:auto;overflow-y:visible;padding:8px}
 .cmp{display:flex;flex-direction:column;gap:12px;align-items:stretch}
 .half{width:100%;min-width:0}
-.half h3{margin:2px 0 6px;font-size:14px;color:var(--muted);font-weight:600}
+.half h3{margin:2px 0 6px;font-size:calc(var(--fs)*0.875);color:var(--muted);font-weight:600}
 
 /* ---------- 矩阵表格（字号保持不变） ---------- */
-table{border-collapse:collapse;font-family:Consolas,monospace;font-size:13px}
+table{border-collapse:collapse;font-family:Consolas,monospace;font-size:calc(var(--fs)*0.8125)}
 th,td{border:1px solid var(--border);padding:3px 7px;text-align:right;white-space:nowrap}
 th{position:sticky;top:0;background:#eef2ee;color:var(--text)}
 td.err{background:#fbe3e2;color:#8f2f2b;font-weight:700}
@@ -85,21 +86,58 @@ td.gold{background:#dff0e6;color:#1e6b42;font-weight:700}
 td.dim{opacity:.3}
 
 /* ---------- 日志管理 ---------- */
-.errlist{font-family:Consolas,monospace;font-size:13px;max-height:200px;overflow:auto}
+.errlist{font-family:Consolas,monospace;font-size:calc(var(--fs)*0.8125);max-height:200px;overflow:auto}
 .errlist div{padding:2px 0;border-bottom:1px dashed var(--border)}
-.hint{color:var(--muted);font-size:13px}
+.hint{color:var(--muted);font-size:calc(var(--fs)*0.8125)}
 
 #termPanel{position:fixed;left:160px;right:0;bottom:0;background:var(--panel);border-top:1px solid var(--border);z-index:30;box-shadow:0 -2px 10px rgba(0,0,0,.06)}
 #termBar{display:flex;align-items:center;gap:10px;padding:5px 12px;border-bottom:1px solid var(--border);background:#f8faf7}
 #termBody{max-height:260px;overflow:auto}
-#log{background:#fbfcf9;padding:10px 12px;font-family:Consolas,monospace;font-size:14px;max-height:260px;overflow:auto;white-space:pre-wrap;color:var(--text)}
+#log{background:#fbfcf9;padding:12px 20px;font-family:Consolas,monospace;font-size:calc(var(--fs)*0.875);max-height:260px;overflow:auto;white-space:pre-wrap;color:var(--text)}
 #termPanel.collapsed{display:none}
+/* ---------- 右上角设置菜单 ---------- */
+.header-left{display:flex;flex-direction:column;justify-content:center;gap:4px;min-width:0}
+.header-right{display:flex;align-items:center;gap:8px;flex:0 0 auto}
+.menu-wrap{position:relative}
+.menu-btn{background:var(--teal-soft);color:var(--teal);border:1px solid var(--border);border-radius:10px;width:40px;height:40px;font-size:calc(var(--fs)*1.4);line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s}
+.menu-btn:hover{background:#d3ebe5}
+.menu-panel{position:absolute;top:calc(100% + 10px);right:0;width:250px;background:var(--panel);border:1px solid var(--border);border-radius:12px;box-shadow:0 10px 28px rgba(0,0,0,.14);padding:14px 16px;z-index:60}
+.menu-panel.hidden{display:none}
+.menu-title{font-size:calc(var(--fs)*0.875);font-weight:700;color:var(--muted);margin-bottom:10px}
+.fs-row{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.fs-step{flex:0 0 auto;background:var(--teal-soft);color:var(--teal);border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:calc(var(--fs)*0.875);cursor:pointer}
+.fs-step:hover{background:#d3ebe5}
+#fsSelect{flex:1;background:#fff;color:var(--text);border:1px solid var(--border);border-radius:8px;padding:6px 8px;font-size:calc(var(--fs)*0.875)}
+.fs-presets{display:flex;gap:6px}
+.fs-preset{flex:1;padding:6px 4px;background:var(--teal-soft);color:var(--teal);border:1px solid transparent;border-radius:8px;font-size:calc(var(--fs)*0.75);cursor:pointer}
+.fs-preset:hover{background:#d3ebe5}
 </style>
 </head>
 <body>
 <header id="pageHeader">
-  <h1>TPU cpp_verification 验证工具</h1>
-  <div class="hint">默认目录: E:\electronic2\project\verilog_pro\TPU_vivado\cpp\cpp_verification · 首次请点「选择目录」授权，之后自动记住</div>
+  <div class="header-left">
+    <h1>TPU cpp_verification 验证工具</h1>
+    <div class="hint">默认目录: E:\electronic2\project\verilog_pro\TPU_vivado\cpp\cpp_verification · 首次请点「选择目录」授权，之后自动记住</div>
+  </div>
+  <div class="header-right">
+    <div class="menu-wrap">
+      <button id="menuBtn" class="menu-btn" title="设置" aria-label="设置">⋮</button>
+      <div id="menuPanel" class="menu-panel hidden">
+        <div class="menu-title">字体大小</div>
+        <div class="fs-row">
+          <button id="fsDec" class="fs-step" title="调小">A−</button>
+          <select id="fsSelect" title="选择字体大小"></select>
+          <button id="fsInc" class="fs-step" title="调大">A+</button>
+        </div>
+        <div class="fs-presets">
+          <button class="fs-preset" data-fs="12">小</button>
+          <button class="fs-preset" data-fs="16">默认</button>
+          <button class="fs-preset" data-fs="22">大</button>
+          <button class="fs-preset" data-fs="28">特大</button>
+        </div>
+      </div>
+    </div>
+  </div>
 </header>
 <nav id="sideNav">
   <div class="nav-title">验证工具</div>
@@ -230,6 +268,34 @@ function log(msg){ logEl.textContent += msg + "\n"; logEl.scrollTop = logEl.scro
   });
   setTerm(true);
 })();
+// ---------- 右上角设置：字体大小（--fs 变量，范围 12~28px，默认 16） ----------
+(function(){
+  const KEY = "tpu_v10_fontSize";
+  const DEF = 16, MIN = 12, MAX = 28;
+  const root = document.documentElement;
+  const sel = document.getElementById("fsSelect");
+  if (!sel) return;
+  for (let s = MIN; s <= MAX; s++) sel.add(new Option(s + " px", s));
+  function apply(px){
+    px = Math.min(MAX, Math.max(MIN, px));
+    root.style.setProperty("--fs", px + "px");
+    sel.value = String(px);
+    try { localStorage.setItem(KEY, String(px)); } catch(e){}
+  }
+  sel.addEventListener("change", () => apply(parseInt(sel.value, 10)));
+  document.getElementById("fsDec").addEventListener("click", () => apply(parseInt(sel.value, 10) - 1));
+  document.getElementById("fsInc").addEventListener("click", () => apply(parseInt(sel.value, 10) + 1));
+  document.querySelectorAll(".fs-preset").forEach(b => b.addEventListener("click", () => apply(parseInt(b.dataset.fs, 10))));
+  const saved = parseInt(localStorage.getItem(KEY), 10);
+  apply(isFinite(saved) ? saved : DEF);
+  // 菜单开合：点 ⋮ 切换；点外部关闭
+  const btn = document.getElementById("menuBtn"), panel = document.getElementById("menuPanel");
+  if (btn && panel){
+    btn.addEventListener("click", (e) => { e.stopPropagation(); panel.classList.toggle("hidden"); });
+    document.addEventListener("click", (e) => { if (!e.target.closest(".menu-wrap")) panel.classList.add("hidden"); });
+  }
+})();
+
 
 // ---------- 目录访问 ----------
 let dirHandle = null;          // File System Access API（可写）
@@ -803,7 +869,7 @@ function renderLogList(items){
       const acc = it.data && it.data.stats ? (it.data.stats.accuracy!==null ? it.data.stats.accuracy+"%" : "—") : "—";
       const badge = it.data && it.data.stats && it.data.stats.badGroups ? `<span class="badge bad">${it.data.stats.badGroups} 组错</span>` : `<span class="badge ok">全对</span>`;
       html += `<div class="logitem" data-name="${it.name}">
-        <span class="path" style="font-size:12px">${it.name}</span>
+        <span class="path" style="font-size:calc(var(--fs)*0.75)">${it.name}</span>
         <span class="hint">${it.data ? (it.data.dtype+" / "+it.data.dsize+" · 正确率 "+acc) : "读取失败"}</span>
         ${it.data ? badge : ""}
         <button class="ghost" data-act="load">加载</button>
