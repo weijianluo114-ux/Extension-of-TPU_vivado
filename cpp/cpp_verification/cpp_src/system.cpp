@@ -86,8 +86,14 @@ short FP32_to_FP16(float value)
 	unsigned int f = input.u;
 
 	unsigned int sign = (f >> 31) & 0x1;
-	int exponent = ((f >> 23) & 0xFF) - 127 + 15; // adjust exponent bias
+	unsigned int raw_exp = (f >> 23) & 0xFF;
+	int exponent = raw_exp - 127 + 15; // adjust exponent bias
 	unsigned int mantissa = f & 0x7FFFFF;
+
+	// NaN：指数域全1且尾数非0，直接映射为半精度静默 NaN（保留符号位）。
+	// 若不拦截，NaN 会落入下方 "exponent >= 31" 分支被误转为 Inf。
+	if (raw_exp == 0xFF && mantissa != 0)
+		return (unsigned short)((sign << 15) | 0x7E00); // 0x7E00 = 静默 NaN
 
 	unsigned short result;
 
@@ -128,6 +134,8 @@ float FP16_to_FP32(short n)
 
 	if (frac == 0 && exp == 0x1f)
 		m = INFINITY;
+	else if (exp == 0x1f)
+		m = NAN;	// NaN：指数全1且尾数非0。缺少此分支会把 NaN 当普通数算出有限值
 	else if (exp)
 		m = (frac | 0x400) * pow(2, exp - bias - 10);
 	else
