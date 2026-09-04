@@ -490,7 +490,7 @@ function goldMulAdd(A,B,C,aPrec,bPrec,cPrec,m,n,k){
         else acc = (acc + Math.imul(ai|0, bt|0)) | 0;
       }
       const cv = C[i*n+j];
-      if (fpMode) acc += cv;
+      if (fpMode) acc = Math.fround(acc + cv); // fp32 饱和口径：真值超 fp32 上限(≈3.4e38)时按 IEEE754 饱和为 ±Inf
       else acc = (acc + (cv|0)) | 0;
       D.push(acc);
     }
