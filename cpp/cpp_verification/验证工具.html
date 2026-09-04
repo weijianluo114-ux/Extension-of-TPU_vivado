@@ -14,17 +14,25 @@
 html{scroll-behavior:smooth}
 body{margin:0;font-family:"Segoe UI",system-ui,sans-serif;background:var(--bg);color:var(--text);font-size:16px}
 
-/* ---------- 左侧导航 ---------- */
-#sideNav{position:fixed;left:0;top:0;bottom:0;width:160px;background:var(--panel);border-right:1px solid var(--border);padding:16px 10px;overflow-y:auto;z-index:20}
+/* ---------- 页首标题条 ---------- */
+#pageHeader{position:fixed;top:0;left:0;right:0;height:78px;background:var(--panel);border-bottom:1px solid var(--border);padding:10px 20px;z-index:25;display:flex;flex-direction:column;justify-content:center;gap:4px}
+#pageHeader h1{font-size:20px;margin:0;color:var(--teal)}
+#pageHeader .hint{font-size:12.5px;color:var(--muted)}
+
+/* ---------- 左侧导航（标题条之下） ---------- */
+#sideNav{position:fixed;left:0;top:78px;bottom:0;width:160px;background:var(--panel);border-right:1px solid var(--border);padding:14px 10px 10px;overflow-y:auto;z-index:20;display:flex;flex-direction:column}
 #sideNav .nav-title{font-size:15px;font-weight:800;color:var(--teal);margin-bottom:14px;padding:0 6px}
 #sideNav a{display:block;padding:9px 10px;border-radius:8px;color:var(--text);text-decoration:none;font-size:14px;cursor:pointer;margin-bottom:4px;transition:background .15s,color .15s}
 #sideNav a:hover{background:var(--teal-soft);color:var(--teal)}
 #sideNav a.active{background:var(--teal);color:#fff;font-weight:600}
+#sideNav .nav-bottom{margin-top:auto;padding-top:10px;border-top:1px solid var(--border)}
+#sideNav .nav-bottom .hint{display:block;margin-top:6px;font-size:12px;color:var(--muted);text-align:center}
+#termToggle{width:100%;background:var(--teal-soft);border:1px solid var(--teal);color:var(--teal);font-size:14px;font-weight:700;cursor:pointer;padding:8px 10px;border-radius:8px;transition:background .15s}
+#termToggle:hover{background:#d3ebe5}
 
 /* ---------- 主内容区 ---------- */
-#contentWrap{margin-left:160px;padding:0 24px 60px;transition:padding-bottom .2s}
-body.term-collapsed #contentWrap{padding-bottom:40px}
-header{padding:16px 4px 10px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+#contentWrap{margin-left:160px;padding:94px 24px 60px;transition:padding-bottom .2s}
+body.term-collapsed #contentWrap{padding-bottom:14px}
 h1{font-size:21px;margin:0;color:var(--teal)}
 main{max-width:1500px;margin:0 auto}
 section{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:16px 18px;margin-bottom:16px}
@@ -81,17 +89,18 @@ td.dim{opacity:.3}
 .errlist div{padding:2px 0;border-bottom:1px dashed var(--border)}
 .hint{color:var(--muted);font-size:13px}
 
-/* ---------- 底部终端式日志面板（VSCode 风格） ---------- */
 #termPanel{position:fixed;left:160px;right:0;bottom:0;background:var(--panel);border-top:1px solid var(--border);z-index:30;box-shadow:0 -2px 10px rgba(0,0,0,.06)}
-#termBar{display:flex;align-items:center;gap:10px;padding:6px 12px;border-bottom:1px solid var(--border);background:#f8faf7}
-#termToggle{background:transparent;border:0;color:var(--teal);font-size:14px;font-weight:700;cursor:pointer;padding:4px 8px;border-radius:6px}
-#termToggle:hover{background:var(--teal-soft)}
+#termBar{display:flex;align-items:center;gap:10px;padding:5px 12px;border-bottom:1px solid var(--border);background:#f8faf7}
 #termBody{max-height:260px;overflow:auto}
 #log{background:#fbfcf9;padding:10px 12px;font-family:Consolas,monospace;font-size:14px;max-height:260px;overflow:auto;white-space:pre-wrap;color:var(--text)}
-#termPanel.collapsed #termBody{display:none}
+#termPanel.collapsed{display:none}
 </style>
 </head>
 <body>
+<header id="pageHeader">
+  <h1>TPU cpp_verification 验证工具</h1>
+  <div class="hint">默认目录: E:\electronic2\project\verilog_pro\TPU_vivado\cpp\cpp_verification · 首次请点「选择目录」授权，之后自动记住</div>
+</header>
 <nav id="sideNav">
   <div class="nav-title">验证工具</div>
   <a data-target="sec-dir">① 目录</a>
@@ -100,12 +109,12 @@ td.dim{opacity:.3}
   <a data-target="sec-matrix">④ 矩阵</a>
   <a data-target="sec-logs">⑤ 日志管理</a>
   <a data-target="termPanel">⑥ 终端日志</a>
+  <div class="nav-bottom">
+    <button id="termToggle">▾ 终端日志</button>
+    <span class="hint">Ctrl + ` 切换</span>
+  </div>
 </nav>
 <div id="contentWrap">
-<header>
-  <h1>TPU cpp_verification 验证工具</h1>
-  <span class="hint">默认目录: E:\electronic2\project\verilog_pro\TPU_vivado\cpp\cpp_verification · 首次请点「选择目录」授权，之后自动记住</span>
-</header>
 <main>
 
 <section id="sec-dir">
@@ -176,8 +185,7 @@ td.dim{opacity:.3}
 
 <div id="termPanel">
   <div id="termBar">
-    <button id="termToggle">▾ 终端日志</button>
-    <span class="hint">Ctrl + ` 展开/折叠</span>
+    <span class="hint">终端日志（Ctrl + ` 展开/折叠）</span>
   </div>
   <div id="termBody"><div id="log"></div></div>
 </div>
