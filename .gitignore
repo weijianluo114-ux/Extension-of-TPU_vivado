@@ -29,12 +29,10 @@
 **/sources_1/ip/**/*_stub.vhdl
 **/sources_1/ip/**/*_sim_netlist.v
 **/sources_1/ip/**/*_sim_netlist.vhdl
-# IP 内部生成目录（可由 .xci 重新生成）
-**/sources_1/ip/**/sim/
+# IP 内部生成目录（仿真必需 sim/rtl/tb 保留入库；synth/hdl/simulation 可由 .xci 重新生成，不入库）
 **/sources_1/ip/**/simulation/
 **/sources_1/ip/**/synth/
 **/sources_1/ip/**/hdl/
-**/sources_1/ip/**/rtl/
 
 # ================================
 # ModelSim / 仿真内存初始化
@@ -85,7 +83,6 @@ transcript
 **/sources_1/ip/**/data/
 **/sources_1/ip/**/hw_handoff/
 **/sources_1/ip/**/sw/
-**/sources_1/ip/**/tb/
 **/sources_1/ip/**/*.elf
 **/sources_1/ip/**/*.bmm
 **/sources_1/ip/**/*.bxml
@@ -108,3 +105,8 @@ cpp/cpp_verification/txt/D_result.txt
 cpp/cpp_verification/logs/
 cpp/cpp_verification/gold/
 cpp/cpp_verification/output/*.coe
+
+# ================================
+# 仿真探针转储（可重新生成）
+# ================================
+cpp/cpp_verification/probe_output/

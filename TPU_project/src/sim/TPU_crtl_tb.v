@@ -360,4 +360,158 @@ module TPU_crtl_tb#(
         );
 
 
+// ==================== DEBUG PROBES (temporary, non-synthesizable) ====================
+// 数据流中间观测探针：只记录信号，不改动计算核心
+// 日志目录: cpp/cpp_verification/probe_output/
+integer probe_f_load, probe_f_rd, probe_f_unpack, probe_f_mult, probe_f_adder, probe_f_d, probe_f_ram;
+integer pi;
+initial begin
+    probe_f_load   = $fopen("../../../../../../../cpp/cpp_verification/probe_output/probe_load.txt", "w");
+    probe_f_rd     = $fopen("../../../../../../../cpp/cpp_verification/probe_output/probe_rd.txt", "w");
+    probe_f_unpack = $fopen("../../../../../../../cpp/cpp_verification/probe_output/probe_unpack.txt", "w");
+    probe_f_mult   = $fopen("../../../../../../../cpp/cpp_verification/probe_output/probe_mult.txt", "w");
+    probe_f_adder  = $fopen("../../../../../../../cpp/cpp_verification/probe_output/probe_adder.txt", "w");
+    probe_f_d      = $fopen("../../../../../../../cpp/cpp_verification/probe_output/probe_d.txt", "w");
+    probe_f_ram    = $fopen("../../../../../../../cpp/cpp_verification/probe_output/probe_ram.txt", "w");
+    if (!probe_f_load || !probe_f_rd || !probe_f_unpack || !probe_f_mult || !probe_f_adder || !probe_f_d || !probe_f_ram)
+        $display("PROBE: 某个探针文件打开失败！");
+end
+
+// P1: 装载阶段 AXI_rdata 流（DDR3 -> RAM_BUF_TOP 写 RAM）
+always @(posedge clk) begin
+    if (TPU_top.TPU.RAM_BUF_TOP.data_send_en && TPU_top.TPU.RAM_BUF_TOP.read_flag) begin
+        $fdisplay(probe_f_load, "t=%0t state=%0d cnt=%0d araddr=%0d rdata=%h",
+            $time,
+            TPU_top.TPU.RAM_BUF_TOP.MATRIX_state,
+            TPU_top.TPU.RAM_BUF_TOP.MATRIX_cnt,
+            TPU_top.TPU.RAM_BUF_TOP.AXI_rdata_A_addr,
+            TPU_top.TPU.RAM_BUF_TOP.AXI_rdata);
+    end
+end
+
+// P3: kernel 读取（Rd_A/Rd_B/Rd_C 地址与数据）
+always @(posedge clk) begin
+    if (TPU_top.TPU.RAM_BUF_TOP.Rd_AB_en) begin
+        $fdisplay(probe_f_rd, "t=%0t RdA_addr=%0d RdB_addr=%0d RdA=%h RdB=%h",
+            $time,
+            TPU_top.TPU.RAM_BUF_TOP.Rd_A_addr,
+            TPU_top.TPU.RAM_BUF_TOP.Rd_B_addr,
+            TPU_top.TPU.RAM_BUF_TOP.Rd_A_data,
+            TPU_top.TPU.RAM_BUF_TOP.Rd_B_data);
+    end
+    if (TPU_top.TPU.RAM_BUF_TOP.Rd_C_en) begin
+        $fdisplay(probe_f_rd, "t=%0t RdC_addr=%0d RdC=%h",
+            $time,
+            TPU_top.TPU.RAM_BUF_TOP.Rd_C_addr,
+            TPU_top.TPU.RAM_BUF_TOP.Rd_C_data);
+    end
+end
+
+// P4: A_value/B_value/C_value 展开
+always @(posedge clk) begin
+    if (TPU_top.TPU.MATRIX_COMPUTE_KERNEL.matmult_kernel_inst.fp_en) begin
+        $fwrite(probe_f_unpack, "t=%0t row=%0d col=%0d", $time,
+            TPU_top.TPU.MATRIX_COMPUTE_KERNEL.matmult_kernel_inst.r_A_row_cnt,
+            TPU_top.TPU.MATRIX_COMPUTE_KERNEL.matmult_kernel_inst.r_B_col_cnt);
+        for (pi=0; pi<16; pi=pi+1) begin
+            $fwrite(probe_f_unpack, " A[%0d]=%h B[%0d]=%h", pi,
+                TPU_top.TPU.MATRIX_COMPUTE_KERNEL.matmult_kernel_inst.A[pi],
+                pi,
+                TPU_top.TPU.MATRIX_COMPUTE_KERNEL.matmult_kernel_inst.B[pi]);
+        end
+        $fwrite(probe_f_unpack, " C=%h\n", TPU_top.TPU.MATRIX_COMPUTE_KERNEL.matmult_kernel_inst.C);
+    end
+end
+
+// P5: fp_A/fp_B/fp_C 与 fp_state_1（16 个乘积）
+always @(posedge clk) begin
+    if (TPU_top.TPU.MATRIX_COMPUTE_KERNEL.matmult_kernel_inst.fp_en) begin
+        $fwrite(probe_f_mult, "t=%0t row=%0d col=%0d", $time,
+            TPU_top.TPU.MATRIX_COMPUTE_KERNEL.matmult_kernel_inst.r_A_row_cnt,
+            TPU_top.TPU.MATRIX_COMPUTE_KERNEL.matmult_kernel_inst.r_B_col_cnt);
+        for (pi=0; pi<16; pi=pi+1) begin
+            $fwrite(probe_f_mult, " fA[%0d]=%h fB[%0d]=%h p[%0d]=%h", pi,
+                TPU_top.TPU.MATRIX_COMPUTE_KERNEL.matmult_kernel_inst.fp_A[pi],
+                pi,
+                TPU_top.TPU.MATRIX_COMPUTE_KERNEL.matmult_kernel_inst.fp_B[pi],
+                pi,
+                TPU_top.TPU.MATRIX_COMPUTE_KERNEL.matmult_kernel_inst.fp_state_1[pi]);
+        end
+        $fwrite(probe_f_mult, " fC=%h\n", TPU_top.TPU.MATRIX_COMPUTE_KERNEL.matmult_kernel_inst.fp_C);
+    end
+end
+
+// P6: 加法树各级
+always @(posedge clk) begin
+    if (TPU_top.TPU.MATRIX_COMPUTE_KERNEL.matmult_kernel_inst.fp_en) begin
+        $fwrite(probe_f_adder, "t=%0t row=%0d col=%0d", $time,
+            TPU_top.TPU.MATRIX_COMPUTE_KERNEL.matmult_kernel_inst.r_A_row_cnt,
+            TPU_top.TPU.MATRIX_COMPUTE_KERNEL.matmult_kernel_inst.r_B_col_cnt);
+        for (pi=0; pi<8; pi=pi+1) $fwrite(probe_f_adder, " s2[%0d]=%h", pi,
+            TPU_top.TPU.MATRIX_COMPUTE_KERNEL.matmult_kernel_inst.fp_state_2[pi]);
+        for (pi=0; pi<4; pi=pi+1) $fwrite(probe_f_adder, " s3[%0d]=%h", pi,
+            TPU_top.TPU.MATRIX_COMPUTE_KERNEL.matmult_kernel_inst.fp_state_3[pi]);
+        for (pi=0; pi<2; pi=pi+1) $fwrite(probe_f_adder, " s4[%0d]=%h", pi,
+            TPU_top.TPU.MATRIX_COMPUTE_KERNEL.matmult_kernel_inst.fp_state_4[pi]);
+        $fwrite(probe_f_adder, " s5=%h s6=%h\n",
+            TPU_top.TPU.MATRIX_COMPUTE_KERNEL.matmult_kernel_inst.fp_state_5,
+            TPU_top.TPU.MATRIX_COMPUTE_KERNEL.matmult_kernel_inst.fp_state_6);
+    end
+end
+
+// P7: D 写回（Wr_addr/D 与 Rd_D_addr/Rd_D_data）
+always @(posedge clk) begin
+    if (TPU_top.TPU.MATRIX_COMPUTE_KERNEL.matmult_kernel_inst.Wr_en) begin
+        $fdisplay(probe_f_d, "t=%0t Wr_addr=%0d D=%h",
+            $time,
+            TPU_top.TPU.MATRIX_COMPUTE_KERNEL.matmult_kernel_inst.Wr_addr,
+            TPU_top.TPU.MATRIX_COMPUTE_KERNEL.matmult_kernel_inst.D);
+    end
+    if (TPU_top.TPU.RAM_BUF_TOP.Rd_D_en) begin
+        $fdisplay(probe_f_d, "t=%0t RdD_addr=%0d RdD_data=%h",
+            $time,
+            TPU_top.TPU.RAM_BUF_TOP.Rd_D_addr,
+            TPU_top.TPU.RAM_BUF_TOP.Rd_D_data);
+    end
+end
+
+// P2: RAM_B_0/1 与 RAM_D_0/1 dump（compute_en 上升沿时）
+always @(posedge clk) begin
+    if (TPU_top.TPU.RAM_BUF_TOP.compute_en_posedge) begin
+        for (pi=0; pi<32; pi=pi+1)
+            $fdisplay(probe_f_ram, "t=%0t RAM_B_0[%0d]=%h", $time, pi, TPU_top.TPU.RAM_BUF_TOP.RAM_B_0[pi]);
+        for (pi=0; pi<32; pi=pi+1)
+            $fdisplay(probe_f_ram, "t=%0t RAM_B_1[%0d]=%h", $time, pi, TPU_top.TPU.RAM_BUF_TOP.RAM_B_1[pi]);
+    end
+end
+
+// ==================== DEBUG PROBES P8/P9 (temporary) ====================
+// P8: 装载阶段写 DDR3（LOAD: BRAM -> DDR3），观测写入地址/数据
+// P9: 计算阶段 AXI 读通道（ARADDR/RDATA），确认读地址是否重复
+integer probe_f_load_ddr, probe_f_axi_rd;
+initial begin
+    probe_f_load_ddr = $fopen("../../../../../../../cpp/cpp_verification/probe_output/probe_load_ddr.txt", "w");
+    probe_f_axi_rd   = $fopen("../../../../../../../cpp/cpp_verification/probe_output/probe_axi_rd.txt", "w");
+    if (!probe_f_load_ddr || !probe_f_axi_rd)
+        $display("PROBE P8/P9: 探针文件打开失败！");
+end
+
+// P8: LOAD 态写 DDR3（AXI_LOAD_DATA_TO_DDR3 = 2'b01）
+always @(posedge clk) begin
+    if (axi_work_state == 2'b01) begin
+        if (BRAM_and_DDR3.c0_ddr3_s_axi_awvalid && BRAM_and_DDR3.c0_ddr3_s_axi_awready)
+            $fdisplay(probe_f_load_ddr, "t=%0t AWADDR=%h", $time, BRAM_and_DDR3.c0_ddr3_s_axi_awaddr);
+        if (BRAM_and_DDR3.c0_ddr3_s_axi_wvalid && BRAM_and_DDR3.c0_ddr3_s_axi_wready)
+            $fdisplay(probe_f_load_ddr, "t=%0t WDATA=%h", $time, BRAM_and_DDR3.c0_ddr3_s_axi_wdata);
+    end
+end
+
+// P9: AXI 读通道（计算阶段），记录 ARADDR 与 RDATA
+always @(posedge clk) begin
+    if (TPU_top.AXI_FULL_M_CHINESE.M_AXI_ARVALID && TPU_top.AXI_FULL_M_CHINESE.M_AXI_ARREADY)
+        $fdisplay(probe_f_axi_rd, "t=%0t ARADDR=%h", $time, TPU_top.AXI_FULL_M_CHINESE.M_AXI_ARADDR);
+    if (TPU_top.AXI_FULL_M_CHINESE.M_AXI_RVALID && TPU_top.AXI_FULL_M_CHINESE.M_AXI_RREADY)
+        $fdisplay(probe_f_axi_rd, "t=%0t RDATA=%h", $time, TPU_top.AXI_FULL_M_CHINESE.M_AXI_RDATA);
+end
+
 endmodule

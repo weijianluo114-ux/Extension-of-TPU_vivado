@@ -581,7 +581,7 @@ module matmult_kernel #(
 
     generate
         for (i = 0; i < 8; i = i + 1) begin : fpu_add_stage_2
-            fp_adder_16_32bits fpu_add_stage_2_inst (
+            fp_adder fpu_add_stage_2_inst (
                 .clk              (clk),
                 .rst_n            (rst_n),
                 .read_en          (fp_en),
@@ -597,7 +597,7 @@ module matmult_kernel #(
     //第3级流水线
     generate
         for (i = 0; i < 4; i = i + 1) begin : fpu_add_stage_3
-            fp_adder_16_32bits fpu_add_stage_3_inst (
+            fp_adder fpu_add_stage_3_inst (
                 .clk              (clk),
                 .rst_n            (rst_n),
                 .read_en          (fp_en),
@@ -613,7 +613,7 @@ module matmult_kernel #(
     //第4级流水线
     generate
         for (i = 0; i < 2; i = i + 1) begin : fpu_add_stage_4
-            fp_adder_16_32bits fpu_add_stage_4_inst (
+            fp_adder fpu_add_stage_4_inst (
                 .clk              (clk),
                 .rst_n            (rst_n),
                 .read_en          (fp_en),
@@ -627,7 +627,7 @@ module matmult_kernel #(
 
 
     //第5级流水线
-    fp_adder_16_32bits fpu_add_stage_5_inst (
+    fp_adder fpu_add_stage_5_inst (
         .clk              (clk),
         .rst_n            (rst_n),
         .read_en          (fp_en),
@@ -639,7 +639,7 @@ module matmult_kernel #(
 
 
     //第6级流水线
-    fp_adder_16_32bits fpu_add_stage_6_inst (
+    fp_adder fpu_add_stage_6_inst (
         .clk              (clk),
         .rst_n            (rst_n),
         .read_en          (fp_en),
