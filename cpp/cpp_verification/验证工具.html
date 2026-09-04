@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>TPU cpp_verification 验证工具</title>
+<title>TPU验证工具</title>
 <style>
 *,*::before,*::after{box-sizing:border-box}
 :root{
@@ -12,16 +12,16 @@
   --future_saas-color-4:#EEF4F1; --future_saas-color-5:#FFFFFF;
   --bg:#F2F6F4; --panel:#FFFFFF; --border:#DCE5E0; --text:#2A2E2C; --muted:#8E8E93; --font-apple:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
   --teal:var(--future_saas-color-3); --teal-soft:#E3ECE8; --orange:var(--future_saas-color-1); --orange-soft:#F3E6DC;
-  --green:#3F8F6B; --red:#C0605F; --amber:var(--future_saas-color-1); --blue:var(--future_saas-color-3); --nav-w:160px;
+  --green:#3F8F6B; --red:#C0605F; --amber:var(--future_saas-color-1); --blue:var(--future_saas-color-3); --nav-w:160px; --nav-left:16px; --nav-top:84px;
 html{scroll-behavior:smooth}
-body{margin:0;font-family:"Segoe UI",system-ui,sans-serif;background:linear-gradient(170deg,#E4EDE8 0%,#F0F5F2 40%,#F8FAF9 75%,#FFFFFF 100%);color:var(--text);font-size:calc(var(--fs)*1)}
+body{margin:0;font-family:"Segoe UI",system-ui,sans-serif;background:linear-gradient(170deg,#E4EDE8 0%,#F0F5F2 40%,#F6FAF8 75%,#EEF4F1 100%);color:var(--text);font-size:calc(var(--fs)*1)}
 
 /* ---------- 页首标题条 ---------- */
-#pageHeader{position:fixed;top:0;left:0;right:0;height:64px;background:linear-gradient(180deg,var(--panel) 0%,var(--panel) 72%,#E4EDE8 100%);border-bottom:none;padding:12px 28px;z-index:25;display:flex;align-items:center;justify-content:space-between;gap:16px}
-#pageHeader h1{font-size:calc(var(--fs)*1.25);margin:0;color:var(--teal)}
+#pageHeader{position:fixed;top:0;left:0;right:0;height:64px;background:linear-gradient(180deg,#F4F8F6 0%,#EDF3EF 55%,#E4EDE8 100%);border-bottom:none;padding:12px 28px;z-index:25;display:flex;align-items:center;justify-content:space-between;gap:16px}
+#pageHeader h1{font-size:calc(var(--fs)*1.5);margin:0;color:var(--teal)}
 
 /* ---------- 左侧导航（标题条之下） ---------- */
-#sideNav{position:fixed;left:0;top:64px;bottom:0;width:var(--nav-w);background:var(--panel);border-right:1px solid var(--border);padding:14px 10px 10px;overflow-y:auto;z-index:20;display:flex;flex-direction:column}
+#sideNav{position:fixed;left:var(--nav-left);top:var(--nav-top);bottom:0;width:var(--nav-w);background:var(--panel);border-right:1px solid var(--border);padding:14px 10px 10px;overflow-y:auto;z-index:20;display:flex;flex-direction:column}
 #sideNav .nav-title{font-size:calc(var(--fs)*0.9375);font-weight:800;color:var(--teal);margin-bottom:14px;padding:0 6px 0 16px}
 #sideNav a{display:block;padding:9px 10px;border-radius:10px;color:var(--text);text-decoration:none;font-size:calc(var(--fs)*0.875);cursor:pointer;margin:0 4px 6px 10px;transition:background .15s,color .15s,border-color .15s;background:rgba(255,255,255,.55);border:1px solid rgba(62,124,107,.16)}
 #sideNav a:hover{background:var(--teal-soft);border-color:var(--teal);color:var(--teal)}
@@ -32,7 +32,7 @@ body{margin:0;font-family:"Segoe UI",system-ui,sans-serif;background:linear-grad
 #termToggle:hover{background:rgba(62,124,107,.18)}
 
 /* ---------- 主内容区 ---------- */
-#contentWrap{margin-left:var(--nav-w);padding:84px 56px calc(var(--term-h,260px) + 20px);transition:padding-bottom .2s}
+#contentWrap{margin-left:calc(var(--nav-left) + var(--nav-w));padding:84px 56px calc(var(--term-h,260px) + 20px);transition:padding-bottom .2s}
 body.term-collapsed #contentWrap{padding-bottom:14px}
 h1{font-size:calc(var(--fs)*1.3125);margin:0;color:var(--teal)}
 main{max-width:1080px;margin:0 auto}
@@ -99,7 +99,7 @@ td.dim{opacity:.3}
 .logitem .path{font-weight:600;font-size:calc(var(--fs)*0.875);letter-spacing:.3px}
 .logitem .hint{font-size:calc(var(--fs)*0.8125);font-family:var(--font-apple)}
 
-#termPanel{position:fixed;left:var(--nav-w);right:0;bottom:0;background:var(--panel);border-top:1px solid var(--border);border-left:1px solid var(--border);z-index:30;box-shadow:0 -2px 10px rgba(62,124,107,.14);display:flex;flex-direction:column;height:260px}
+#termPanel{position:fixed;left:calc(var(--nav-left) + var(--nav-w));right:0;bottom:0;background:var(--panel);border-top:1px solid var(--border);border-left:1px solid var(--border);z-index:30;box-shadow:0 -2px 10px rgba(62,124,107,.14);display:flex;flex-direction:column;height:260px}
 #termBar{display:flex;align-items:center;gap:10px;padding:5px 12px;border-bottom:1px solid var(--border);background:#E8EFEB;cursor:ns-resize;user-select:none;flex:0 0 auto}
 #termBody{flex:1 1 auto;min-height:0;overflow:hidden}
 #log{background:#FFFFFF;padding:12px 20px;font-family:Consolas,monospace;font-size:calc(var(--fs)*0.875);height:100%;overflow:auto;white-space:pre-wrap;color:var(--text)}
@@ -125,7 +125,7 @@ td.dim{opacity:.3}
 <body>
 <header id="pageHeader">
   <div class="header-left">
-    <h1>TPU cpp_verification 验证工具</h1>
+    <h1>TPU验证工具</h1>
   </div>
   <div class="header-right">
     <div class="menu-wrap">
