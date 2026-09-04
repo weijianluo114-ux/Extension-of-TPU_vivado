@@ -110,3 +110,8 @@ cpp/cpp_verification/output/*.coe
 # 仿真探针转储（可重新生成）
 # ================================
 cpp/cpp_verification/probe_output/
+
+# ================================
+# C++ 验证程序已废弃（仅保留本地备份，不入库）
+# ================================
+cpp/cpp_verification/cpp_backup/
