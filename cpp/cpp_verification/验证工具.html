@@ -12,16 +12,16 @@
   --future_saas-color-4:#F1EDFB; --future_saas-color-5:#FFFFFF;
   --bg:#F4F1FC; --panel:#FDFCFE; --border:#E3DDF4; --text:#3A3650; --muted:#8A86A3; --font-apple:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
   --teal:var(--future_saas-color-3); --teal-soft:#EEEAFB; --orange:var(--future_saas-color-1); --orange-soft:#F7EDE3;
-  --green:#2F9E6E; --red:#C0605F; --amber:var(--future_saas-color-1); --blue:var(--future_saas-color-3); --nav-w:160px; --nav-left:16px;
+  --green:#2F9E6E; --red:#C0605F; --amber:var(--future_saas-color-1); --blue:var(--future_saas-color-3); --nav-w:160px; --nav-left:16px; --header-h:64px; --scroll-gap:12px;
 html{scroll-behavior:smooth}
 body{margin:0;font-family:"Segoe UI",system-ui,sans-serif;background:linear-gradient(170deg,#EFEAFB 0%,#F4F1FC 40%,#F9F7FE 75%,#F1EDFB 100%);color:var(--text);font-size:calc(var(--fs)*1)}
 
 /* ---------- 页首标题条 ---------- */
-#pageHeader{position:fixed;top:0;left:0;right:0;height:64px;background:linear-gradient(180deg,#F5F2FC 0%,#EFEAF9 55%,#EFEAFB 100%);border-bottom:none;padding:12px 28px;z-index:25;display:flex;align-items:center;justify-content:space-between;gap:16px}
+#pageHeader{position:fixed;top:0;left:0;right:0;height:var(--header-h);background:linear-gradient(180deg,#F5F2FC 0%,#EFEAF9 55%,#EFEAFB 100%);border-bottom:none;padding:12px 28px;z-index:25;display:flex;align-items:center;justify-content:space-between;gap:16px}
 #pageHeader h1{font-size:calc(var(--fs)*1.5);margin:0;color:var(--teal)}
 
 /* ---------- 左侧导航（标题条之下） ---------- */
-#sideNav{position:fixed;left:0;top:64px;bottom:0;width:calc(var(--nav-left) + var(--nav-w));background:var(--panel);border-right:1px solid var(--border);padding:34px 10px 10px 26px;overflow-y:auto;z-index:20;display:flex;flex-direction:column}
+#sideNav{position:fixed;left:0;top:var(--header-h);bottom:0;width:calc(var(--nav-left) + var(--nav-w));background:var(--panel);border-right:1px solid var(--border);padding:34px 10px 10px 26px;overflow-y:auto;z-index:20;display:flex;flex-direction:column}
 #sideNav .nav-title{font-size:calc(var(--fs)*0.9375);font-weight:800;color:var(--teal);margin-bottom:14px;padding:0 6px 0 16px}
 #sideNav a{display:block;padding:9px 10px;border-radius:10px;color:var(--text);text-decoration:none;font-size:calc(var(--fs)*0.875);cursor:pointer;margin:0 4px 6px 10px;transition:background .15s,color .15s,border-color .15s;background:rgba(255,255,255,.55);border:1px solid rgba(108,92,231,.18)}
 #sideNav a:hover{background:var(--teal-soft);border-color:var(--teal);color:var(--teal)}
@@ -32,11 +32,11 @@ body{margin:0;font-family:"Segoe UI",system-ui,sans-serif;background:linear-grad
 #termToggle:hover{background:rgba(108,92,231,.18)}
 
 /* ---------- 主内容区 ---------- */
-#contentWrap{margin-left:calc(var(--nav-left) + var(--nav-w));padding:84px 56px calc(var(--term-h,260px) + 20px);transition:padding-bottom .2s}
+#contentWrap{margin-left:calc(var(--nav-left) + var(--nav-w));padding:calc(var(--header-h) + 20px) 56px calc(var(--term-h,260px) + 20px);transition:padding-bottom .2s}
 body.term-collapsed #contentWrap{padding-bottom:14px}
 h1{font-size:calc(var(--fs)*1.3125);margin:0;color:var(--teal)}
 main{max-width:1080px;margin:0 auto}
-section{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:22px 26px;margin-bottom:20px}
+section{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:22px 26px;margin-bottom:20px;scroll-margin-top:calc(var(--header-h) + var(--scroll-gap))}
 .row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
 label{color:var(--muted);font-size:calc(var(--fs)*0.875);font-family:var(--font-apple)}
 select,input[type=checkbox],input[type=text]{background:var(--panel);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:calc(var(--fs)*0.875)}
