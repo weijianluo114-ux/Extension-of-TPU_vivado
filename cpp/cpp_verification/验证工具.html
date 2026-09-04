@@ -1045,6 +1045,15 @@ function renderGroups(groups){
   sec.innerHTML = html;
   const cells = sec.querySelectorAll(".grp-cell");
   const detailArea = $("grpDetailArea");
+  // 同步“目标结果 / 实际结果”两个矩阵表格的横向滚动
+  let tblSyncBusy = false;
+  detailArea.addEventListener("scroll", (e) => {
+    const t = e.target && e.target.closest ? e.target.closest(".tblwrap") : null;
+    if (!t || tblSyncBusy) return;
+    tblSyncBusy = true;
+    detailArea.querySelectorAll(".tblwrap").forEach(x => { if (x !== t) x.scrollLeft = t.scrollLeft; });
+    tblSyncBusy = false;
+  }, true);
   cells.forEach(cell => {
     cell.addEventListener("click", () => {
       const isActive = cell.classList.contains("active");
