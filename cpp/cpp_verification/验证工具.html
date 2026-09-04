@@ -195,6 +195,7 @@ td.dim{opacity:.3}
     </select>
     <button id="btnRun">加载并验证</button>
     <button id="btnCoe" class="ghost">生成 dataset.coe</button>
+    <button id="btnRand" class="ghost">随机生成测试矩阵</button>
     <label><input type="checkbox" id="onlyErr"> 只看错误元素</label>
   </div>
   <div class="row">
@@ -366,7 +367,6 @@ async function idbGet(k){ const db=await idbOpen(); return new Promise((res,rej)
 // ---------- 目录结构检查 ----------
 async function checkStructure(h){
   const missing = [];
-  try { await h.getFileHandle("path.txt"); } catch(e){ missing.push("path.txt"); }
   try { await h.getDirectoryHandle("dataset"); } catch(e){ missing.push("dataset/"); }
   try { await h.getDirectoryHandle("output"); } catch(e){ missing.push("output/"); }
   try { const t = await h.getDirectoryHandle("txt"); await t.getFileHandle("D_result.txt"); } catch(e){ missing.push("txt/D_result.txt"); }
@@ -412,7 +412,7 @@ $("dirInput").onchange = async e => {
   dirHandle = null;
   $("dirPath").textContent = "只读模式，共 " + readOnlyFiles.length + " 个文件";
   const has = p => readOnlyFiles.some(f => f.webkitRelativePath.replace(/\\/g,"/").includes(p));
-  const missing = ["path.txt","dataset/","output/","txt/D_result.txt"].filter(p => !has(p));
+  const missing = ["dataset/","output/","txt/D_result.txt"].filter(p => !has(p));
   if (missing.length) log("⚠ 只读目录结构不完整，缺少: " + missing.join("、") + "。请选择 cpp_verification 目录。");
   else log("只读目录结构完整，就绪");
 };
@@ -453,7 +453,7 @@ function halfToFloat(h){
   const e = (h >> 10) & 0x1f;
   const m = h & 0x3ff;
   if (e === 0) return s * m * Math.pow(2,-24);
-  if (e === 31) return m ? NaN : s * Infinity;
+  if (e === 31) return m ? (s < 0 ? -NaN : NaN) : s * Infinity;
   return s * (1 + m/1024) * Math.pow(2, e-15);
 }
 function parseBin(bytes, prec, row, col){
@@ -537,8 +537,10 @@ function floatToHalf(f){
   dv.setFloat32(0, f, false);
   const u = dv.getUint32(0, false);
   const sign = (u >> 16) & 0x8000;
-  let exp = ((u >> 23) & 0xff) - 127 + 15;
+  const rawExp = (u >> 23) & 0xff;
   const mant = u & 0x7fffff;
+  if (rawExp === 0xff && mant !== 0) return sign | 0x7e00; // NaN：指数域全1且尾数非0，映射为半精度静默 NaN
+  let exp = rawExp - 127 + 15;
   if (exp <= 0) {
     if (exp < -10) return sign;
     const m2 = (mant | 0x800000) >> (14 - exp);
@@ -1065,7 +1067,7 @@ $("btnCoe").onclick = async () => {
     logEl.textContent = "";
     if (!dirHandle) { log("生成 COE 需要 [可读写] 目录权限"); return; }
     log("生成 dataset.coe 中（18 组）...");
-    let head = "MEMORY_INITIALIZATION_RADIX = 2;\nMEMORY_INITIALIZATION_VECTOR = \n";
+    let head = "MEMORY_INITIALIZATION_RADIX = 2;\r\nMEMORY_INITIALIZATION_VECTOR = \r\n";
     let body = "";
     for (const ty of TYPES) for (const sz of SIZES){
       const {m,n,k} = sz;
@@ -1077,10 +1079,10 @@ $("btnCoe").onclick = async () => {
       const B = parseBin(await readFile(bName), ty.b, k, n);
       const C = parseBin(await readFile(cName), ty.c, m, n);
       for (const vec of [toCoeVec(A,ty.a,m,k), toCoeVec(B,ty.b,k,n), toCoeVec(C,ty.c,m,n)]){
-        for (const line of vec) body += line + ",\n";
+        for (const line of vec) body += line + ",\r\n";
       }
     }
-    const full = head + body + ";";
+    const full = head + body;
     // 写回 output/dataset.coe
     const oh = await dirHandle.getDirectoryHandle("output");
     const fh = await oh.getFileHandle("dataset.coe", {create:true});
@@ -1090,6 +1092,76 @@ $("btnCoe").onclick = async () => {
     log("已写入 output/dataset.coe，共 " + (body.split("\n").length-1) + " 行数据");
   } catch(e){ log("生成 COE 失败: " + (e.message||e)); }
 };
+// ---------- 随机生成测试矩阵（覆盖 dataset/ 下的 .bin，与 C++ random() 值域一致） ----------
+function precName(p){ return p===PREC.INT4?"int4":p===PREC.INT8?"int8":p===PREC.FP16?"fp16":p===PREC.FP32?"fp32":"int32"; }
+function randInt(a,b){ return a + Math.floor(Math.random()*(b-a+1)); }
+function randMat(row, col, prec){
+  const v = new Array(row*col);
+  for (let i=0;i<row*col;i++){
+    if (prec === PREC.INT4) v[i] = randInt(-8,7);
+    else if (prec === PREC.INT8) v[i] = randInt(-128,127);
+    else if (prec === PREC.FP16 || prec === PREC.FP32) v[i] = randInt(-99999,99999)/1e4; // 与 cpp: float(int/1e4)
+    else v[i] = randInt(-65536,65536); // INT32：cpp 原为全 0，现按要求随机化
+  }
+  return v;
+}
+function matToBin(mat, prec){
+  const n = mat.length;
+  let bytes, dv;
+  if (prec === PREC.INT4){
+    bytes = new Uint8Array(Math.ceil(n/2));
+    for (let i=0;i<n;i++){ const b = mat[i] & 0x0f; if (i%2===0) bytes[i>>1] = (b<<4); else bytes[i>>1] |= b; }
+  } else if (prec === PREC.INT8){
+    bytes = new Uint8Array(n);
+    for (let i=0;i<n;i++) bytes[i] = mat[i] & 0xff;
+  } else if (prec === PREC.FP16){
+    bytes = new Uint8Array(n*2); dv = new DataView(bytes.buffer);
+    for (let i=0;i<n;i++) dv.setUint16(i*2, floatToHalf(mat[i]), true);
+  } else if (prec === PREC.FP32){
+    bytes = new Uint8Array(n*4); dv = new DataView(bytes.buffer);
+    for (let i=0;i<n;i++) dv.setFloat32(i*4, mat[i], true);
+  } else {
+    bytes = new Uint8Array(n*4); dv = new DataView(bytes.buffer);
+    for (let i=0;i<n;i++) dv.setInt32(i*4, mat[i]|0, true);
+  }
+  return bytes;
+}
+async function writeFile(relPath, bytes){
+  if (!dirHandle) throw new Error("需要 [可读写] 目录权限");
+  const parts = relPath.split("/");
+  let h = dirHandle;
+  for (let i=0;i<parts.length-1;i++) h = await h.getDirectoryHandle(parts[i], {create:true});
+  const fh = await h.getFileHandle(parts[parts.length-1], {create:true});
+  const w = await fh.createWritable();
+  await w.write(bytes);
+  await w.close();
+}
+$("btnRand").onclick = async () => {
+  try {
+    logEl.textContent = "";
+    if (!dirHandle) { log("随机生成需要 [可读写] 目录权限"); return; }
+    const dtype = $("dtype").value, dsize = $("dsize").value;
+    const types = dtype === "all" ? TYPES : TYPES.filter(x => x.t === dtype);
+    const sizes = dsize === "all" ? SIZES : SIZES.filter(x => x.s === dsize);
+    let cnt = 0;
+    for (const ty of types) for (const sz of sizes){
+      const {m, n, k} = sz;
+      const base = `dataset/${ty.t}/${sz.s}/`;
+      const A = randMat(m,k,ty.a), B = randMat(k,n,ty.b), C = randMat(m,n,ty.c);
+      await writeFile(base + `a_${precName(ty.a)}_${sz.s}.bin`, matToBin(A, ty.a));
+      await writeFile(base + `b_${precName(ty.b)}_${sz.s}.bin`, matToBin(B, ty.b));
+      await writeFile(base + `c_${precName(ty.c)}_${sz.s}.bin`, matToBin(C, ty.c));
+      log(`已生成随机矩阵 ${ty.t}/${sz.s}（A ${m}×${k}，B ${k}×${n}，C ${m}×${n}）`);
+      cnt++;
+    }
+    log(`共 ${cnt} 组随机矩阵已写入 dataset/，正在刷新 gold ...`);
+    const gold = await computeAllGold();
+    const saved = await saveGold(gold);
+    $("goldStatus").textContent = "已刷新" + (saved ? " ("+saved+")" : "（只读，未保存）");
+    log("gold 已" + (saved ? "刷新保存：" + saved : "重算（只读模式未保存，验证时仍会在线计算）"));
+  } catch(e){ log("随机生成失败: " + (e.message||e)); console.error(e); }
+};
+
 restoreLastDir();
 </script>
 </body>
