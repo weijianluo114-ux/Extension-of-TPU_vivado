@@ -105,3 +105,8 @@ cpp/cpp_verification/txt/D_result.txt
 cpp/cpp_verification/logs/
 cpp/cpp_verification/gold/
 cpp/cpp_verification/output/*.coe
+
+# ================================
+# 仿真探针转储（可重新生成）
+# ================================
+cpp/cpp_verification/probe_output/
