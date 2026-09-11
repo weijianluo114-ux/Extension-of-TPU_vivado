@@ -115,3 +115,4 @@ cpp/cpp_verification/probe_output/
 # C++ 验证程序已废弃（仅保留本地备份，不入库）
 # ================================
 cpp/cpp_verification/cpp_backup/
+cpp/cpp_verification/dataset_random_*/
