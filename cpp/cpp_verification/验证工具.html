@@ -239,7 +239,7 @@ td.dim{opacity:.3}
 "use strict";
 const $ = id => document.getElementById(id);
 const logEl = $("log");
-function log(msg){ logEl.textContent += msg + "\n"; logEl.scrollTop = logEl.scrollHeight; }
+function log(msg){ logEl.textContent += msg + "\n"; logEl.scrollTop = logEl.scrollHeight; const tp = document.getElementById("termPanel"); if (tp && tp.classList.contains("collapsed") && window.setTerm) window.setTerm(true); }
 
 // ---------- 左侧导航（悬停滑动 + 点击固定） ----------
 (function(){
@@ -283,6 +283,7 @@ function log(msg){ logEl.textContent += msg + "\n"; logEl.scrollTop = logEl.scro
     document.body.classList.toggle("term-collapsed", !open);
     termToggle.textContent = open ? "▾ 终端日志" : "▸ 终端日志";
   }
+  window.setTerm = setTerm;   // 暴露给 log()，让提示自动弹出终端
   termToggle.addEventListener("click", () => setTerm(termPanel.classList.contains("collapsed")));
   document.addEventListener("keydown", (e) => {
     if (e.ctrlKey && e.key === "`") { e.preventDefault(); setTerm(termPanel.classList.contains("collapsed")); }
@@ -391,7 +392,7 @@ async function adoptDirHandle(h){
 $("btnPick").onclick = async () => {
   try {
     if (!window.showDirectoryPicker) { log("当前浏览器不支持 showDirectoryPicker，请用 [只读] 方式或换 Edge/Chrome"); return; }
-    const h = await window.showDirectoryPicker();
+    const h = await window.showDirectoryPicker({ mode: "readwrite" });
     await adoptDirHandle(h);
   } catch(e){ if (e.name !== "AbortError") log("选择目录失败: " + e.message); }
 };
@@ -430,6 +431,25 @@ async function restoreLastDir(){
   } catch(e){ $("dirPath").textContent = "默认目录: " + DEFAULT_DIR_HINT; }
 }
 
+// ---------- 确保存在[可读写]目录句柄：缺失/未授权时尝试恢复并申请权限（须在用户手势内调用） ----------
+async function ensureWritableDir(){
+  try {
+    if (dirHandle) {
+      let perm = dirHandle.queryPermission ? await dirHandle.queryPermission({mode:"readwrite"}) : "granted";
+      if (perm === "prompt") perm = await dirHandle.requestPermission({mode:"readwrite"});
+      if (perm === "granted") return true;
+      log("当前目录句柄不是可写权限，正在尝试重新申请 ...");
+    }
+    const h = await idbGet("lastDir");
+    if (h) {
+      let perm = await h.queryPermission({mode:"readwrite"});
+      if (perm === "prompt") perm = await h.requestPermission({mode:"readwrite"});
+      if (perm === "granted") { await adoptDirHandle(h); return true; }
+    }
+    log("✗ 需要 [可读写] 目录授权：请先点「选择目录（可读写）」并选中 cpp_verification 目录（写入 dataset/、output/、gold/、logs/ 都需要写权限）。");
+    return false;
+  } catch(e){ log("✗ 获取目录写权限失败: " + (e.message||e)); return false; }
+}
 async function readFile(relPath){
   if (dirHandle) {
     const parts = relPath.split("/");
@@ -1114,35 +1134,39 @@ function renderGroups(groups){
 $("onlyErr").onchange = () => { if ($("sec-matrix").style.display !== "none") renderGroups(window.__lastGroups || []); };
 // 最近一次结果已由 renderGroups 内部保存到 window.__lastGroups
 
-// ---------- 生成 dataset.coe ----------
+// ---------- 生成 dataset.coe（「随机生成测试矩阵」复用它同步刷新 output/） ----------
+async function regenerateCoe(){
+  log("生成 dataset.coe 中（18 组）...");
+  let head = "MEMORY_INITIALIZATION_RADIX = 2;\r\nMEMORY_INITIALIZATION_VECTOR = \r\n";
+  let body = "";
+  for (const ty of TYPES) for (const sz of SIZES){
+    const {m,n,k} = sz;
+    const base = `dataset/${ty.t}/${sz.s}/`;
+    const aName = base + `a_${precName(ty.a)}_${sz.s}.bin`;
+    const bName = base + `b_${precName(ty.b)}_${sz.s}.bin`;
+    const cName = base + `c_${precName(ty.c)}_${sz.s}.bin`;
+    const A = parseBin(await readFile(aName), ty.a, m, k);
+    const B = parseBin(await readFile(bName), ty.b, k, n);
+    const C = parseBin(await readFile(cName), ty.c, m, n);
+    for (const vec of [toCoeVec(A,ty.a,m,k), toCoeVec(B,ty.b,k,n), toCoeVec(C,ty.c,m,n)]){
+      for (const line of vec) body += line + ",\r\n";
+    }
+  }
+  const full = head + body;
+  const oh = await dirHandle.getDirectoryHandle("output");
+  const fh = await oh.getFileHandle("dataset.coe", {create:true});
+  const w = await fh.createWritable();
+  await w.write(full);
+  await w.close();
+  const nLines = body.split("\n").length-1;
+  log("已写入 output/dataset.coe，共 " + nLines + " 行数据");
+  return nLines;
+}
 $("btnCoe").onclick = async () => {
   try {
     logEl.textContent = "";
-    if (!dirHandle) { log("生成 COE 需要 [可读写] 目录权限"); return; }
-    log("生成 dataset.coe 中（18 组）...");
-    let head = "MEMORY_INITIALIZATION_RADIX = 2;\r\nMEMORY_INITIALIZATION_VECTOR = \r\n";
-    let body = "";
-    for (const ty of TYPES) for (const sz of SIZES){
-      const {m,n,k} = sz;
-      const base = `dataset/${ty.t}/${sz.s}/`;
-      const aName = base + `a_${ty.a===1?"int4":ty.a===2?"int8":ty.a===3?"fp16":"fp32"}_${sz.s}.bin`;
-      const bName = base + `b_${ty.a===1?"int4":ty.a===2?"int8":ty.a===3?"fp16":"fp32"}_${sz.s}.bin`;
-      const cName = base + `c_${ty.c===5?"int32":ty.c===1?"int4":ty.c===2?"int8":ty.c===3?"fp16":"fp32"}_${sz.s}.bin`;
-      const A = parseBin(await readFile(aName), ty.a, m, k);
-      const B = parseBin(await readFile(bName), ty.b, k, n);
-      const C = parseBin(await readFile(cName), ty.c, m, n);
-      for (const vec of [toCoeVec(A,ty.a,m,k), toCoeVec(B,ty.b,k,n), toCoeVec(C,ty.c,m,n)]){
-        for (const line of vec) body += line + ",\r\n";
-      }
-    }
-    const full = head + body;
-    // 写回 output/dataset.coe
-    const oh = await dirHandle.getDirectoryHandle("output");
-    const fh = await oh.getFileHandle("dataset.coe", {create:true});
-    const w = await fh.createWritable();
-    await w.write(full);
-    await w.close();
-    log("已写入 output/dataset.coe，共 " + (body.split("\n").length-1) + " 行数据");
+    if (!(await ensureWritableDir())) return;
+    await regenerateCoe();
   } catch(e){ log("生成 COE 失败: " + (e.message||e)); }
 };
 // ---------- 随机生成测试矩阵（覆盖 dataset/ 下的 .bin，与 C++ random() 值域一致） ----------
@@ -1192,7 +1216,7 @@ async function writeFile(relPath, bytes){
 $("btnRand").onclick = async () => {
   try {
     logEl.textContent = "";
-    if (!dirHandle) { log("随机生成需要 [可读写] 目录权限"); return; }
+    if (!(await ensureWritableDir())) return;
     const dtype = $("dtype").value, dsize = $("dsize").value;
     const types = dtype === "all" ? TYPES : TYPES.filter(x => x.t === dtype);
     const sizes = dsize === "all" ? SIZES : SIZES.filter(x => x.s === dsize);
@@ -1204,10 +1228,12 @@ $("btnRand").onclick = async () => {
       await writeFile(base + `a_${precName(ty.a)}_${sz.s}.bin`, matToBin(A, ty.a));
       await writeFile(base + `b_${precName(ty.b)}_${sz.s}.bin`, matToBin(B, ty.b));
       await writeFile(base + `c_${precName(ty.c)}_${sz.s}.bin`, matToBin(C, ty.c));
-      log(`已生成随机矩阵 ${ty.t}/${sz.s}（A ${m}×${k}，B ${k}×${n}，C ${m}×${n}）`);
+      log(`已生成随机矩阵 ${ty.t}/${sz.s} → dataset/${ty.t}/${sz.s}/*.bin（A ${m}×${k}，B ${k}×${n}，C ${m}×${n}）`);
       cnt++;
     }
-    log(`共 ${cnt} 组随机矩阵已写入 dataset/，正在刷新 gold ...`);
+    log(`共 ${cnt} 组随机矩阵已写入 dataset/<类型>/<规格>/*.bin`);
+    log("正在同步刷新 output/dataset.coe ...");
+    await regenerateCoe();
     const gold = await computeAllGold();
     const saved = await saveGold(gold);
     $("goldStatus").textContent = "已刷新" + (saved ? " ("+saved+")" : "（只读，未保存）");
