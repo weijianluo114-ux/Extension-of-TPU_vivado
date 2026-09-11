@@ -212,7 +212,6 @@ module AXI_FULL_M_CHINESE #
 		// AXI4 内部暂时信号
 		reg [C_M_AXI_ADDR_WIDTH-1 : 0] 	axi_awaddr;
 		reg  							axi_awvalid;
-		reg [C_M_AXI_DATA_WIDTH-1 : 0] 	axi_wdata;
 		reg  							axi_wlast;
 		reg  							axi_wvalid;
 		reg  							axi_bready;
@@ -276,7 +275,46 @@ module AXI_FULL_M_CHINESE #
 
 	//允许读写时拉高的信号
 	assign AXI_FULL_crtl_axi_wvalid = (axi_wvalid) && (~AXI_FULL_wstop);
-	assign wnext = M_AXI_WREADY && AXI_FULL_crtl_axi_wvalid;	//ready和valid同时有效且不暂停时拉高
+	assign wnext = M_AXI_WREADY && M_AXI_WVALID && ~AXI_FULL_wstop;	//ready和valid同时有效且不暂停时拉高（LOAD态由FIFO空满门控）
+
+	//-------------------------------- LOAD 回环 FIFO（方案B：深度8） --------------------------------//
+	// 深度 8 的同步 FIFO，缓冲 LOAD 态 BRAM 读 -> DDR3 写 的数据，解决单寄存器 axi_wdata 在
+	// 写通道反压（WREADY 拉低）时中间数据被覆盖丢失的问题。
+	// push = 读握手（rnext），pop = 写握手（wnext，已按 fifo_empty 门控）。读写指针同步推进。
+	localparam integer LOAD_FIFO_DEPTH = 8;
+	localparam integer LOAD_FIFO_AW     = 3;                // log2(LOAD_FIFO_DEPTH)
+	reg [C_M_AXI_DATA_WIDTH-1:0] load_fifo_mem [0:LOAD_FIFO_DEPTH-1];
+	reg [LOAD_FIFO_AW-1:0]       load_fifo_wptr;
+	reg [LOAD_FIFO_AW-1:0]       load_fifo_rptr;
+	reg [LOAD_FIFO_AW:0]         load_fifo_cnt;            // 占用深度 0..LOAD_FIFO_DEPTH
+
+	wire load_fifo_empty = (load_fifo_cnt == 0);
+	wire load_fifo_full  = (load_fifo_cnt == LOAD_FIFO_DEPTH);
+	wire load_fifo_push  = (axi_work_state == AXI_LOAD_DATA_TO_DDR3) && rnext && ~load_fifo_full;
+	wire load_fifo_pop   = (axi_work_state == AXI_LOAD_DATA_TO_DDR3) && wnext && ~load_fifo_empty;
+	wire [C_M_AXI_DATA_WIDTH-1:0] load_fifo_dout = load_fifo_mem[load_fifo_rptr];
+
+	always @(posedge M_AXI_ACLK) begin
+		if (M_AXI_ARESETN == 1'b0) begin
+			load_fifo_wptr <= {LOAD_FIFO_AW{1'b0}};
+			load_fifo_rptr <= {LOAD_FIFO_AW{1'b0}};
+			load_fifo_cnt  <= {(LOAD_FIFO_AW+1){1'b0}};
+		end else begin
+			if (load_fifo_push) begin
+				load_fifo_mem[load_fifo_wptr] <= M_AXI_RDATA;
+				load_fifo_wptr <= load_fifo_wptr + 1'b1;
+			end
+			if (load_fifo_pop)
+				load_fifo_rptr <= load_fifo_rptr + 1'b1;
+
+			case ({load_fifo_push, load_fifo_pop})
+				2'b10:   load_fifo_cnt <= load_fifo_cnt + 1'b1;
+				2'b01:   load_fifo_cnt <= load_fifo_cnt - 1'b1;
+				default: load_fifo_cnt <= load_fifo_cnt;
+			endcase
+		end
+	end
+
 
 	//以下逻辑用来指示axi_work_state从AXI_LOAD_DATA_TO_DDR3转变到axi_work_state
 	assign axi_work_state_switch = (r_axi_work_state == AXI_LOAD_DATA_TO_DDR3) && (axi_work_state == AXI_COMPUTE);
@@ -299,13 +337,13 @@ module AXI_FULL_M_CHINESE #
 	assign M_AXI_AWVALID = axi_awvalid;
 	
 	//写数据(W)，若当前处于计算态使写数据由计算核心给出
-	assign M_AXI_WDATA	 = (axi_work_state == AXI_COMPUTE) ? AXI_wdata : axi_wdata;	//这里由于需要测试故将这个信号直接连接至读信号
+	assign M_AXI_WDATA	 = (axi_work_state == AXI_COMPUTE) ? AXI_wdata : load_fifo_dout;	//LOAD态数据取自回环FIFO
 
 
 	assign M_AXI_WSTRB	 = {(C_M_AXI_DATA_WIDTH/8){1'b1}};
 	assign M_AXI_WLAST	 = axi_wlast;
 	assign M_AXI_WUSER	 = 'b0;
-	assign M_AXI_WVALID	 = axi_wvalid;
+	assign M_AXI_WVALID	 = (axi_work_state == AXI_LOAD_DATA_TO_DDR3) ? (axi_wvalid && ~load_fifo_empty) : axi_wvalid;	//LOAD态FIFO空时拉低写valid，反压写通道
 
 	//写响应 (B)
 	assign M_AXI_BREADY	 = axi_bready;
@@ -660,23 +698,6 @@ module AXI_FULL_M_CHINESE #
 				write_index <= write_index;                                                   
 			end                                                                               
 																																													
-		// 要发出什么数据由自己定                                                                    
-		//axi_wdata控制
-			always @(posedge M_AXI_ACLK) begin                                                                             
-				if (M_AXI_ARESETN == 0 || init_txn_write_pulse == 1'b1)                                                         
-					axi_wdata <= 'b0;                                                             
-				else if (wnext && axi_wlast)                                                  
-					axi_wdata <= 'b0;
-
-				//单独控制将数据写入ddr3
-				else if (axi_work_state <= AXI_LOAD_DATA_TO_DDR3) begin
-					axi_wdata <= M_AXI_RDATA;
-				end 
-				else                                                                            
-					axi_wdata <= axi_wdata;                                                       
-			end                                                                             
-
-
 	//-------------------------------------- 写响应 (B) 通道 ---------------------------------//                                                                                                                                                                                                          
 		//写响应通道用于反馈写操作已完成，并将数据放到内存。当所有写数据和写地址都已到达并被从设备接受时，BREADY 信号会激活。
 		//写事务的发起（即未完成写地址的数量）由写地址传输（AW）开始，由 BREADY/BRESP 信号完成。
