@@ -765,8 +765,9 @@ function matToText(vals, m, n, prec){
 }
 function buildLogJson(out, stats, dtype, dsize){
   return {
-    format: 1,
+    format: 2,
     savedAt: nowText(),
+    source: { key: dsSource, label: src().label, datasetDir: src().datasetDir, goldDir: src().goldDir },
     dtype: dtype,
     dsize: dsize,
     stats: {
@@ -781,6 +782,7 @@ function buildLogJson(out, stats, dtype, dsize){
     groups: out.map(g => ({
       idx: g.g, type: g.ty.t, size: g.sz.s, m: g.m, n: g.n, k: g.k,
       ok: g.ok, goldPrec: g.goldPrec,
+      gold: (g.D && g.D.length) ? g.D.map(encNum) : null,
       rtl: g.rtl ? g.rtl.map(encNum) : g.rtl,
       errors: (g.errs || []).map(e => Object.assign({idx:e.idx, gold:encNum(e.gold), rtl:encNum(e.rtl)}, e.limit ? {limit:e.limit} : {}))
     }))
@@ -913,25 +915,32 @@ $("btnEnsureGold").onclick = async () => {
 function logGroupToRender(g){
   return {
     g: g.idx, ty:{t:g.type}, sz:{s:g.size}, m:g.m, n:g.n, k:g.k,
-    D: null, rtl: g.rtl, errs: g.errors, goldPrec: g.goldPrec, ok: g.ok
+    D: (g.gold && g.gold.length) ? g.gold : null, rtl: g.rtl, errs: g.errors, goldPrec: g.goldPrec, ok: g.ok
   };
 }
 async function loadLogIntoUI(data){
   const s = data.stats;
   renderStats({total:s.total, okGroups:s.okGroups, badGroups:s.badGroups, errElems:s.errElems, limitElems:(s.limitElems||0), totalElems:s.totalElems});
   const groups = data.groups.map(logGroupToRender);
-  // 尝试加载 gold 并挂到各组（存在则左侧显示正确结果）
-  try {
-    const gold = await ensureGold();
-    if (gold && gold.groups) {
-      for (const grp of groups) {
-        const g = gold.groups.find(x => x.type===grp.ty.t && x.size===grp.sz.s);
-        if (g) { grp.D = g.D; grp.goldPrec = g.goldPrec; }
+  // 优先使用日志自带的 gold 快照（与这份日志的矩阵一一对应，随机数据也不会错配）
+  const noGold = groups.filter(g => !(g.D && g.D.length));
+  if (noGold.length === 0) {
+    log("gold 来自日志自带快照，与该日志矩阵一一对应");
+  } else {
+    log(`⚠ 旧格式日志：${noGold.length}/${groups.length} 组未记录 gold，回退使用当前来源【${src().label}】的 ${src().goldDir}/（可能与日志矩阵不匹配）`);
+    try {
+      const gold = await ensureGold();
+      if (gold && gold.groups) {
+        for (const grp of groups) {
+          if (grp.D && grp.D.length) continue;
+          const g = gold.groups.find(x => x.type===grp.ty.t && x.size===grp.sz.s);
+          if (g) { grp.D = g.D; grp.goldPrec = g.goldPrec; }
+        }
       }
-    }
-  } catch(e){ log("加载 gold 失败（日志仍可查看 RTL）: " + e.message); }
+    } catch(e){ log("加载 gold 失败（日志仍可查看 RTL）: " + e.message); }
+  }
   renderGroups(groups);
-  log("已加载日志: " + data.savedAt + " （" + data.dtype + " / " + data.dsize + "）");
+  log("已加载日志: " + data.savedAt + " （" + data.dtype + " / " + data.dsize + "）" + (data.source ? "，来源：" + data.source.label : ""));
 }
 async function parseLogBytes(bytes, isGz){
   let buf = bytes;
@@ -944,6 +953,7 @@ async function parseLogBytes(bytes, isGz){
   if (data && data.groups) data.groups.forEach(g => {
     if (g.rtl) g.rtl = g.rtl.map(decNum);
     if (g.errors) g.errors.forEach(e => { e.gold = decNum(e.gold); e.rtl = decNum(e.rtl); });
+    if (g.gold) g.gold = g.gold.map(decNum);
   });
   return data;
 }
@@ -995,7 +1005,7 @@ function renderLogList(items){
       const badge = it.data && it.data.stats && it.data.stats.badGroups ? `<span class="badge bad">${it.data.stats.badGroups} 组错</span>` : `<span class="badge ok">全对</span>`;
       html += `<div class="logitem" data-name="${it.name}">
         <span class="path" style="font-size:calc(var(--fs)*0.75)">${it.name}</span>
-        <span class="hint">${it.data ? (it.data.dtype+" / "+it.data.dsize+" · 正确率 "+acc) : "读取失败"}</span>
+        <span class="hint">${it.data ? ((it.data.source ? "["+it.data.source.label+"] " : "[旧格式] ") + it.data.dtype+" / "+it.data.dsize+" · 正确率 "+acc + ((it.data.groups && it.data.groups[0] && it.data.groups[0].gold) ? " · 含gold" : " · 无gold")) : "读取失败"}</span>
         ${it.data ? badge : ""}
         <button class="ghost" data-act="load">加载</button>
         <button class="ghost" data-act="del" style="color:var(--red)">删除</button>
@@ -1081,7 +1091,7 @@ function buildGroupDetailHtml(grp, onlyErr){
                      : `<div class="hint">未读取到 RTL 结果</div>`;
   const goldHalfHtml = hasGold
     ? `<div class="half"><h3>正确结果（黄金模型 D=A×B+C · 紫色=输出错误对应位置）</h3><div class="tblwrap">${goldTbl}</div></div>`
-    : `<div class="half"><h3>正确结果（日志模式 · 不含 gold）</h3><div class="tblwrap"><div class="hint">日志中未保存 gold 矩阵（所有组 gold 一致）</div></div></div>`;
+    : `<div class="half"><h3>正确结果（旧格式日志 · 无 gold 快照）</h3><div class="tblwrap"><div class="hint">该日志未记录 gold（旧格式）。当前显示的是其它来源的 gold，可能不匹配；重新验证一次即可生成含 gold 快照的新日志。</div></div></div>`;
   const accHtml = acc===null ? `<span class="badge">未对比</span>` : acc==="100.00" ? `<span class="badge ok">正确 100%</span>` : `<span class="badge bad">正确率 ${acc}% · 错误 ${errCnt}</span>`;
   const badge = ok===null ? `<span class="badge">未对比</span>` : ok ? `<span class="badge ok">正确</span>` : `<span class="badge bad">错误 ${errCnt}</span>`;
   let errlist = "";
