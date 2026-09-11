@@ -197,9 +197,9 @@ td.dim{opacity:.3}
       <option value="orig" selected>原始 dataset/（只读）</option>
       <option value="rand">随机 dataset_random/</option>
     </select>
+    <span class="hint">来源只决定「读哪份数据 / 用哪份 gold」；coe 始终写入 IP 固定路径 output/dataset.coe</span>
     <button id="btnRun">加载并验证</button>
-    <button id="btnCoe" class="ghost">生成 coe（当前来源）</button>
-    <button id="btnUseCoe" class="ghost">设为当前 coe（IP 用）</button>
+    <button id="btnCoe" class="ghost">生成 output/dataset.coe（按当前来源）</button>
     <button id="btnRand" class="ghost">随机生成测试矩阵 → dataset_random/</button>
     <label><input type="checkbox" id="onlyErr"> 只看错误元素</label>
   </div>
@@ -363,9 +363,11 @@ const SIZES = [
 ];
 const PREC = {INT4:1, INT8:2, FP16:3, FP32:4, INT32:5};
 // ---------- 数据集来源（原始 dataset/ 全程只读；随机数据独立存放 dataset_random/） ----------
+// Vivado IP(blk_mem_gen_0) 固定读取的 coe 路径（方案B：无论哪种来源都写这一个文件）
+const COE_REL = "output/dataset.coe";
 const SOURCES = {
-  orig: { label:"原始", datasetDir:"dataset",        goldDir:"gold",        coeFile:"output/dataset.coe" },
-  rand: { label:"随机", datasetDir:"dataset_random", goldDir:"gold_random", coeFile:"output/dataset_random.coe" }
+  orig: { label:"原始", datasetDir:"dataset",        goldDir:"gold" },
+  rand: { label:"随机", datasetDir:"dataset_random", goldDir:"gold_random" }
 };
 let dsSource = "orig";
 function src(){ return SOURCES[dsSource] || SOURCES.orig; }
@@ -378,7 +380,7 @@ function applySource(key){
   const s = src();
   const g = $("goldDir");    if (g)  g.value = s.goldDir;
   const st = $("goldStatus"); if (st) st.textContent = "";
-  log(`数据集来源：【${s.label}】读取 ${s.datasetDir}/ ，coe → ${s.coeFile} ，gold → ${s.goldDir}/`);
+  log(`数据集来源：【${s.label}】读取 ${s.datasetDir}/ ，gold → ${s.goldDir}/ ，coe 固定写入 ${COE_REL}`);
 }
 $("dsSource").onchange = () => applySource($("dsSource").value);
 
@@ -1171,7 +1173,7 @@ $("onlyErr").onchange = () => { if ($("sec-matrix").style.display !== "none") re
 
 // ---------- 生成 dataset.coe（「随机生成测试矩阵」复用它同步刷新 output/） ----------
 async function regenerateCoe(){
-  log(`生成 coe 中（18 组，来源：${src().label} → ${src().coeFile}）...`);
+  log(`生成 coe 中（18 组，来源：${src().label} → ${COE_REL}）...`);
   let head = "MEMORY_INITIALIZATION_RADIX = 2;\r\nMEMORY_INITIALIZATION_VECTOR = \r\n";
   let body = "";
   for (const ty of TYPES) for (const sz of SIZES){
@@ -1188,7 +1190,7 @@ async function regenerateCoe(){
     }
   }
   const full = head + body;
-  const coeRel = src().coeFile;
+  const coeRel = COE_REL;
   const cparts = coeRel.split("/");
   let oh = dirHandle;
   for (let i=0;i<cparts.length-1;i++) oh = await oh.getDirectoryHandle(cparts[i], {create:true});
@@ -1291,19 +1293,6 @@ async function backupRandomDataset(){
   }
   log(`已备份旧随机数据 → ${bkName}/（保留最近 ${KEEP} 份）`);
 }
-// ---------- 设为当前 coe（Vivado IP 实际使用的 output/dataset.coe） ----------
-$("btnUseCoe").onclick = async () => {
-  try {
-    logEl.textContent = "";
-    if (!(await ensureWritableDir())) return;
-    const s = src();
-    if (s.coeFile === "output/dataset.coe") { log("当前来源（原始）的 coe 就是 output/dataset.coe，无需切换"); return; }
-    const bytes = await readFile(s.coeFile);
-    if (!confirm(`确定用 ${s.coeFile} 覆盖 Vivado IP 当前使用的 output/dataset.coe 吗？\n（之后可用「生成 coe（当前来源）」按原始数据重建）`)) { log("已取消"); return; }
-    await writeFile("output/dataset.coe", bytes);
-    log(`已把 ${s.coeFile} 设为当前 coe → output/dataset.coe（来源：${s.label}）`);
-  } catch(e){ log("设为当前 coe 失败: " + (e.message||e)); }
-};
 $("btnRand").onclick = async () => {
   try {
     logEl.textContent = "";
