@@ -443,11 +443,15 @@ module fp_adder_16_32bits #(  // 输入+三级流水（对阶 加减 规格化�
                     // FP16: FP32_MANT_WIDTH = 11，分为2组，第一组5位，第二组6位
                     // 注意：以下代码处理了两种可能的宽度
                     is_inf_stage4 <= 0;
-                    norm_mantissa <= sum_stage3[FP32_MANT_WIDTH:0] << (shift_amount);  // 指数大于移位数，则减去移位数，否则归零
                     if (exp_stage3 > shift_amount) begin  //够移则仍然是规格数
-                        exp_stage4 <= exp_stage3 - shift_amount;
-                    end else begin  //不够移位则是非规格数
-                        exp_stage4 <= 0;
+                        norm_mantissa <= sum_stage3[FP32_MANT_WIDTH:0] << shift_amount;
+                        exp_stage4    <= exp_stage3 - shift_amount;
+                    end else begin  //不够移则下溢为 subnormal
+                        // 正确对齐：先左移 shift_amount 位归一化，再右移 (shift_amount+1-exp_stage3) 位，
+                        // 使尾数对齐到 subnormal 的 2^-149 权重（frac = norm >> (1-exp_out)）。
+                        // 旧代码只左移不右移，结果被放大 2^(shift_amount+1-exp_stage3) 倍。
+                        norm_mantissa <= (({23'd0, sum_stage3} << shift_amount) >> (shift_amount + 8'd1 - exp_stage3));
+                        exp_stage4    <= 8'd0;
                     end
                 end
             end
