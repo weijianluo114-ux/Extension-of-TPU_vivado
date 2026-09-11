@@ -83,6 +83,7 @@ th,td{border:1px solid var(--border);padding:3px 7px;text-align:right;white-spac
 th{position:sticky;top:0;background:#EFEBFA;color:var(--text)}
 td.err{background:#F5E4E3;color:#A8504F;font-weight:700}
 td.gold{background:#E9E4FA;color:#5C4FB0;font-weight:700}
+td.lim{background:#FCEFD9;color:#9A6A1F;font-weight:700}
 td.dim{opacity:.3}
 
 /* ---------- 日志管理 ---------- */
@@ -567,8 +568,16 @@ function parseBitsToUint32(s){
 }
 function u2f(u){ const b = new ArrayBuffer(4); new DataView(b).setUint32(0,u,true); return new DataView(b).getFloat32(0,true); }
 
-// ---------- 对比（与 C++ matrix_compare 一致） ----------
-function compareVec(gold, rtl, goldPrec){
+// ---------- 对比（与 C++ matrix_compare 一致；fp32 附加"精度极限"分类） ----------
+// fp32 表示能力边界：
+//   中间上溢   —— 16 个乘积累加中的某一项 |A·B| 已超 fp32 上限 FLT_MAX，
+//                 RTL 按 IEEE 饱和为 ±Inf 是正确行为，而 gold 用 double 仍得有限值；
+//   灾难性相消 —— 中间项量级远大于最终结果（比值 > LIMIT_RATIO），
+//                 fp32 尾数(24 位)不足以保留相消后的差值。
+// 仅在元素"已判定不一致"时才做该分类，避免误伤本已正确的元素。
+const FLT_MAX = 3.4028234663852886e38;
+const LIMIT_RATIO = 1e3;
+function compareVec(gold, rtl, goldPrec, maxAbsProd){
   const errs = [];
   for (let i=0;i<gold.length;i++){
     let ok;
@@ -583,7 +592,15 @@ function compareVec(gold, rtl, goldPrec){
     } else {
       ok = ((gold[i]|0) === (rtl[i]|0));
     }
-    if (!ok) errs.push({idx:i, gold:gold[i], rtl:rtl[i]});
+    if (ok) continue;
+    const e = {idx:i, gold:gold[i], rtl:rtl[i]};
+    if (goldPrec === PREC.FP32 && maxAbsProd) {
+      const mp = maxAbsProd[i];
+      const ref = Math.max(Math.abs(gold[i]), Number.isFinite(rtl[i]) ? Math.abs(rtl[i]) : 0);
+      if (Number.isFinite(mp) && mp > FLT_MAX) { e.limit = "中间上溢"; e.maxProd = mp; }
+      else if (Number.isFinite(mp) && ref > 0 && mp/ref > LIMIT_RATIO) { e.limit = "灾难性相消"; e.maxProd = mp; }
+    }
+    errs.push(e);
   }
   return errs;
 }
@@ -606,7 +623,7 @@ $("btnRun").onclick = async () => {
     const groups = [];
     for (const ty of types) for (const sz of sizes) groups.push({ty, sz});
 
-    const stats = {total:0, errElems:0, totalElems:0, okGroups:0, badGroups:0};
+    const stats = {total:0, errElems:0, limitElems:0, totalElems:0, okGroups:0, badGroups:0};
     const out = [];
     let txtLines = null;
     let txtPos = 0;
@@ -634,23 +651,44 @@ $("btnRun").onclick = async () => {
         const r = goldMulAdd(A,B,C,ty.a,ty.b,ty.c,m,n,k);
         D = r.D; goldPrec = r.goldPrec;
       }
+      // fp32 组：计算每个元素的"中间项最大量级"（用于 fp32 精度极限分类）
+      let maxAbsProd = null;
+      if (goldPrec === PREC.FP32) {
+        try {
+          if (!A || !B) {
+            const aN = base + `a_${ty.a===1?"int4":ty.a===2?"int8":ty.a===3?"fp16":"fp32"}_${sz.s}.bin`;
+            const bN = base + `b_${ty.a===1?"int4":ty.a===2?"int8":ty.a===3?"fp16":"fp32"}_${sz.s}.bin`;
+            A = parseBin(await readFile(aN), ty.a, m, k);
+            B = parseBin(await readFile(bN), ty.b, k, n);
+          }
+          maxAbsProd = new Float64Array(m*n);
+          for (let i=0;i<m;i++) for (let j=0;j<n;j++){
+            let mx = 0;
+            for (let t=0;t<k;t++){ const pp = Math.abs(A[i*k+t]*B[t*n+j]); if (pp > mx) mx = pp; }
+            maxAbsProd[i*n+j] = mx;
+          }
+        } catch(e){ log(`第[${g}]组 中间量级计算跳过: ${e.message}`); maxAbsProd = null; }
+      }
       let rtl = null, errs = null;
       if (txtLines) {
         try {
           const rtlBits = parseTxtLines(txtLines, txtPos, m, n);
           txtPos += Math.ceil(m*n/4);
           rtl = rtlBits.map(u => goldPrec === PREC.FP32 ? u2f(u) : (u|0));
-          errs = compareVec(D, rtl, goldPrec);
+          errs = compareVec(D, rtl, goldPrec, maxAbsProd);
         } catch(e){ log(`第[${g}]组 txt 解析失败: ${e.message}`); }
       }
-      const ok = errs === null ? null : errs.length === 0;
+      const lims = errs ? errs.filter(e => e.limit) : [];
+      const realErrs = errs ? errs.filter(e => !e.limit) : null;
+      const ok = realErrs === null ? null : realErrs.length === 0;
       stats.total++;
       stats.totalElems += m*n;
-      if (errs) stats.errElems += errs.length;
+      if (realErrs) stats.errElems += realErrs.length;
+      stats.limitElems += lims.length;
       if (ok === true) stats.okGroups++;
       if (ok === false) stats.badGroups++;
-      out.push({g, ty, sz, m, n, k, A, B, C, D, rtl, errs, goldPrec, ok});
-      log(`第[${g}]组 ${ty.t}/${sz.s} 加载完成` + (ok===null?"（无RTL对比）":ok?"  ✓ 正确":"  ✗ 错误 "+errs.length+" 个元素"));
+      out.push({g, ty, sz, m, n, k, A, B, C, D, rtl, errs, limits: lims, goldPrec, ok});
+      log(`第[${g}]组 ${ty.t}/${sz.s} 加载完成` + (ok===null?"（无RTL对比）":ok?"  ✓ 正确":"  ✗ 错误 "+realErrs.length+" 个元素") + (lims.length?`  ⚠ ${lims.length} 个 fp32 精度极限`:"") );
     }
 
     renderStats(stats);
@@ -691,6 +729,7 @@ function buildLogJson(out, stats, dtype, dsize){
       okGroups: stats.okGroups,
       badGroups: stats.badGroups,
       errElems: stats.errElems,
+      limitElems: stats.limitElems,
       totalElems: stats.totalElems,
       accuracy: stats.totalElems ? +(((stats.totalElems - stats.errElems)/stats.totalElems*100).toFixed(2)) : null
     },
@@ -698,7 +737,7 @@ function buildLogJson(out, stats, dtype, dsize){
       idx: g.g, type: g.ty.t, size: g.sz.s, m: g.m, n: g.n, k: g.k,
       ok: g.ok, goldPrec: g.goldPrec,
       rtl: g.rtl ? g.rtl.map(encNum) : g.rtl,
-      errors: (g.errs || []).map(e => ({idx:e.idx, gold:encNum(e.gold), rtl:encNum(e.rtl)}))
+      errors: (g.errs || []).map(e => Object.assign({idx:e.idx, gold:encNum(e.gold), rtl:encNum(e.rtl)}, e.limit ? {limit:e.limit} : {}))
     }))
   };
 }
@@ -834,7 +873,7 @@ function logGroupToRender(g){
 }
 async function loadLogIntoUI(data){
   const s = data.stats;
-  renderStats({total:s.total, okGroups:s.okGroups, badGroups:s.badGroups, errElems:s.errElems, totalElems:s.totalElems});
+  renderStats({total:s.total, okGroups:s.okGroups, badGroups:s.badGroups, errElems:s.errElems, limitElems:(s.limitElems||0), totalElems:s.totalElems});
   const groups = data.groups.map(logGroupToRender);
   // 尝试加载 gold 并挂到各组（存在则左侧显示正确结果）
   try {
@@ -948,11 +987,13 @@ $("btnListLogs").onclick = listLogs;
 function renderStats(s){
   $("sec-stats").style.display = "block";
   const acc = s.totalElems ? ((s.totalElems - s.errElems)/s.totalElems*100).toFixed(2) : "—";
+  const lim = s.limitElems || 0;
   $("cards").innerHTML = `
     <div class="card"><div class="num">${s.total}</div><div class="lbl">验证组数</div></div>
     <div class="card"><div class="num ${s.badGroups? 'red':'green'}">${s.okGroups}</div><div class="lbl">正确组数</div></div>
     <div class="card"><div class="num ${s.badGroups? 'red':'green'}">${s.badGroups}</div><div class="lbl">错误组数</div></div>
     <div class="card"><div class="num ${s.errElems? 'red':'green'}">${s.errElems}</div><div class="lbl">错误元素数</div></div>
+    <div class="card"><div class="num ${lim? 'amber':''}">${lim}</div><div class="lbl">fp32 精度极限</div></div>
     <div class="card"><div class="num">${s.totalElems}</div><div class="lbl">总元素数</div></div>
     <div class="card"><div class="num ${s.errElems? 'amber':'green'}">${acc}%</div><div class="lbl">元素正确率</div></div>`;
 }
@@ -961,7 +1002,7 @@ function fmtVal(v, prec){ if (v===null || v===undefined) return "—"; if (typeo
 function fmtErrVal(v, prec){ if (v===null || v===undefined) return "—"; if (typeof v==="string") return v; if (typeof v!=="number") return String(v); if (Number.isNaN(v)) return "NaN"; if (v===Infinity) return "Inf"; if (v===-Infinity) return "-Inf"; return prec===PREC.FP32 ? v.toPrecision(6) : String(v|0); }
 function encNum(v){ if (typeof v!=="number") return v; if (Number.isNaN(v)) return "NaN"; if (v===Infinity) return "Inf"; if (v===-Infinity) return "-Inf"; return v; }
 function decNum(v){ if (v==="NaN") return NaN; if (v==="Inf") return Infinity; if (v==="-Inf") return -Infinity; return v; }
-function makeTbl(vals, m, n, prec, errSet, onlyErr, markMode){
+function makeTbl(vals, m, n, prec, errSet, onlyErr, markMode, limitSet){
   let tbl = `<table><thead><tr><th>#</th>`;
   for (let j=0;j<n;j++) tbl += `<th>${j}</th>`;
   tbl += `</tr></thead><tbody>`;
@@ -971,7 +1012,10 @@ function makeTbl(vals, m, n, prec, errSet, onlyErr, markMode){
       const idx = i*n+j;
       const isErr = errSet.has(idx);
       if (onlyErr && !isErr) { tbl += `<td></td>`; continue; }
-      const cls = (markMode==="err" && isErr) ? "err" : (markMode==="gold" && isErr) ? "gold" : "";
+      const isLim = !!(limitSet && limitSet.has(idx));
+      const cls = (markMode==="err" && isLim) ? "lim"
+                : (markMode==="err" && isErr) ? "err"
+                : (markMode==="gold" && isErr) ? "gold" : "";
       tbl += `<td class="${cls}">${fmtVal(vals[idx], prec)}</td>`;
     }
     tbl += `</tr>`;
@@ -982,18 +1026,19 @@ function makeTbl(vals, m, n, prec, errSet, onlyErr, markMode){
 function buildGroupDetailHtml(grp, onlyErr){
   const {m,n,ty,sz,g,D,rtl,errs,goldPrec,ok} = grp;
   const errSet = new Set(errs ? errs.map(e=>e.idx) : []);
+  const limSet = new Set(errs ? errs.filter(e=>e.limit).map(e=>e.idx) : []);
   const hasGold = !!(D && D.length);
   const total = m*n;
-  const errCnt = errs ? errs.length : 0;
+  const errCnt = errs ? errs.filter(e=>!e.limit).length : 0;   // fp32 精度极限不计入错误数
   const acc = ok===null ? null : ((total-errCnt)/total*100).toFixed(2);
   const goldTbl = hasGold ? makeTbl(D, m, n, goldPrec, errSet, onlyErr, "gold") : null;
-  const rtlTbl = rtl ? makeTbl(rtl, m, n, goldPrec, errSet, onlyErr, "err")
+  const rtlTbl = rtl ? makeTbl(rtl, m, n, goldPrec, errSet, onlyErr, "err", limSet)
                      : `<div class="hint">未读取到 RTL 结果</div>`;
   const goldHalfHtml = hasGold
     ? `<div class="half"><h3>正确结果（黄金模型 D=A×B+C · 紫色=输出错误对应位置）</h3><div class="tblwrap">${goldTbl}</div></div>`
     : `<div class="half"><h3>正确结果（日志模式 · 不含 gold）</h3><div class="tblwrap"><div class="hint">日志中未保存 gold 矩阵（所有组 gold 一致）</div></div></div>`;
   const accHtml = acc===null ? `<span class="badge">未对比</span>` : acc==="100.00" ? `<span class="badge ok">正确 100%</span>` : `<span class="badge bad">正确率 ${acc}% · 错误 ${errCnt}</span>`;
-  const badge = ok===null ? `<span class="badge">未对比</span>` : ok ? `<span class="badge ok">正确</span>` : `<span class="badge bad">错误 ${errs.length}</span>`;
+  const badge = ok===null ? `<span class="badge">未对比</span>` : ok ? `<span class="badge ok">正确</span>` : `<span class="badge bad">错误 ${errCnt}</span>`;
   let errlist = "";
   if (errs && errs.length){
     errlist = `<div class="errlist">`;
@@ -1001,7 +1046,8 @@ function buildGroupDetailHtml(grp, onlyErr){
     for (const e of show){
       const i = Math.floor(e.idx/n), j = e.idx%n;
       const gv = fmtErrVal(e.gold, goldPrec), rv = fmtErrVal(e.rtl, goldPrec);
-      errlist += `<div>[${i},${j}] 期望=${gv}  实际=${rv}</div>`;
+      const tag = e.limit ? `  <b style="color:#9A6A1F">（fp32 精度极限·${e.limit}）</b>` : "";
+      errlist += `<div>[${i},${j}] 期望=${gv}  实际=${rv}${tag}</div>`;
     }
     if (errs.length > show.length) errlist += `<div>... 还有 ${errs.length - show.length} 个</div>`;
     errlist += `</div>`;
@@ -1011,7 +1057,7 @@ function buildGroupDetailHtml(grp, onlyErr){
     ${errlist}
     <div class="cmp">
       ${goldHalfHtml}
-      <div class="half"><h3>RTL 输出（D_result.txt · 红色=错误）</h3><div class="tblwrap">${rtlTbl}</div></div>
+      <div class="half"><h3>RTL 输出（D_result.txt · 红色=错误 · 橙色=fp32 精度极限）</h3><div class="tblwrap">${rtlTbl}</div></div>
     </div>
   </div>`;
 }
@@ -1021,12 +1067,12 @@ function renderGroups(groups){
   const sec = $("sec-matrix");
   sec.style.display = "block";
   const onlyErr = $("onlyErr").checked;
-  let html = `<div class="hint" style="margin-bottom:10px">判定标准：浮点（FP16/FP32）= 相对误差 ≤ 1e-4（0.01%）；整数（INT4/INT8/INT32）= 逐位完全相等。正确率 = (总元素-错误元素)/总元素 × 100%。gold 中绿色 = 与输出错误对应位置。点击方格查看该组完整矩阵。</div>`;
+  let html = `<div class="hint" style="margin-bottom:10px">判定标准：浮点（FP16/FP32）= 相对误差 ≤ 1e-4（0.01%）；整数（INT4/INT8/INT32）= 逐位完全相等。正确率 = (总元素-错误元素)/总元素 × 100%。<b>fp32 精度极限</b>（橙色）= 差异来自 fp32 表示能力边界，单列不计入错误：① 中间上溢（某项 |A·B| 已超 fp32 上限 3.4e38，RTL 按 IEEE 饱和为 ±Inf）；② 灾难性相消（中间项量级比结果大 1000 倍以上，24 位尾数不足以保留差值）。点击方格查看该组完整矩阵。</div>`;
   html += `<div class="grp-grid">`;
   for (const grp of groups){
     const {m,n,ty,sz,g,D,rtl,errs,goldPrec,ok} = grp;
     const total = m*n;
-    const errCnt = errs ? errs.length : 0;
+    const errCnt = errs ? errs.filter(e=>!e.limit).length : 0;   // fp32 精度极限不计入错误数
     const acc = ok===null ? null : ((total-errCnt)/total*100).toFixed(2);
     const cls = ok===null ? "none" : ok ? "ok" : "bad";
     const accTxt = acc===null ? "未对比" : acc+"%";
