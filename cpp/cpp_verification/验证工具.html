@@ -192,9 +192,15 @@ td.dim{opacity:.3}
       <option value="m8n32k16">m8n32k16</option>
       <option value="all" selected>全部 3 种</option>
     </select>
+    <label>数据集来源</label>
+    <select id="dsSource" title="选择验证/生成 coe 使用哪份数据集；原始 dataset/ 永不被改写">
+      <option value="orig" selected>原始 dataset/（只读）</option>
+      <option value="rand">随机 dataset_random/</option>
+    </select>
     <button id="btnRun">加载并验证</button>
-    <button id="btnCoe" class="ghost">生成 dataset.coe</button>
-    <button id="btnRand" class="ghost">随机生成测试矩阵</button>
+    <button id="btnCoe" class="ghost">生成 coe（当前来源）</button>
+    <button id="btnUseCoe" class="ghost">设为当前 coe（IP 用）</button>
+    <button id="btnRand" class="ghost">随机生成测试矩阵 → dataset_random/</button>
     <label><input type="checkbox" id="onlyErr"> 只看错误元素</label>
   </div>
   <div class="row">
@@ -356,6 +362,25 @@ const SIZES = [
   {s:"m8n32k16",  m:8, n:32,k:16},
 ];
 const PREC = {INT4:1, INT8:2, FP16:3, FP32:4, INT32:5};
+// ---------- 数据集来源（原始 dataset/ 全程只读；随机数据独立存放 dataset_random/） ----------
+const SOURCES = {
+  orig: { label:"原始", datasetDir:"dataset",        goldDir:"gold",        coeFile:"output/dataset.coe" },
+  rand: { label:"随机", datasetDir:"dataset_random", goldDir:"gold_random", coeFile:"output/dataset_random.coe" }
+};
+let dsSource = "orig";
+function src(){ return SOURCES[dsSource] || SOURCES.orig; }
+function datasetDir(){ return src().datasetDir; }
+// 原始数据只读保护：任何写操作都不允许落到这些顶级目录
+const PROTECTED_DIRS = ["dataset"];
+function applySource(key){
+  dsSource = SOURCES[key] ? key : "orig";
+  const sel = $("dsSource"); if (sel) sel.value = dsSource;
+  const s = src();
+  const g = $("goldDir");    if (g)  g.value = s.goldDir;
+  const st = $("goldStatus"); if (st) st.textContent = "";
+  log(`数据集来源：【${s.label}】读取 ${s.datasetDir}/ ，coe → ${s.coeFile} ，gold → ${s.goldDir}/`);
+}
+$("dsSource").onchange = () => applySource($("dsSource").value);
 
 const DEFAULT_DIR_HINT = "E:\\electronic2\\project\\verilog_pro\\TPU_vivado\\cpp\\cpp_verification";
 
@@ -446,7 +471,7 @@ async function ensureWritableDir(){
       if (perm === "prompt") perm = await h.requestPermission({mode:"readwrite"});
       if (perm === "granted") { await adoptDirHandle(h); return true; }
     }
-    log("✗ 需要 [可读写] 目录授权：请先点「选择目录（可读写）」并选中 cpp_verification 目录（写入 dataset/、output/、gold/、logs/ 都需要写权限）。");
+    log("✗ 需要 [可读写] 目录授权：请先点「选择目录（可读写）」并选中 cpp_verification 目录（写入 dataset_random/、output/、gold*/、logs/ 需要写权限；原始 dataset/ 只读）。");
     return false;
   } catch(e){ log("✗ 获取目录写权限失败: " + (e.message||e)); return false; }
 }
@@ -657,7 +682,7 @@ $("btnRun").onclick = async () => {
     for (let g=0; g<groups.length; g++){
       const {ty, sz} = groups[g];
       const {m,n,k} = sz;
-      const base = `dataset/${ty.t}/${sz.s}/`;
+      const base = `${datasetDir()}/${ty.t}/${sz.s}/`;
       let A=null,B=null,C=null,D=null,goldPrec=2;
       const goldEntry = goldData && goldData.groups.find(x => x.type===ty.t && x.size===sz.s);
       if (goldEntry) { D = goldEntry.D; goldPrec = goldEntry.goldPrec; }
@@ -847,7 +872,7 @@ async function computeAllGold(){
   let idx = 0;
   for (const ty of TYPES) for (const sz of SIZES){
     const {m,n,k} = sz;
-    const base = `dataset/${ty.t}/${sz.s}/`;
+    const base = `${datasetDir()}/${ty.t}/${sz.s}/`;
     const aName = base + `a_${ty.a===1?"int4":ty.a===2?"int8":ty.a===3?"fp16":"fp32"}_${sz.s}.bin`;
     const bName = base + `b_${ty.a===1?"int4":ty.a===2?"int8":ty.a===3?"fp16":"fp32"}_${sz.s}.bin`;
     const cName = base + `c_${ty.c===5?"int32":ty.c===1?"int4":ty.c===2?"int8":ty.c===3?"fp16":"fp32"}_${sz.s}.bin`;
@@ -1136,12 +1161,12 @@ $("onlyErr").onchange = () => { if ($("sec-matrix").style.display !== "none") re
 
 // ---------- 生成 dataset.coe（「随机生成测试矩阵」复用它同步刷新 output/） ----------
 async function regenerateCoe(){
-  log("生成 dataset.coe 中（18 组）...");
+  log(`生成 coe 中（18 组，来源：${src().label} → ${src().coeFile}）...`);
   let head = "MEMORY_INITIALIZATION_RADIX = 2;\r\nMEMORY_INITIALIZATION_VECTOR = \r\n";
   let body = "";
   for (const ty of TYPES) for (const sz of SIZES){
     const {m,n,k} = sz;
-    const base = `dataset/${ty.t}/${sz.s}/`;
+    const base = `${datasetDir()}/${ty.t}/${sz.s}/`;
     const aName = base + `a_${precName(ty.a)}_${sz.s}.bin`;
     const bName = base + `b_${precName(ty.b)}_${sz.s}.bin`;
     const cName = base + `c_${precName(ty.c)}_${sz.s}.bin`;
@@ -1153,13 +1178,16 @@ async function regenerateCoe(){
     }
   }
   const full = head + body;
-  const oh = await dirHandle.getDirectoryHandle("output");
-  const fh = await oh.getFileHandle("dataset.coe", {create:true});
+  const coeRel = src().coeFile;
+  const cparts = coeRel.split("/");
+  let oh = dirHandle;
+  for (let i=0;i<cparts.length-1;i++) oh = await oh.getDirectoryHandle(cparts[i], {create:true});
+  const fh = await oh.getFileHandle(cparts[cparts.length-1], {create:true});
   const w = await fh.createWritable();
   await w.write(full);
   await w.close();
   const nLines = body.split("\n").length-1;
-  log("已写入 output/dataset.coe，共 " + nLines + " 行数据");
+  log(`已写入 ${coeRel}（来源：${src().label}），共 ${nLines} 行数据`);
   return nLines;
 }
 $("btnCoe").onclick = async () => {
@@ -1205,6 +1233,8 @@ function matToBin(mat, prec){
 }
 async function writeFile(relPath, bytes){
   if (!dirHandle) throw new Error("需要 [可读写] 目录权限");
+  const top = relPath.split("/")[0];
+  if (PROTECTED_DIRS.includes(top)) throw new Error(`拒绝写入原始数据目录 ${top}/（只读保护：原始数据绝不可改）`);
   const parts = relPath.split("/");
   let h = dirHandle;
   for (let i=0;i<parts.length-1;i++) h = await h.getDirectoryHandle(parts[i], {create:true});
@@ -1213,26 +1243,79 @@ async function writeFile(relPath, bytes){
   await w.write(bytes);
   await w.close();
 }
+// ---------- 随机数据集备份（只备份 dataset_random/，原始 dataset/ 永不触碰） ----------
+async function copyDirHandle(srcH, dstH){
+  for await (const [name, e] of srcH.entries()){
+    if (e.kind === "file") {
+      const f = await (await srcH.getFileHandle(name)).getFile();
+      const fh = await dstH.getFileHandle(name, {create:true});
+      const w = await fh.createWritable();
+      await w.write(new Uint8Array(await f.arrayBuffer()));
+      await w.close();
+    } else {
+      const d = await dstH.getDirectoryHandle(name, {create:true});
+      await copyDirHandle(e, d);
+    }
+  }
+}
+async function backupRandomDataset(){
+  const NAME = "dataset_random", PREFIX = "dataset_random_backup_", KEEP = 3;
+  let cur = null;
+  try { cur = await dirHandle.getDirectoryHandle(NAME); } catch(e){ return; }
+  let fileCnt = 0;
+  for await (const [, e] of cur.entries()) { if (e.kind === "file") fileCnt++; }
+  const backups = [];
+  for await (const [name, e] of dirHandle.entries()) {
+    if (e.kind === "directory" && name.startsWith(PREFIX)) backups.push(name);
+  }
+  if (fileCnt === 0 && backups.length === 0) return;
+  const stamp = new Date().toISOString().replace(/[-:T]/g,"").slice(0,14);
+  const bkName = PREFIX + stamp;
+  const bk = await dirHandle.getDirectoryHandle(bkName, {create:true});
+  await copyDirHandle(cur, bk);
+  backups.push(bkName);
+  backups.sort();
+  while (backups.length > KEEP) {
+    const old = backups.shift();
+    try { await dirHandle.removeEntry(old, {recursive:true}); log(`已清理旧备份 ${old}/`); } catch(e){}
+  }
+  log(`已备份旧随机数据 → ${bkName}/（保留最近 ${KEEP} 份）`);
+}
+// ---------- 设为当前 coe（Vivado IP 实际使用的 output/dataset.coe） ----------
+$("btnUseCoe").onclick = async () => {
+  try {
+    logEl.textContent = "";
+    if (!(await ensureWritableDir())) return;
+    const s = src();
+    if (s.coeFile === "output/dataset.coe") { log("当前来源（原始）的 coe 就是 output/dataset.coe，无需切换"); return; }
+    const bytes = await readFile(s.coeFile);
+    if (!confirm(`确定用 ${s.coeFile} 覆盖 Vivado IP 当前使用的 output/dataset.coe 吗？\n（之后可用「生成 coe（当前来源）」按原始数据重建）`)) { log("已取消"); return; }
+    await writeFile("output/dataset.coe", bytes);
+    log(`已把 ${s.coeFile} 设为当前 coe → output/dataset.coe（来源：${s.label}）`);
+  } catch(e){ log("设为当前 coe 失败: " + (e.message||e)); }
+};
 $("btnRand").onclick = async () => {
   try {
     logEl.textContent = "";
     if (!(await ensureWritableDir())) return;
+    const RAND_DIR = "dataset_random";            // 固定写入独立目录，绝不碰原始 dataset/
+    await backupRandomDataset();
     const dtype = $("dtype").value, dsize = $("dsize").value;
     const types = dtype === "all" ? TYPES : TYPES.filter(x => x.t === dtype);
     const sizes = dsize === "all" ? SIZES : SIZES.filter(x => x.s === dsize);
     let cnt = 0;
     for (const ty of types) for (const sz of sizes){
       const {m, n, k} = sz;
-      const base = `dataset/${ty.t}/${sz.s}/`;
+      const base = `${RAND_DIR}/${ty.t}/${sz.s}/`;
       const A = randMat(m,k,ty.a), B = randMat(k,n,ty.b), C = randMat(m,n,ty.c);
       await writeFile(base + `a_${precName(ty.a)}_${sz.s}.bin`, matToBin(A, ty.a));
       await writeFile(base + `b_${precName(ty.b)}_${sz.s}.bin`, matToBin(B, ty.b));
       await writeFile(base + `c_${precName(ty.c)}_${sz.s}.bin`, matToBin(C, ty.c));
-      log(`已生成随机矩阵 ${ty.t}/${sz.s} → dataset/${ty.t}/${sz.s}/*.bin（A ${m}×${k}，B ${k}×${n}，C ${m}×${n}）`);
+      log(`已生成随机矩阵 ${ty.t}/${sz.s} → ${RAND_DIR}/${ty.t}/${sz.s}/*.bin（A ${m}×${k}，B ${k}×${n}，C ${m}×${n}）`);
       cnt++;
     }
-    log(`共 ${cnt} 组随机矩阵已写入 dataset/<类型>/<规格>/*.bin`);
-    log("正在同步刷新 output/dataset.coe ...");
+    log(`共 ${cnt} 组随机矩阵已写入 ${RAND_DIR}/<类型>/<规格>/*.bin（原始 dataset/ 未改动）`);
+    applySource("rand");
     await regenerateCoe();
     const gold = await computeAllGold();
     const saved = await saveGold(gold);
@@ -1240,7 +1323,8 @@ $("btnRand").onclick = async () => {
     log("gold 已" + (saved ? "刷新保存：" + saved : "重算（只读模式未保存，验证时仍会在线计算）"));
   } catch(e){ log("随机生成失败: " + (e.message||e)); console.error(e); }
 };
-
+// 启动默认来源：原始（静默，仅同步 gold 目录输入框）
+(function(){ const g = $("goldDir"); if (g) g.value = src().goldDir; })();
 restoreLastDir();
 </script>
 </body>

@@ -116,3 +116,5 @@ cpp/cpp_verification/probe_output/
 # ================================
 cpp/cpp_verification/cpp_backup/
 cpp/cpp_verification/dataset_random_*/
+cpp/cpp_verification/dataset_random/
+cpp/cpp_verification/gold_random/
